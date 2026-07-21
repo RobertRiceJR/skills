@@ -42,15 +42,19 @@ weighted mean (D1 ×3, D2–D5 ×2, D6 ×1). Read-only over the graded skills.
    (roast-me grep fallback, skill-evolve/skill-scorecard/TDD/devils-advocate degrade preambles,
    claude-architect provenance labeling) are the bulk of this pass's fine-tuning and are reflected in
    the D4/D5 scores above.
+3. **session-review D1** — widened the explicit-cue list (description + body) with the ambient
+   session-closing phrasings that missed in the single run ("should I push?", "what's left?", "are we
+   done here?", "let's lock this in and move on", "call it for today", "that's settled / done with
+   this work", and the name-the-next-task pivot). Skip conditions ("keep moving fast", single-file
+   edits) left intact to protect precision on the 12 negatives. **Applied but NOT re-measured** — the
+   verification eval was stopped for time; re-run the 3× eval to confirm recall rose without
+   over-firing on the negatives before treating the new D1 as settled.
 
 ## Fine-tune recommendations (need Robert's approval — NOT auto-applied)
 
-- **session-review D1 (0.63).** The misses are ambient "work is settling" cues — the exact seams the
-  skill targets, but hard for a *proactive* skill to fire on under a command-style eval. Single-run
-  noise inflates it. Options: (a) accept — auto-activation reflection skills inherently under-fire,
-  and explicit `/session-review` always works; (b) run the `skill-creator` optimize loop
-  (`run_loop.py`) to lift ambient-cue coverage — but weigh over-trigger risk carefully. Recommend
-  (a) for now; revisit with a 3-run eval before tuning.
+- **session-review D1 (0.63).** ✅ **Applied** (see "Fine-tunes applied" #3) — widened the explicit-cue
+  list to cover the ambient phrasings that missed, precision guards left intact. Still needs a 3× eval
+  to confirm the new number; the single-run 0.63 was noisy.
 - **technical-due-diligence & skill-evolve D5 (0.60/0.65).** Their descriptions/bodies still name
   sibling skills that don't exist here (`/gap-analysis`, `/coverage-gap-scan`, `/three-amigos`, …) as
   negative-routing or handoff targets. Now labeled project-specific/optional (not breaking), but the

@@ -1,17 +1,16 @@
 ---
 name: session-review
 description: >
-    End-of-phase reflection discipline. Activates at the natural seams of a working session —
-    not after every edit, but when a meaningful piece of work is settling and it's worth
-    looking back before moving on. Auto-activate when Claude has just declared a task, feature,
-    phase, or debugging session complete; when a verification step has just passed (tests green,
-    build succeeds, manual confirmation logged); or when the user is poised to transition
-    (about to commit and push, switch to a new task, end the session, or scale/extend something
-    just approved). Also activates on explicit cues: user says "before we move on", "wrap this
-    up", "anything else?", "is this done?", "are we good?", or similar session-closing language.
-    Do NOT activate after single-file edits or minor fixes, in the middle of active
-    problem-solving where reflection would interrupt flow, on documentation-only changes or
-    cosmetic edits, or when the user has explicitly signaled they want to keep moving fast.
+    End-of-phase reflection discipline — fires at the natural seams of a working session (a
+    meaningful piece settling), not after every edit. Auto-activate when a task/feature/phase/
+    debugging session is just declared complete, a verification step just passed (tests green,
+    build succeeds), or the user is poised to transition (about to commit and push, switch tasks,
+    end the session, or scale something just approved). Explicit cues: "before we move on", "wrap
+    this up", "anything else?", "is this done?", "are we good?", "are we done here?", "what's
+    left?", "should I push?", "lock this in and move on", "call it for today", "that's settled /
+    done with this work", or naming the NEXT task to move to (the pivot is the seam). Do NOT
+    activate after single-file edits or minor fixes, mid-problem-solving where reflection breaks
+    flow, on doc-only/cosmetic edits, or when the user signaled they want to keep moving fast.
     Manual invocation: /session-review
 user_invocable: true
 argument: '(optional) a topic or scope to focus the review on; omit to review the full session surface'
@@ -51,9 +50,12 @@ project's equivalents.
 - A task, feature, phase, or debugging session was just declared complete
 - A verification step just passed (Playwright suite green, `type-check` clean, manual confirmation logged)
 - The user says: "before we move on", "wrap this up", "anything else?", "is this done?",
-  "are we good?", or similar session-closing language
+  "are we good?", "are we done here?", "what's left?", "should I push?", "let's lock this in and
+  move on", "call it for today", "that's settled / done with this work", or similar
+  session-closing language
 - A long working session (migration batch, fix-loop, skills/docs pass) is reaching a natural stop
-- The user is about to commit and push, switch tickets, or end the session
+- The user is about to commit and push, switch tickets, or end the session — including when they
+  name the next ticket/task to move on to (that pivot is itself the seam)
 - The user just approved something significant and is poised to scale or extend it
 
 **Skip (do not activate) for:**

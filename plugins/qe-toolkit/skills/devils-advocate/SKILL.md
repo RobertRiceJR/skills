@@ -5,8 +5,7 @@ description: >
     pointed challenges to the test plan using lenses the orchestrator does not use
     (malicious user, panicking dev, skeptical senior QE, single-point-of-failure
     auditor). Forces the user to rebut or revise each challenge. Appends a
-    rebuttal/acceptance log to the source doc.
-    Do NOT use as a replacement for /three-amigos or /ready-for-testing — this is
+    rebuttal/acceptance log to the source doc. this is
     a review pass that runs AFTER those have produced a populated doc.
 user_invocable: true
 argument: '<path to a populated test-plan / ticket doc> — or a ticket ID (e.g., CI-7461) if the project uses the _shared/tickets convention'
@@ -25,7 +24,6 @@ uses different frames on purpose to surface what was missed.
 
 **Read-and-append only.** Never deletes or rewrites existing doc content.
 **User-driven.** Every challenge requires explicit disposition before anything is written.
-**Opt-in.** Never called automatically by `/three-amigos` or `/ready-for-testing`.
 
 ---
 
