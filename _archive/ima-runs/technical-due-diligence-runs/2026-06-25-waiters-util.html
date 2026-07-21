@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-014
+date: 2026-06-25
+scope: src/utils/waiters.ts (+ src/utils/logger.ts) — best-practice + Winston logging enhancement
+jira: []
+severity: { critical: 0, high: 1, medium: 7, low: 4 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-014 — waiters.ts due diligence</title>
+  <style>
+:root {
+  --ink:        #1b1f1d;
+  --bg:         #f7f9f7;
+  --muted:      #5b6472;
+  --line:       #e4e9e5;
+  --accent:     #4f9d3a;
+  --accent-2:   #2c6e9b;
+  --accent-3:   #e08a3e;
+  --accent-soft:#eef5ea;
+  --card:       #ffffff;
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+  --font-head: "Inter", "Segoe UI", Arial, sans-serif;
+  --font-body: "Inter", "Segoe UI", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 40px 28px 80px; }
+header.report {
+  background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 100%);
+  color: #fff; border-radius: 16px; padding: 34px 36px; margin-bottom: 28px;
+  box-shadow: 0 8px 28px rgba(27,31,29,.18);
+}
+header.report .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 11.5px; font-weight: 700; opacity: .85; margin: 0 0 10px; }
+header.report h1 { margin: 0 0 8px; font-size: 29px; line-height: 1.15; font-weight: 750; font-family: var(--font-head); }
+header.report p.sub { margin: 0; font-size: 15px; opacity: .93; max-width: 760px; }
+header.report .meta { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.25); display: flex; flex-wrap: wrap; gap: 22px; font-size: 12.5px; opacity: .93; }
+h2.section { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 750; margin: 34px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--line); font-family: var(--font-head); }
+.legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+.legend .item { background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 14px 16px; }
+.legend .item .k { font-weight: 750; font-size: 13px; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+.legend .item .k .dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend .item .d { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.tablecard { background: var(--card); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; box-shadow: 0 2px 10px rgba(20,25,40,.04); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead th { background: #eef1ee; text-align: left; padding: 13px 14px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 750; border-bottom: 1px solid var(--line); white-space: nowrap; }
+thead th.num { text-align: center; }
+tbody td { padding: 12px 14px; border-bottom: 1px solid #eef0ee; vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f6faf4; }
+td.num { text-align: center; }
+.tier { border-left: 5px solid var(--accent); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; background: var(--card); border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.tier h3 { margin: 0 0 8px; font-size: 15px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-family: var(--font-head); }
+.tier h3 .badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; color: #fff; background: var(--accent); }
+.tier p { margin: 0 0 8px; font-size: 13.5px; color: var(--ink); }
+.tier ul { margin: 6px 0 0; padding-left: 18px; }
+.tier li { margin: 6px 0; font-size: 13.5px; }
+.tier.ok    { border-left-color: var(--accent);   } .tier.ok    .badge { background: var(--accent);   }
+.tier.warn  { border-left-color: var(--accent-3); } .tier.warn  .badge { background: var(--accent-3); }
+.tier.info  { border-left-color: var(--accent-2); } .tier.info  .badge { background: var(--accent-2); }
+.tier.muted { border-left-color: var(--muted);    } .tier.muted .badge { background: var(--muted);    }
+.tier.crit  { border-left-color: var(--s1); } .tier.crit .badge { background: var(--s1); }
+.callout { background: var(--accent-soft); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: 12px; padding: 18px 22px; margin: 6px 0 30px; }
+.callout .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 750; color: var(--accent); margin-bottom: 6px; }
+.callout p { margin: 0; font-size: 14.5px; line-height: 1.55; }
+.callout p + p { margin-top: 9px; }
+.callout ol { margin: 6px 0 0; padding-left: 20px; }
+.callout li { font-size: 14px; margin: 8px 0; line-height: 1.5; }
+.callout a { color: var(--accent-2); font-weight: 650; text-decoration: none; }
+.callout a:hover { text-decoration: underline; }
+.note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+code { background: #eef1ee; padding: 1px 6px; border-radius: 5px; font-size: .88em; font-family: "SF Mono", Consolas, monospace; }
+pre { background: #1b1f1d; color: #e9eee9; border-radius: 9px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; font-family: "SF Mono", Consolas, monospace; margin: 10px 0; }
+pre .cmt { color: #7f8c7a; }
+.ev { font-size: 12px; color: var(--muted); font-family: "SF Mono", Consolas, monospace; margin: 2px 0 0; }
+.kv { margin: 8px 0; font-size: 13.5px; }
+.kv b { font-family: var(--font-head); }
+footer.rep { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
+@media print { body { background: #fff; } .wrap { padding: 0; } .tablecard, .tier, .legend .item { box-shadow: none; } header.report { box-shadow: none; } }
+@media (max-width: 720px) { .legend { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>waiters.ts — the suite&rsquo;s response-wait primitive</h1>
+    <p class="sub">A 20-line utility that every browser test depends on, reviewed for best-practice and observability gaps with a focus on Winston logger integration. Companion to TDD-009 (navigation utilities), the layer directly above this one.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice / QE inheriting this test infrastructure</span>
+      <span><b>Date:</b> 2026-06-25</span>
+      <span><b>Run:</b> TDD-014</span>
+      <span><b>Scope:</b> src/utils/waiters.ts (+ logger.ts)</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>Critical &mdash; 0</div><div class="d">Data loss · auth bypass · money wrong · untested money/auth path</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High &mdash; 1</div><div class="d">A core capability silently breaks for many; false-green across the suite</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium &mdash; 7</div><div class="d">Degraded behavior with a workaround; compounding maintainability/observability tax</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low &mdash; 4</div><div class="d">Localized smell · style/consistency · advisory</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout">
+    <div class="lbl">Verdict &mdash; the three things that move the price</div>
+    <p>This file is small, lightweight, and fit-for-purpose &mdash; the user&rsquo;s assessment is correct. It has no Critical defects. But it is the single highest-fan-in primitive in the test suite (reached by ~130 files), and its name makes a promise the code does not keep. Three concerns dominate:</p>
+    <ol>
+      <li><a href="#f1"><b>[High] <code>waitForResponseSuccess</code> validates an HTTP status, not operational success.</b></a> The predicate matches HTTP 200, but GraphQL &mdash; which is every data call in this app &mdash; returns 200 <em>even when the body carries <code>errors[]</code></em>. The waiter passes; the test believes a failed operation succeeded. This is a false-green vector across the entire E2E layer, and it is the same class the suite already booked in TDD-005 (&ldquo;failures masked as 200&rdquo;).</li>
+      <li><a href="#f6"><b>[Medium] Timeout failures are opaque and unlogged.</b></a> When a wait times out, nothing logs <em>which</em> endpoint was being waited for at <code>error</code> level; the only breadcrumb is an <code>info</code> line you must correlate by eye. This is exactly the gap the requested Winston enhancement should close &mdash; and the suite already has the idiom (<code>logger.error</code> on failure in <code>sql.client.ts:25</code>) that <code>waiters.ts</code> doesn&rsquo;t follow.</li>
+      <li><a href="#f9"><b>[Medium] The one log line it does emit is at the wrong level.</b></a> Every promise creation logs at <code>info</code> &mdash; hundreds of lines per run &mdash; while the events worth seeing (resolve latency, failure) log nothing. Signal is off; noise is on. Move start to <code>debug</code>, add <code>error</code>-on-failure and latency.</li>
+    </ol>
+    <p>Net: keep the design, harden the contract and the logging. The remediation is ~25 lines and is sketched at the end.</p>
+  </div>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tablecard">
+    <table>
+      <tbody>
+        <tr><td><b>Run ID</b></td><td>TDD-014 (index.md high-water TDD-013 + 1)</td></tr>
+        <tr><td><b>Date</b></td><td>2026-06-25</td></tr>
+        <tr><td><b>Jira</b></td><td>&mdash;</td></tr>
+        <tr><td><b>Target</b></td><td><code>src/utils/waiters.ts</code> (20 LOC) &mdash; primary; <code>src/utils/logger.ts</code> (16 LOC) &mdash; the Winston wrapper it depends on</td></tr>
+        <tr><td><b>Root path</b></td><td><code>c:\Users\rrice\IGS_360\test_suite-IMA_360_playwright</code></td></tr>
+        <tr><td><b>In scope</b></td><td><code>src/utils/waiters.ts</code>, <code>src/utils/logger.ts</code>; call-path tracing into <code>src/utils/navigate.ts</code> and representative consumers</td></tr>
+        <tr><td><b>Excluded</b></td><td>The ~130 downstream specs/POMs as targets in their own right (they are consumers; assessed only for blast radius, not audited)</td></tr>
+        <tr><td><b>Size / shape</b></td><td>36 LOC across 2 files &mdash; <b>inline single-context run</b>, all 7 dimensions, no fan-out</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">All seven dimensions in scope. No scope-down. Every finding below cites <code>file:line</code> and quotes the code verbatim.</p>
+
+  <!-- PHASE 1 SURFACE MAP -->
+  <h2 class="section">Phase 1 &mdash; Surface Map</h2>
+  <div class="tier muted">
+    <h3>Public API (2 functions, one exported object)</h3>
+    <ul>
+      <li><code>waiters.getResponsePromise(page, regEXP, timeout = 30000)</code> &mdash; <code>waiters.ts:5&ndash;8</code>. Logs <code>info</code>, returns <code>page.waitForResponse</code> with predicate <code>regEXP.test(url) &amp;&amp; status === 200</code>. <b>Must be called before the triggering action</b> (documented contract in CLAUDE.md; a <code>spec-review</code> BLOCKER check) &mdash; but that contract is <em>not</em> stated in the file.</li>
+      <li><code>waiters.waitForResponseSuccess(promise)</code> &mdash; <code>waiters.ts:10&ndash;15</code>. Awaits the promise, asserts <code>200 &le; status &lt; 300</code>, returns the response.</li>
+    </ul>
+    <p><b>Change-radius:</b> highest fan-in leaf in the util layer. <code>waiters.</code> appears 779&times; across 130 files; in <code>src/</code> the real callers are <code>navigate.ts</code> (11 sites &mdash; itself reached by nearly every E2E spec) plus direct calls in dozens of specs and POMs. A change to the <em>contract</em> of either function radiates to the whole browser suite. <code>logger</code> (its only dependency) is itself imported by 22 files / 78 call sites &mdash; so a behavior change in <code>logger.ts</code> radiates to 22 files.</p>
+    <p><b>logger.ts</b> &mdash; <code>logger.ts:6&ndash;14</code>: Winston <code>createLogger</code>, level <code>process.env.LOG_LEVEL || 'info'</code>, format <code>combine(timestamp(), prettyPrint())</code>, a single Console transport re-applying <code>combine(colorize(), prettyPrint())</code>. No file transport &rarr; logs live only in stdout/CI console, not a persisted artifact.</p>
+  </div>
+
+  <!-- DIM 1 -->
+  <h2 class="section">Dimension 1 &mdash; Architecture, Coupling, Boundaries</h2>
+
+  <div class="tier warn" id="f1">
+    <h3><span class="badge">HIGH</span> <code>waitForResponseSuccess</code> asserts an HTTP status, not operational success &mdash; GraphQL errors return 200 and pass</h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:5&ndash;15</p>
+    <pre>const getResponsePromise = (page, regEXP, timeout = 30000) =&gt; {
+  logger.info(`API Endpoint - ${regEXP}`);
+  return page.waitForResponse((response) =&gt; regEXP.test(response.url()) <b>&amp;&amp; response.status() === 200</b>, { timeout });
+};
+
+const waitForResponseSuccess = async (promise) =&gt; {
+  const response = await promise;
+  <b>expect(response.status()).toBeGreaterThanOrEqual(200);</b>
+  <b>expect(response.status()).toBeLessThan(300);</b>   <span class="cmt">// only ever sees 200 (predicate filtered it)</span>
+  return response;
+};</pre>
+    <p><b>Why it matters:</b> Every data call in IMA 360 is GraphQL over POST, and GraphQL returns <b>HTTP 200 even when the response body contains an <code>errors[]</code> array</b> (a resolver threw, a validation failed, an entity was not found). Both functions key entirely off the HTTP status code, so a 200-with-errors sails straight through <code>waitForResponseSuccess</code>. The test then proceeds to assert against a UI that never got its data &mdash; producing either a confusing downstream failure or, worse, a false green. The function&rsquo;s <em>name</em> tells the reader it confirms success; it confirms an HTTP transport code.</p>
+    <p><b>Call path / reach:</b> Reached by the whole browser suite via <code>navigate.ts</code> (<code>goto</code> at <code>navigate.ts:14&ndash;19</code> wraps both) and by direct calls in dozens of specs (e.g. <code>summary.panel.notes.e2e.spec.ts:27&ndash;29</code>, <code>pipeline.management.e2e.spec.ts:106&ndash;108</code>). A masked GraphQL error is invisible at this layer everywhere.</p>
+    <p><b>Severity rationale:</b> High &mdash; broad blast radius (false-green across the E2E layer) and a known recurring class in this repo (TDD-005 &ldquo;failures masked as 200&rdquo;; <code>knowledge/reference/bug-patterns.md</code>). Not Critical: it degrades test trustworthiness, not production money/auth/data.</p>
+    <p><b>Remediation sketch:</b> For GraphQL waits, after resolving, parse the body and fail if <code>body.errors?.length</code>; or add a sibling <code>waitForGraphqlSuccess</code> that asserts both <code>response.ok()</code> and an empty <code>errors[]</code>. At minimum rename to reflect that it validates transport status, not operation success.</p>
+  </div>
+
+  <div class="tier info" id="f2">
+    <h3><span class="badge">MEDIUM</span> Predicate hardcodes <code>status === 200</code>, contradicting the 2xx assertion &mdash; 201/204 endpoints hang to timeout, and the range check is unreachable</h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:7 vs. 12&ndash;13</p>
+    <pre><span class="cmt">// resolves ONLY on an exact 200:</span>
+return page.waitForResponse((r) =&gt; regEXP.test(r.url()) &amp;&amp; r.status() === 200, { timeout });
+<span class="cmt">// ...but the &ldquo;success&rdquo; check claims to accept the whole 2xx range:</span>
+expect(response.status()).toBeGreaterThanOrEqual(200);
+expect(response.status()).toBeLessThan(300);</pre>
+    <p><b>Why it matters:</b> The two halves of the contract disagree. Because the predicate only resolves on a literal 200, any endpoint that legitimately returns <code>201 Created</code> or <code>204 No Content</code> will <em>never</em> resolve the promise &mdash; it waits the full 30s and dies with an opaque Playwright timeout, not a status assertion. Meanwhile the <code>&lt; 300</code> branch in <code>waitForResponseSuccess</code> is dead code: nothing but a 200 can reach it. This is a latent trap for the REST endpoints in the suite (e.g. <code>BulkTransferOpportunities/Template</code>, <code>.../ParseTemplate</code> in <code>waiters.types.ts:9,73</code>), whose status conventions are not GraphQL&rsquo;s uniform-200.</p>
+    <p><b>Call path / reach:</b> Any future or existing wait on a non-200 2xx endpoint. Today most calls are GraphQL-200 so it rarely bites &mdash; which is exactly why the trap is dangerous (it looks correct).</p>
+    <p><b>Severity rationale:</b> Medium &mdash; degraded behavior with a workaround (callers learn to only use it on 200 endpoints), but the internal contradiction is a real correctness smell with a 30s-timeout failure mode.</p>
+    <p><b>Remediation sketch:</b> Make the predicate match <code>r.ok()</code> (2xx) or take an expected-status param, and align the assertion (<code>expect(response.ok()).toBeTruthy()</code>). One source of truth for &ldquo;acceptable status,&rdquo; not two that disagree.</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> Highest-fan-in leaf with no published contract</h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:5,10 (signatures); CLAUDE.md:46&ndash;66 (contract lives only in docs)</p>
+    <p><b>Why it matters:</b> The create-promise-before-action ordering is the single most-repeated footgun in this suite &mdash; it has a dedicated BLOCKER check in <code>spec-review/skill.md:103&ndash;109</code> and a worked example in CLAUDE.md. Yet the function a developer actually hovers in their IDE carries no JSDoc, no <code>@param</code>, and no statement of the ordering contract. The knowledge lives everywhere except at the point of use. (Folded into the maintainability remediation, Dim 5 &mdash; <a href="#f10">F10</a>.)</p>
+    <p><b>Severity rationale:</b> Low in isolation; it is the enabling condition for a recurring Medium-severity defect class.</p>
+    <p><b>Remediation sketch:</b> JSDoc on <code>getResponsePromise</code> stating &ldquo;create BEFORE the triggering action&rdquo; with the canonical 3-line example.</p>
+  </div>
+
+  <!-- DIM 2 -->
+  <h2 class="section">Dimension 2 &mdash; Test Coverage, Quality &amp; Gaps</h2>
+
+  <div class="tier info" id="f4">
+    <h3><span class="badge">MEDIUM</span> No test exercises the waiter&rsquo;s own contract, and nothing asserts GraphQL <code>errors[]</code> at the E2E layer</h3>
+    <p class="ev">Evidence: glob <code>src/**/waiters*.{test,spec}.ts</code> &rarr; no files; predicate at src/utils/waiters.ts:7</p>
+    <p><b>Why it matters:</b> <code>waiters.ts</code> is verified only transitively &mdash; &ldquo;the E2E tests pass, so the waiter must work.&rdquo; That reasoning is circular given F1: the waiter is precisely the thing that decides whether a GraphQL error is seen, so a broken waiter makes the dependent tests <em>more</em> likely to pass, not less. There is no direct assertion anywhere in the E2E path that a resolved response is free of <code>errors[]</code>. A foundational primitive used by 130 files with zero direct coverage is an inherited blind spot.</p>
+    <p><b>Call path / reach:</b> The gap is suite-wide: any GraphQL operation that returns 200-with-errors is unobserved at the browser layer (API-layer tests do check <code>res.errors</code>, per the <code>matchers.fixture</code> convention &mdash; the E2E layer does not).</p>
+    <p><b>Severity rationale:</b> Medium &mdash; shares a root with F1; the coverage gap is what lets F1 stay invisible. Not High on its own because the API test layer partially compensates.</p>
+    <p><b>Remediation sketch:</b> A small unit/contract spec for the waiter (resolves on match, rejects/throws clearly on timeout, flags <code>errors[]</code>); fold the <code>errors[]</code> assertion into the waiter itself (F1) so coverage is structural, not per-test discipline.</p>
+  </div>
+
+  <!-- DIM 3 -->
+  <h2 class="section">Dimension 3 &mdash; Security Surface &amp; Trust Boundaries</h2>
+
+  <div class="tier muted" id="f3">
+    <h3><span class="badge">LOW</span> Advisory for the logging enhancement: do not log <code>response.url()</code> or bodies &mdash; they carry entity IDs / PII</h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:6 (logs only the regex today &mdash; safe); IMA URLs in waiters.types.ts:40&ndash;72 embed <code>operation=</code> + entity params</p>
+    <p><b>Why it matters:</b> Current code logs only the endpoint <em>pattern</em> (<code>API Endpoint - /getParties/</code>) &mdash; no sensitive data. This is a forward-looking caution tied directly to the requested enhancement: when you add success/failure logging, resist logging <code>response.url()</code> in full or the response body. IMA request URLs embed <code>operation=...&amp;partyId=...&amp;summaryPartyId=...</code> (see <code>navigate.ts:128</code>, <code>waiters.types.ts</code>) &mdash; party/account/opportunity IDs are arguably low-sensitivity but they are customer-record identifiers that would land in CI logs and persist in build artifacts. Log the matched <em>pattern</em> and a status/latency, not the raw URL or payload.</p>
+    <p><b>Severity rationale:</b> Low &mdash; no current exposure; preventative guidance for the change about to be made.</p>
+    <p><b>Remediation sketch:</b> In any new log line, reference <code>regEXP.source</code> (the pattern) and <code>response.status()</code> &mdash; never <code>response.url()</code> or <code>await response.body()</code>.</p>
+  </div>
+  <p class="note">No other security findings. There is no untrusted input, no auth/secret handling, and no injection/SSRF/deserialization surface in either file &mdash; this is in-process Node test tooling.</p>
+
+  <!-- DIM 4 -->
+  <h2 class="section">Dimension 4 &mdash; Error Handling &amp; Failure Modes</h2>
+
+  <div class="tier info" id="f6">
+    <h3><span class="badge">MEDIUM</span> Timeout failures are opaque and unlogged &mdash; no <code>try/catch</code>, no <code>error</code>-level breadcrumb naming the endpoint</h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:5&ndash;8 (no catch); contrast src/utils/sql/sql.client.ts:25</p>
+    <pre><span class="cmt">// waiters.ts &mdash; logs the START at info, nothing on failure:</span>
+logger.info(`API Endpoint - ${regEXP}`);
+return page.waitForResponse(/* ... */, { timeout });
+
+<span class="cmt">// the suite&rsquo;s own established idiom (sql.client.ts:25) &mdash; error-level on failure:</span>
+logger.error(`Error connecting to SQL - ${String(err)}`);</pre>
+    <p><b>Why it matters:</b> When <code>waitForResponse</code> times out, Playwright throws a generic <code>TimeoutError: Timeout 30000ms exceeded while waiting for event &quot;response&quot;</code> &mdash; it does <em>not</em> name which endpoint regex was being awaited. The only clue is the preceding <code>info</code> line, which a developer must visually correlate against a wall of other <code>info</code> lines (see F9). The suite already has the right pattern &mdash; <code>logger.error</code> with the failing context in <code>sql.client.ts:25</code>, <code>sql.queries.spec.ts:60</code>, <code>data.factory.spec.ts:64</code> &mdash; but the one primitive that times out most often doesn&rsquo;t use it. This is the central gap the requested Winston enhancement should close.</p>
+    <p><b>Call path / reach:</b> Every flaky-timeout triage across the whole browser suite pays this tax. <code>navigate.ts:14&ndash;19</code> adds &ldquo;Navigating to&hellip;/Successfully navigated&rdquo; context for navigation waits, but the dozens of direct <code>waiters</code> calls in specs/POMs have no such wrapper.</p>
+    <p><b>Severity rationale:</b> Medium &mdash; observability/maintainability tax that compounds across the suite; recoverable by reading the trace, but slow and repeated.</p>
+    <p><b>Remediation sketch:</b> Wrap the await in <code>try/catch</code>; on failure <code>logger.error(`[waiter] timeout after ${ms}ms waiting for ${regEXP.source}`)</code> and rethrow (optionally wrapped with the endpoint in the message so the trace itself names it).</p>
+  </div>
+
+  <div class="tier info" id="f7">
+    <h3><span class="badge">MEDIUM</span> Asymmetric logging and no latency capture &mdash; near-timeout flakiness is invisible</h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:6 (start logged) vs. 10&ndash;15 (resolve/fail logs nothing)</p>
+    <p><b>Why it matters:</b> The waiter logs that it <em>started</em> waiting but never that it resolved, nor how long it took. A wait that returns in 180ms and one that scrapes in at 29.6s &mdash; one network hiccup from a 30s timeout &mdash; look identical in the logs (both: one <code>info</code> line, then silence). That hides the early-warning signal for the flaky waits TDD-009 already flagged as &ldquo;flaky-by-design&rdquo; in the navigation layer. Capturing elapsed time around the await and logging slow resolves turns invisible drift into a visible <code>warn</code>.</p>
+    <p><b>Call path / reach:</b> Suite-wide; most acute on the heavy grid/overview loads (<code>GET_PARTIES</code>, <code>GET_OPPORTUNITY</code>) that sit closest to the timeout ceiling.</p>
+    <p><b>Severity rationale:</b> Medium &mdash; directly supports the requested observability improvement; absence costs triage time on intermittent failures.</p>
+    <p><b>Remediation sketch:</b> <code>const t = Date.now()</code> before the await (production test code &mdash; <code>Date.now</code> is fine here), then <code>logger.debug(`[waiter] ${regEXP.source} resolved ${status} in ${Date.now()-t}ms`)</code> on success and a <code>logger.warn</code> when the elapsed time exceeds a soft threshold (e.g. 80% of timeout).</p>
+  </div>
+
+  <div class="tier muted" id="f8">
+    <h3><span class="badge">LOW</span> Dead assertion &mdash; <code>toBeGreaterThanOrEqual(200)</code> can never fail; the block reduces to <code>response.ok()</code></h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:12&ndash;13</p>
+    <pre>expect(response.status()).toBeGreaterThanOrEqual(200);  <span class="cmt">// a matched response is always 200 (see F2)</span>
+expect(response.status()).toBeLessThan(300);</pre>
+    <p><b>Why it matters:</b> Given the predicate already filters to status 200, the lower-bound assertion is tautological and the upper bound is unreachable &mdash; two <code>expect</code> calls that assert nothing the predicate hasn&rsquo;t already guaranteed. They read as a meaningful safety check but provide none. Playwright ships <code>response.ok()</code> (true for 2xx) for exactly this.</p>
+    <p><b>Severity rationale:</b> Low &mdash; cosmetic/misleading, no functional impact today.</p>
+    <p><b>Remediation sketch:</b> Replace both lines with <code>expect(response.ok(), `unexpected status ${response.status()} for ${...}`).toBeTruthy()</code> &mdash; folds naturally into the F2 fix.</p>
+  </div>
+
+  <!-- DIM 5 -->
+  <h2 class="section">Dimension 5 &mdash; Tech Debt &amp; Maintainability</h2>
+
+  <div class="tier info" id="f9">
+    <h3><span class="badge">MEDIUM</span> Start-of-wait logged at <code>info</code> &mdash; log spam at the default level, while the events worth seeing are silent</h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:6; logger default level src/utils/logger.ts:7</p>
+    <pre>logger.info(`API Endpoint - ${regEXP}`);   <span class="cmt">// fires on EVERY wait; default level is &quot;info&quot;</span></pre>
+    <p><b>Why it matters:</b> <code>getResponsePromise</code> is called for essentially every API interaction in the suite (779 textual sites; hundreds of live calls per run). Logging each at <code>info</code> &mdash; the default level (<code>logger.ts:7</code>) &mdash; means a normal run buries any genuinely interesting line under hundreds of <code>API Endpoint - /.../</code> rows. The level assignment is inverted: routine start events are <code>info</code> (always on); failures and slow resolves (F6, F7) are <code>info</code>-or-nothing. The thing you want on by default is the exception, not the heartbeat.</p>
+    <p><b>Call path / reach:</b> Every CI run&rsquo;s console output; degrades the signal-to-noise of the one observability channel logger.ts exposes.</p>
+    <p><b>Severity rationale:</b> Medium &mdash; compounding operational tax on every run; cheap to fix; inverts the value of the log.</p>
+    <p><b>Remediation sketch:</b> Drop the start line to <code>logger.debug</code> (opt in via <code>LOG_LEVEL=debug</code> when actively debugging) and reserve <code>info</code>/<code>warn</code>/<code>error</code> for resolve-summary, slow-wait, and failure (F6/F7).</p>
+  </div>
+
+  <div class="tier info" id="f10">
+    <h3><span class="badge">MEDIUM</span> No JSDoc on a known-footgun primitive &mdash; the ordering contract lives only in docs and a linter skill</h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:5,10 (no doc comments); contract in CLAUDE.md:46&ndash;66 + spec-review/skill.md:103&ndash;109</p>
+    <p><b>Why it matters:</b> &ldquo;Create the promise <em>before</em> the action&rdquo; is the most-repeated mistake this suite guards against &mdash; a dedicated <code>spec-review</code> BLOCKER and a CLAUDE.md worked example. None of that reaches the developer at the moment they use the function, because there is no JSDoc to surface on hover. For a 130-file-fan-in primitive, the documentation cost-to-benefit of two doc comments is overwhelming.</p>
+    <p><b>Call path / reach:</b> Every new test author; the absence is why the ordering bug keeps recurring across new specs.</p>
+    <p><b>Severity rationale:</b> Medium &mdash; the enabling condition for a recurring defect class; near-zero fix cost.</p>
+    <p><b>Remediation sketch:</b> Add JSDoc to both functions stating the ordering contract, the GraphQL-200 caveat (F1), and the canonical 3-line usage; the example already exists in CLAUDE.md.</p>
+  </div>
+
+  <div class="tier muted" id="f11">
+    <h3><span class="badge">LOW</span> Naming / style nits &mdash; <code>regEXP</code> casing, redundant <code>{ timeout: timeout }</code>, magic <code>30000</code></h3>
+    <p class="ev">Evidence: src/utils/waiters.ts:5,7</p>
+    <pre>const getResponsePromise = (page, <b>regEXP</b>, timeout = 30000) =&gt; {   <span class="cmt">// inconsistent casing; magic literal</span>
+  return page.waitForResponse(/* ... */, { <b>timeout: timeout</b> });    <span class="cmt">// shorthand: { timeout }</span></pre>
+    <p><b>Why it matters:</b> Minor, but this is a reference primitive other files are pattern-matched against. <code>regEXP</code> (Hungarian + odd casing) reads awkwardly next to the suite&rsquo;s otherwise clean naming; <code>{ timeout: timeout }</code> can be the object shorthand <code>{ timeout }</code>; and <code>30000</code> is a magic literal that could be a named <code>DEFAULT_WAIT_MS</code> aligned with the Playwright config timeouts.</p>
+    <p><b>Severity rationale:</b> Low &mdash; cosmetic/consistency only.</p>
+    <p><b>Remediation sketch:</b> Rename to <code>pattern</code> (or <code>endpoint</code>), use <code>{ timeout }</code>, and hoist <code>30000</code> to a named constant.</p>
+  </div>
+
+  <!-- DIM 6 -->
+  <h2 class="section">Dimension 6 &mdash; Dependency Health &amp; Version Risk</h2>
+
+  <div class="tier info" id="f13">
+    <h3><span class="badge">MEDIUM</span> logger.ts misconfigures Winston formats &mdash; <code>prettyPrint()</code> applied twice, paired with <code>colorize()</code>, and Console-only (no persisted log)</h3>
+    <p class="ev">Evidence: src/utils/logger.ts:4&ndash;14</p>
+    <pre>const { combine, timestamp, prettyPrint, colorize } = winston.format;
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: combine(timestamp(), <b>prettyPrint()</b>),               <span class="cmt">// (1) prettyPrint here</span>
+  transports: [
+    new winston.transports.Console({
+      format: combine(<b>colorize()</b>, <b>prettyPrint()</b>)            <span class="cmt">// (2) prettyPrint AGAIN + colorize</span>
+    })
+  ]
+});</pre>
+    <p><b>Why it matters:</b> <code>prettyPrint()</code> is Winston&rsquo;s <code>util.inspect</code>-based object formatter &mdash; intended for inspecting metadata objects, not for emitting human-readable log <em>lines</em>. Applying it at the logger level <em>and</em> again at the Console transport is redundant, and combining <code>colorize()</code> with <code>prettyPrint()</code> is a documented Winston rough edge (colorize targets the <code>level</code> token; prettyPrint re-serializes the whole info object), so the output is neither cleanly colorized nor cleanly pretty. There is also no <code>printf</code>/template format, so the timestamp + message don&rsquo;t render as a predictable one-line shape. Finally, the only transport is Console &mdash; logs are never written to a file, so post-hoc analysis depends entirely on whatever captured stdout. This wrapper is imported by 22 files / 78 call sites, so the formatting affects all of them.</p>
+    <p><b>Call path / reach:</b> All 22 logger consumers (<code>sql.client.ts</code>, the <code>api/*.api.ts</code> set, <code>navigate.ts</code>, <code>waiters.ts</code>, the sanity specs, &hellip;).</p>
+    <p><b>Severity rationale:</b> Medium &mdash; not broken, but the format is misconfigured against its own intent and there is no durable log artifact; it taxes every consumer&rsquo;s readability and the enhancement asked for here rides on top of it.</p>
+    <p><b>Remediation sketch:</b> Replace the double <code>prettyPrint</code> with a single <code>combine(colorize(), timestamp(), printf(({timestamp, level, message}) =&gt; \`${timestamp} ${level} ${message}\`))</code> on the Console transport; reserve <code>prettyPrint</code>/<code>json</code> for a metadata or file transport if structured logs are wanted. Consider a <code>File</code> transport (or rely on CI artifact capture deliberately, documented).</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> Winston version is healthy</h3>
+    <p class="ev">Evidence: package.json:108 &mdash; <code>"winston": "^3.19.0"</code></p>
+    <p><b>Why it matters:</b> Current major (3.x), actively maintained, widely used, no known advisory in the surface used here (<code>createLogger</code>, <code>format.*</code>, Console transport). No transitive or license concern. Recorded as a clean check, not a finding.</p>
+    <p><b>Severity rationale:</b> Low / informational &mdash; no action required.</p>
+  </div>
+
+  <!-- DIM 7 -->
+  <h2 class="section">Dimension 7 &mdash; Performance Hotspots</h2>
+  <div class="tier muted">
+    <h3>No material findings</h3>
+    <p>Traced both functions: <code>page.waitForResponse</code> evaluates the predicate (a single <code>regEXP.test</code> + status compare) per network response &mdash; Playwright-internal, O(responses), cheap. No loops, no N+1, no unbounded fetch, no allocation in a tight loop. The only per-call cost is the <code>logger.info</code> write (one <code>util.inspect</code> via <code>prettyPrint</code>) on a path hit hundreds of times per run &mdash; negligible in wall-clock terms, and addressed for noise reasons under F9 (move to <code>debug</code>), not performance. Nothing here warrants a perf finding.</p>
+  </div>
+
+  <!-- ENHANCEMENT SUMMARY -->
+  <h2 class="section">Closing &mdash; Consolidated Enhancement (the user&rsquo;s explicit ask)</h2>
+  <div class="callout">
+    <div class="lbl">How to enhance waiters.ts &mdash; findings folded into one ~25-line change</div>
+    <p>The findings above converge on a single, small rewrite that keeps the lightweight design and adds the Winston-backed observability requested. Illustrative shape (not a mandate &mdash; align names to taste):</p>
+    <pre>const DEFAULT_WAIT_MS = 30_000;
+
+/**
+ * Returns a promise for the first matching API response.
+ * CONTRACT: call this BEFORE the action that triggers the request (avoids a race).
+ *   const p = waiters.getResponsePromise(page, API_ENDPOINTS.GET_PARTIES);
+ *   await button.click();
+ *   await waiters.waitForResponseSuccess(p);
+ * NOTE: GraphQL returns HTTP 200 even on errors[] &mdash; use waitForGraphqlSuccess for those.
+ */
+const getResponsePromise = (page: Page, pattern: RegExp, timeout = DEFAULT_WAIT_MS) =&gt; {
+  logger.<b>debug</b>(`[waiter] awaiting ${pattern.source} (timeout ${timeout}ms)`);   <span class="cmt">// F9: debug, not info</span>
+  return page.waitForResponse((r) =&gt; pattern.test(r.url()) &amp;&amp; r.ok(), { timeout });   <span class="cmt">// F2: ok() not ===200</span>
+};
+
+const waitForResponseSuccess = async (promise: Promise&lt;PlaywrightResponse&gt;) =&gt; {
+  const t = Date.now();
+  try {
+    const response = await promise;
+    const ms = Date.now() - t;
+    if (ms &gt; DEFAULT_WAIT_MS * 0.8) logger.<b>warn</b>(`[waiter] slow resolve ${response.url().split('?')[0]} ${response.status()} in ${ms}ms`);  <span class="cmt">// F7</span>
+    else logger.debug(`[waiter] resolved ${response.status()} in ${ms}ms`);
+    expect(response.ok(), `unexpected status ${response.status()}`).toBeTruthy();   <span class="cmt">// F8</span>
+    return response;
+  } catch (err) {
+    logger.<b>error</b>(`[waiter] failed after ${Date.now() - t}ms &mdash; ${err instanceof Error ? err.message : String(err)}`);  <span class="cmt">// F6, matches sql.client.ts idiom</span>
+    throw err;
+  }
+};</pre>
+    <p>Plus a sibling <code>waitForGraphqlSuccess</code> that also asserts an empty <code>errors[]</code> (F1), and a small contract spec (F4). Note the log lines reference <code>pattern.source</code> / a path with the query string stripped &mdash; never the raw URL or body (F3). This closes F1&ndash;F4, F6&ndash;F11 in one pass; the logger.ts format fix (F13) is an independent, parallel change.</p>
+  </div>
+
+  <footer class="rep">Technical Due Diligence · TDD-014 · 2026-06-25 · waiters.ts (+ logger.ts) · Read-only audit &mdash; no files in the target were modified.</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "skill-ops",
+  "version": "0.1.0",
+  "description": "Skill-ecosystem maintenance: sync-skills (architecture drift detector), skill-evolve (blast-radius-aware skill editing), skill-scorecard (ecosystem scoring & ranking). Each degrades to a disk-only pass when a project provides no _shared skill-architecture / skill-graph anchors.",
+  "author": {
+    "name": "Robert Rice",
+    "email": "robertrice12009@yahoo.com"
+  }
+}

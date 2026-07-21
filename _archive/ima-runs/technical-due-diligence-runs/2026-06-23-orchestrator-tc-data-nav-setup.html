@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-007
+date: 2026-06-23
+scope: TC-creation data + navigation setup slice of /three-amigos and /ready-for-testing (incl. /sql-data + ready-for-playwright shell template)
+jira: []
+severity: { critical: 0, high: 3, medium: 4, low: 1 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-007 — Orchestrator Test-Data & Navigation Setup</title>
+  <style>
+:root{
+  --ink:#1b1f1d;--bg:#f7f9f7;--muted:#5b6472;--line:#e4e9e5;
+  --accent:#4f9d3a;--accent-2:#2c6e9b;--accent-3:#e08a3e;--accent-soft:#eef5ea;--card:#ffffff;
+  --s1:#b5261c;--s2:#c84a32;--s3:#dd6b3f;--s4:#e08a3e;--s5:#d4a017;--s6:#b6a92e;--s7:#8aab3c;--s8:#5fa345;--s9:#2f8f3e;--s10:#1d7a33;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif;--font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+header.report h1{margin:0 0 8px;font-size:29px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+header.report p.sub{margin:0;font-size:15px;opacity:.93;max-width:760px;}
+header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+.legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+.legend .item .k{font-weight:750;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.legend .item .k .dot{width:10px;height:10px;border-radius:50%;}
+.legend .item .d{font-size:12.5px;color:var(--muted);line-height:1.45;}
+.tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead th{background:#eef1ee;text-align:left;padding:13px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);white-space:nowrap;}
+thead th.num{text-align:center;}
+tbody td{padding:12px 14px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f6faf4;}
+td.num{text-align:center;}
+.tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:14px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.tier h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);}
+.tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+.tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+.tier ul{margin:6px 0 0;padding-left:18px;}
+.tier li{margin:6px 0;font-size:13.5px;}
+.tier.ok{border-left-color:var(--accent);}.tier.ok .badge{background:var(--accent);}
+.tier.warn{border-left-color:var(--accent-3);}.tier.warn .badge{background:var(--accent-3);}
+.tier.info{border-left-color:var(--accent-2);}.tier.info .badge{background:var(--accent-2);}
+.tier.muted{border-left-color:var(--muted);}.tier.muted .badge{background:var(--muted);}
+.callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+.callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:6px;}
+.callout p{margin:0;font-size:14.5px;line-height:1.55;}
+.callout p + p{margin-top:9px;}
+.note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.88em;font-family:"SF Mono",Consolas,monospace;}
+pre{background:#1b1f1d;color:#e7ece7;border-radius:9px;padding:13px 15px;overflow-x:auto;font-size:12.5px;line-height:1.5;font-family:"SF Mono",Consolas,monospace;margin:8px 0 12px;}
+pre .c{color:#8aab3c;}
+.ev{font-size:12px;color:var(--muted);font-weight:750;text-transform:uppercase;letter-spacing:.05em;margin:2px 0 4px;}
+footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+a{color:var(--accent-2);}
+@media print{body{background:#fff;}.wrap{padding:0;}.tablecard,.tier,.legend .item{box-shadow:none;}header.report{box-shadow:none;}}
+@media (max-width:720px){.legend{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>Test-Data &amp; Navigation Setup — TC-Creation Slice of the Orchestrators</h1>
+    <p class="sub">Adversarial review of how <code>/three-amigos</code> → <code>/ready-for-testing</code> (and the <code>/sql-data</code> path they invoke) set up the <b>data</b> and <b>navigation</b> a test case needs. Thesis under test: the pipeline authors elaborate, over-precise bespoke SQL where reusing an existing finder (<code>sqlDB.getRandomParty()</code> and its ~120 siblings) would be more than enough.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice (QE) — pipeline owner / acquirer-of-the-process</span>
+      <span><b>Date:</b> 2026-06-23</span>
+      <span><b>Run:</b> TDD-007</span>
+      <span><b>Tally:</b> 0 Critical · 3 High · 4 Medium · 1 Low</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>Critical · 0</div><div class="d">No money/auth/data-loss path in scope.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High · 3</div><div class="d">Degrades reliability of the whole data-setup pipeline, every ticket.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium · 4</div><div class="d">Contained inefficiency / maintainability tax that compounds.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low · 1</div><div class="d">Localized defect in scaffolding output.</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout">
+    <div class="lbl">Verdict — the three findings that most change the process</div>
+    <p><b>The thesis holds, and it has one root cause.</b> The reuse surface the tests actually consume — the <code>sqlDB.*</code> façade in <code>sql.db.ts</code> (~120 named finders, <b>167 call-sites across 31 spec files</b>) — is structurally <i>invisible</i> to the skill that is supposed to drive reuse. So the pipeline matches against a different, staler catalog and composes bespoke SQL when that misses, even when a perfectly good finder exists.</p>
+    <p><b>1. <a href="#f1">[High · F1]</a> The reuse façade is not in <code>/sql-data</code>'s match path.</b> Its decision step ranks <code>sql-library.md</code> (markdown) then raw <code>queries.*.ts</code> strings — <code>sql.db.ts</code> appears once, as a passing footnote. The skill literally cannot recommend <code>getRandomParty()</code> because it never looks there.</p>
+    <p><b>2. <a href="#f5">[High · F5]</a> Over-precision <i>manufactures</i> the user gate you're trying to avoid.</b> The heavyweight 6-option "no INT data" stop fires on a zero-row return, and its own cause-list ranks "intent string was too specific" first. The more bespoke the query, the more often the human gate fires. Reuse-first is the way to <i>fewer</i> gates, not more.</p>
+    <p><b>3. <a href="#f3">[High · F3]</a> Bespoke queries skip the column-name safety net.</b> <code>queries.*.ts</code> are validated by <code>sql.queries.spec.ts</code>; a Path-B per-ticket query is not, so it re-rolls the documented #1 failure mode (column mismatch → silent 0 rows) every single ticket.</p>
+    <p><b>Bottom line:</b> a <b>deterministic</b> fix exists and needs <b>no new user gate</b>. Make the <code>sqlDB.*</code> manifest the primary match source, insert a "minimum-sufficient-shape" rule ahead of compose, and re-anchor the upstream precondition authors to finder names. A single minimal one-line confirm is the only gate, and only when reuse genuinely can't be auto-decided. See <a href="#recs">Recommendations</a>.</p>
+  </div>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Item</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td><b>Target</b></td><td>The TC-creation <i>data + navigation setup</i> slice — not the orchestrators end-to-end.</td></tr>
+        <tr><td><b>In scope (files)</b></td><td><code>.claude/skills/three-amigos/skill.md</code> (Phase 3), <code>.claude/skills/ready-for-testing/skill.md</code> (Phase 5), <code>.claude/skills/sql-data/skill.md</code> (Steps 2–6), <code>.claude/skills/ready-for-playwright/skill.md</code> (Phase 2), <code>_shared/tc-template-3-playwright.md</code>, <code>_shared/sql-helper-backlog.md</code>; the reuse surfaces <code>src/utils/sql/sql.db.ts</code>, <code>src/utils/sql/queries/queries.party.ts</code>, <code>src/utils/auth.fixture.ts</code>, and the catalog <code>knowledge/reference/sql-library.md</code>.</td></tr>
+        <tr><td><b>Out of scope</b></td><td>Ticket intake, change analysis, Zephyr/Jira reporting, the implement/run/fix loop. Dimensions <b>3 (security)</b>, <b>6 (dependency health)</b>, <b>7 (performance)</b> are N/A for prompt-engineering artifacts and are reported as one-liners — this is a declared scope-down, not a complete-audit claim.</td></tr>
+        <tr><td><b>Dimensions covered</b></td><td>1 (architecture/coupling), 2 (test coverage &amp; gaps), 4 (failure modes), 5 (tech debt) — full passes. 3/6/7 — one-line null findings.</td></tr>
+        <tr><td><b>Method</b></td><td>Read every skill phase that touches data/nav, the three "query library" tiers, the navigator fixture, and the shell template. Reuse rate measured by grep (<code>sqlDB\.\w+</code> over <code>src/tests</code>). Inline single context — no fan-out (small cohesive slice).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PHASE 1 — SURFACE MAP -->
+  <h2 class="section">Phase 1 — Surface Map (the data/nav pipeline as it actually runs)</h2>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Stage</th><th>Where</th><th>What it produces for data/nav</th></tr></thead>
+      <tbody>
+        <tr><td><b>three-amigos Phase 3</b></td><td><code>three-amigos/skill.md:410–420</code></td><td>Pre-merge <i>precondition descriptions</i> + a suggested <b><code>sql-library.md</code> ID</b> (e.g. <code>OPP-01</code>) or <code>new</code>. Sampled ID left as <code>_(rft adds)_</code>. Note: it suggests a <i>markdown-catalog ID</i>, not a callable finder.</td></tr>
+        <tr><td><b>rft Phase 5 Step 5.0</b></td><td><code>ready-for-testing/skill.md:618–650</code></td><td>Builds an <b>intent string</b> per precondition — <code>{entity type} that is {state/shape constraints}</code> — and dispatches one Agent per intent that runs <code>/sql-data</code>.</td></tr>
+        <tr><td><b>/sql-data Step 2–3</b></td><td><code>sql-data/skill.md:54–122</code></td><td>Match-or-compose. Sources, in order: <b>(1) sql-library.md</b>, <b>(2) queries.*.ts</b>. Path A = exact library match; <b>Path B = compose bespoke from schema</b>. No step looks at <code>sql.db.ts</code>.</td></tr>
+        <tr><td><b>rft Phase 5 zero-row</b></td><td><code>ready-for-testing/skill.md:675–704</code></td><td>On 0 rows: <b>STOP the whole phase</b>, render a 6-option human diagnostic gate.</td></tr>
+        <tr><td><b>ready-for-playwright Phase 2</b></td><td><code>tc-template-3-playwright.md:43–48</code></td><td>Shell stub. Data comment points at <code>sqlDB.{method}()</code>; <b>navigation is free-text prose</b> (<code>// Step 1: {UI action}</code>).</td></tr>
+        <tr><td><b>Reuse surfaces (the leaves)</b></td><td><code>sql.db.ts:839–949</code> · <code>site-navigator.ts:27–196</code></td><td><b><code>sqlDB.*</code></b> = ~120 finders, each = named query + <code>pick()</code> random sample (e.g. <code>getRandomParty</code> <code>sql.db.ts:59–63</code>). <b><code>authFixture</code></b> = 13 nav methods, each with a built-in <code>verify*Loaded()</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>Change-radius:</b> <code>/sql-data</code> is the highest-blast-radius node — every data precondition for every ticket flows through it (rft Phase 5 dispatches into it; three-amigos points at the catalog it reads). A reuse rule placed there governs the whole pipeline. <code>sql.db.ts</code> is the most-depended-on leaf (167 call-sites) yet is the one node the decision step never consults — that mismatch is the spine of this report.</p>
+
+  <!-- DIM 1 -->
+  <h2 class="section">Dimension 1 — Architecture, Coupling &amp; Boundaries</h2>
+
+  <div class="tier warn" id="f1">
+    <h3><span class="badge">HIGH</span> F1 — The <code>sqlDB.*</code> reuse façade is not in <code>/sql-data</code>'s match path</h3>
+    <p class="ev">Evidence · sql-data/skill.md:54–92, 239 &nbsp;·&nbsp; sql.db.ts:839–949</p>
+    <p><code>/sql-data</code> Step 2 ("Load the Relevant Query Source — check sources in priority order, stop at the first match") lists exactly two sources:</p>
+    <pre><span class="c">### Primary source — sql-library.md</span>
+<span class="c">### Secondary source — TypeScript query files</span>
+   src/utils/sql/queries/queries.party.ts        ← Party domain
+   src/utils/sql/queries/queries.opportunity.ts  ← Opportunity domain</pre>
+    <p>The façade that the tests actually call — <code>src/utils/sql/sql.db.ts</code>, exporting <code>sqlDB</code> with ~120 ready-to-call finders — is named exactly once in the whole skill, as a passing pointer at line 239: <code>"…TypeScript sqlDB.* helper table."</code> It is not a match source. So the skill resolves an intent against <code>sql-library.md</code> (the markdown catalog) and the raw query <i>strings</i>, but never against the callable finder layer.</p>
+    <p><b>Why it matters:</b> this is the root cause of the whole thesis. The skill <i>cannot</i> answer "is there already a finder good enough for this?" because it doesn't look at the finder library. <code>getRandomParty()</code> is invisible to the very decision meant to prefer it. Every other finding downstream is a symptom of this one.</p>
+    <p><b>Severity rationale:</b> High — it governs reuse for every data precondition on every ticket; the fix is the highest-leverage single change.</p>
+    <p><b>Remediation sketch:</b> make a mechanically-generated <code>sqlDB.*</code> manifest the <i>primary</i> match source in Step 2 (see R1).</p>
+  </div>
+
+  <div class="tier info" id="f2">
+    <h3><span class="badge">MEDIUM</span> F2 — Three "query library" tiers, no single source of truth, silent drift</h3>
+    <p class="ev">Evidence · sql-data/skill.md:58–80 &nbsp;·&nbsp; sql-library.md:1–4 &nbsp;·&nbsp; sql.db.ts:839–949</p>
+    <p>There are three overlapping representations of "the queries": <code>sql-library.md</code> (markdown catalog, header says <code>Last ingested: 2026-06-09</code>), <code>queries/*.ts</code> (raw SQL strings, validated by the sanity spec), and <code>sql.db.ts</code> (the <code>sqlDB.*</code> façade adding <code>pick()</code> + return types). The skill's own promotion rule acknowledges only two of them:</p>
+    <pre><span class="c">**Promotion rule:** When a new query is added to the TypeScript files, add it to</span>
+<span class="c">sql-library.md … — TypeScript is a subset of the library, not a parallel catalog.</span></pre>
+    <p>The façade is a third tier with no stated relationship. Intent→query resolution must implicitly cross all three, and they drift independently (the markdown is dated; the TS is live and grows per-ticket).</p>
+    <p><b>Why it matters:</b> the skill matches against the layer most likely to be stale (markdown) and least likely to be callable, then falls through to composing new — exactly the wrong default. Reviewers can't tell which tier is authoritative.</p>
+    <p><b>Severity rationale:</b> Medium — a maintainability/coupling tax that compounds; not itself a runtime break.</p>
+    <p><b>Remediation sketch:</b> declare <code>sql.db.ts</code> the SSOT for "what's reusable" and derive the manifest from it; demote <code>sql-library.md</code> to human-readable annotation (see R1).</p>
+  </div>
+
+  <!-- DIM 2 -->
+  <h2 class="section">Dimension 2 — Test Coverage, Quality &amp; Gaps</h2>
+
+  <div class="tier warn" id="f3">
+    <h3><span class="badge">HIGH</span> F3 — Bespoke (Path-B) SQL bypasses the column-name sanity net</h3>
+    <p class="ev">Evidence · sql-data/skill.md:67–69, 104–122 &nbsp;·&nbsp; sql-library.md:30–60</p>
+    <p>The skill itself states the safety guarantee that <i>only</i> library queries enjoy:</p>
+    <pre><span class="c">If a TypeScript implementation exists, use that function body exactly — it has been</span>
+<span class="c">run through the SQL sanity spec (src/tests/sql/sql.queries.spec.ts) so column names</span>
+<span class="c">and joins are confirmed working.</span></pre>
+    <p>And the catalog documents ~30 column-name traps whose failure mode is silent: <code>sql-library.md:36</code> notes <code>Party.Accounts.IsActive</code> <i>does not exist</i>; <code>:62</code> warns mismatches are "<b>the #1 cause of silent zero-row returns.</b>" A Path-B query composed fresh per ticket is <b>not</b> in the sanity spec, so it carries the full risk of that #1 failure mode. Reusing a <code>sqlDB.*</code> finder is correct-by-construction; composing bespoke re-rolls the dice every ticket.</p>
+    <p><b>Why it matters:</b> the over-precise bespoke query is both more work <i>and</i> less safe than the reuse it displaces — it trades a verified finder for an unverified one. And when it returns 0 rows from a typo, the cost lands on the human (F5).</p>
+    <p><b>Severity rationale:</b> High — it re-introduces a documented, high-frequency failure mode on a path that runs every ticket.</p>
+    <p><b>Remediation sketch:</b> route to a verified finder first; only compose when no finder's shape can satisfy the assertion, and require a backlog entry when you do (R2 + R5).</p>
+  </div>
+
+  <div class="tier info" id="f4">
+    <h3><span class="badge">MEDIUM</span> F4 — No "minimum-sufficient-shape" rule → preconditions over-constrain vs. the assertion</h3>
+    <p class="ev">Evidence · three-amigos/skill.md:412–418 &nbsp;·&nbsp; ready-for-testing/skill.md:620–650 &nbsp;·&nbsp; queries.party.ts (loose↔precise spectrum)</p>
+    <p>Both authors derive the precondition from the <i>domain description</i>, never from "what does the key assertion actually read?". three-amigos Phase 3 writes a free-text precondition ("party with at least one linked account"); rft Step 5.0 turns it into <code>{entity type} that is {state/shape constraints}</code>. Nothing in either skill says <i>drop any constraint the assertion does not depend on</i>. Yet the library already encodes the full loose↔precise spectrum — <code>getRandomParty()</code> (<code>sql.db.ts:59</code>) at the loose end, <code>getCertifiedParty()</code> / <code>getPartyWithOpenRenewalTaskAndRenewalOpp()</code> at the precise end — so a happy-path TC that only needs "a party" has a one-call answer that the process never steers it toward.</p>
+    <p><b>Why it matters:</b> over-constraint is what turns "reuse <code>getRandomParty</code>" into "compose a 5-predicate bespoke query." It shrinks the candidate pool (more zero-row stops, F5) and manufactures uniqueness where the test needs none.</p>
+    <p><b>Severity rationale:</b> Medium — drives F1/F3/F5 but is itself an authoring-discipline gap, fixable by a rule.</p>
+    <p><b>Remediation sketch:</b> add a "minimum shape from the assertion" rule to Step 5.0 and to <code>/sql-data</code> Path A′ — a constraint is admitted only if the key assertion reads it (R2 + R3).</p>
+  </div>
+
+  <!-- DIM 4 -->
+  <h2 class="section">Dimension 4 — Error Handling &amp; Failure Modes</h2>
+
+  <div class="tier warn" id="f5">
+    <h3><span class="badge">HIGH</span> F5 — Over-precision manufactures the very user gate the owner wants to avoid</h3>
+    <p class="ev">Evidence · ready-for-testing/skill.md:675–704 &nbsp;·&nbsp; sql-data/skill.md:190–211</p>
+    <p>On any zero-row return, rft Phase 5 halts the whole phase and renders a heavyweight human gate — and ranks the causes itself:</p>
+    <pre><span class="c">If `Findings` contains "no data available…": **STOP. Do not dispatch remaining</span>
+<span class="c">agents or proceed to the gate.**</span>
+   ⛔ No INT data — precondition: {intent string}
+   Possible causes:
+     [ ] Intent string was too specific — state constraint rules out all entities  &lt;-- cause #1
+     …
+   What would you like to do?  (a)…(b)…(c)…(d)…(e)   &lt;-- 6-option human gate</pre>
+    <p>So the current design <i>creates</i> the human interruption the owner is trying to escape: the more bespoke/precise the query, the more often it returns 0 rows, the more often this stop fires. The user gate isn't a safety valve being over-used — it's a <b>direct downstream consequence of not reusing</b>.</p>
+    <p><b>Why it matters:</b> this is the bridge between the thesis and the owner's stated goal. "Prefer reuse" and "fewer user gates" are the same lever pulled from two ends. Reuse-first lowers gate frequency without removing the safety net for the genuinely-rare cases.</p>
+    <p><b>Severity rationale:</b> High — it's the user-facing cost of the architectural gap, on the per-ticket happy path.</p>
+    <p><b>Remediation sketch:</b> reuse-first eliminates most zero-row stops; replace the 6-option block for the common case with a single one-line reuse-vs-compose confirm (R6).</p>
+  </div>
+
+  <div class="tier info" id="f6">
+    <h3><span class="badge">MEDIUM</span> F6 — Navigation has the same reuse-blindness as data — and no safety net at all</h3>
+    <p class="ev">Evidence · tc-template-3-playwright.md:43–48 &nbsp;·&nbsp; site-navigator.ts:27–196</p>
+    <p>The shell template points at the data façade but leaves navigation as free-text prose:</p>
+    <pre>// Precondition: {entity shape} — use sqlDB.{method}() or sampled ID {id}
+// Step 1: {UI action — e.g., navigate to party record}   <span class="c">&lt;-- prose, no helper named</span></pre>
+    <p>Meanwhile <code>authFixture</code> exposes 13 ready, fixture-injected methods — <code>partyFullscreen(partyId, tab)</code>, <code>opportunityFullscreen()</code>, <code>summaryPanel(partyId, tab)</code>, <code>duplicateCheck()</code>, <code>contracts()</code> … — and each one bakes in the correct URL shape <b>and a load-assertion</b> (e.g. <code>partyFullscreen</code> calls <code>verifyPartyFullscreenLoaded()</code>, <code>site-navigator.ts:151–158</code>). Because the orchestrator describes nav in prose, shell-writers hand-roll <code>page.goto(...)</code> + an ad-hoc wait, re-deriving exactly what the navigator already encodes — and skipping the free load-assert. The grep confirms the navigator <i>is</i> the established norm (used across 20+ specs), so the shells diverge from the house pattern.</p>
+    <p><b>Why it matters:</b> same waste as the data side, with strictly worse downside — a hand-rolled goto without the <code>verify*Loaded()</code> gate is a classic flaky-wait source, and there's no <code>sql.queries.spec</code>-style net to catch it.</p>
+    <p><b>Severity rationale:</b> Medium — reliability tax on E2E shells; contained to the nav step.</p>
+    <p><b>Remediation sketch:</b> the Step-1 nav comment should name a <code>authFixture</code> method, mirroring the data line (R4).</p>
+  </div>
+
+  <!-- DIM 5 -->
+  <h2 class="section">Dimension 5 — Tech Debt &amp; Maintainability</h2>
+
+  <div class="tier info" id="f7">
+    <h3><span class="badge">MEDIUM</span> F7 — The promotion backlog exists but is dead — the "compose-once, reuse-forever" loop never closes</h3>
+    <p class="ev">Evidence · _shared/sql-helper-backlog.md (whole file — 0 entries) &nbsp;·&nbsp; sql-data/skill.md:215–232</p>
+    <p><code>sql-helper-backlog.md</code> is explicitly wired as the place bespoke shapes get queued for promotion into <code>sqlDB.*</code> — its header reads <i>"Populated by /code-intelligence Step 1C.7 and /sql-data on new query composition."</i> The table is empty; the only rows are the commented-out format example. So even when Path B composes a genuinely new query, it is never promoted to a finder. Duplication accretes silently and the loop that would <i>converge</i> the suite toward reuse never runs.</p>
+    <p><b>Why it matters:</b> without the closing loop, every bespoke query is permanent debt. The library's growth (good) and the bespoke sprawl (bad) are indistinguishable because nothing forces promotion.</p>
+    <p><b>Severity rationale:</b> Medium — compounding debt; the mechanism is built but inert.</p>
+    <p><b>Remediation sketch:</b> make the Path-B exit <i>require</i> a backlog row + a suggested <code>sqlDB.*</code> name; surface the backlog in <code>/sync</code> (R5).</p>
+  </div>
+
+  <div class="tier muted" id="f8">
+    <h3><span class="badge">LOW</span> F8 — The API shell template imports from a removed alias</h3>
+    <p class="ev">Evidence · tc-template-3-playwright.md:98</p>
+    <p>The API reference shell scaffolds: <code>import { myMutation } from 'queries/myMutation';</code>. Per the project's own record (CLAUDE.md), the <code>queries/*</code> alias was removed in the feature-first data migration — GraphQL ops now resolve via <code>data/*</code> (<code>data/&lt;domain&gt;/&lt;domain&gt;.queries.ts</code>). Any shell scaffolded verbatim from this template carries a broken import that <code>npm run type-check</code> will reject.</p>
+    <p><b>Why it matters:</b> minor, but it's a defect in the scaffolding output found inside the reviewed slice — every API shell author hits it.</p>
+    <p><b>Severity rationale:</b> Low — localized, caught immediately by type-check; one-line fix.</p>
+    <p><b>Remediation sketch:</b> change the template import to <code>import { myMutation } from 'data/&lt;domain&gt;/&lt;domain&gt;.queries';</code>.</p>
+  </div>
+
+  <!-- DIMS 3/6/7 -->
+  <h2 class="section">Dimensions 3 / 6 / 7 — Security · Dependencies · Performance</h2>
+  <div class="tier muted">
+    <h3><span class="badge">N/A</span> One-line null findings (declared scope-down)</h3>
+    <ul>
+      <li><b>3 — Security surface:</b> No material findings — the slice is prompt-engineering text + read-only data finders; the only data mutation path (<code>NEWID()</code> sampling) is read-only and the skill enforces "never use a cached/verified ID for a mutation" (<code>sql-data/skill.md:86–92</code>).</li>
+      <li><b>6 — Dependency health:</b> No material findings in scope — the only dep touched is <code>@faker-js/faker</code> (<code>pick()</code> in <code>sql.db.ts:57</code>), used trivially.</li>
+      <li><b>7 — Performance:</b> No material findings <i>in the orchestrator slice</i>. The one known query-cost hazard (the merge email finder's 3.6s→16s blowup near the 15s MCP timeout) lives in the library and is already documented + deliberately mitigated (<code>queries.party.ts:633–636</code>) — out of scope here, and a point in favor of reuse: that cost was paid <i>once</i> in a finder, not re-discovered per ticket.</li>
+    </ul>
+  </div>
+
+  <!-- RECOMMENDATIONS -->
+  <h2 class="section" id="recs">Recommendations — Fine-Tuning Toward Reuse-First</h2>
+  <div class="callout">
+    <div class="lbl">Design stance</div>
+    <p>The owner's preference order — <b>deterministic fix first, user gates only as a last resort</b> — is achievable. R1–R5 are fully deterministic and add <b>no</b> user gate; they remove the conditions that make today's gate fire. R6 is the single minimal gate, reserved for the genuinely-undecidable case. Implement in order; R1 is the keystone and unblocks the rest.</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">R1 · DETERMINISTIC · KEYSTONE</span> Make a mechanically-generated <code>sqlDB.*</code> manifest the primary match source</h3>
+    <p>Add a tiny build step (sibling to the existing <code>check-data</code> pre-commit guard) that parses <code>sql.db.ts</code> exports + each finder's JSDoc one-liner into a flat <code>sqlDB-manifest.md</code>: <code>name → returns → params → one-line shape</code>. Zero human upkeep — it regenerates from the source of truth. Then rewrite <code>/sql-data</code> Step 2 so the priority is: <b>(1) <code>sqlDB.*</code> manifest → (2) sql-library.md (annotation) → (3) compose.</b> This fixes <b>F1</b> and demotes <b>F2</b>'s drift (the façade becomes the SSOT; the markdown becomes commentary).</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">R2 · DETERMINISTIC</span> Insert Path A′ — "reuse-first / minimum-sufficient-shape" — ahead of compose</h3>
+    <p>Between today's Path A (exact match) and Path B (compose), add Path A′ with an explicit ladder: <b>(a)</b> exact finder; <b>(b)</b> the <i>loosest</i> finder whose returned shape satisfies the TC's <b>key assertion</b> — dropping every constraint the assertion does not read; <b>(c)</b> a parameterized finder (<code>getPartyWithNoteContainingWord(word)</code>-style); only then <b>(d)</b> compose bespoke. Encode the admission test verbatim: <i>"a precondition constraint is allowed into the query only if the key assertion depends on it."</i> Fixes <b>F4</b>, sharply reduces <b>F3</b>.</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">R3 · DETERMINISTIC</span> Re-anchor the upstream precondition authors to finder names</h3>
+    <p>three-amigos Phase 3 should suggest a <b>callable <code>sqlDB.*</code> name</b> (resolved against the R1 manifest), not a <code>sql-library.md</code> ID — so the suggestion is directly usable downstream. rft Phase 5 Step 5.0 should build the intent from the <i>assertion's minimum shape</i> and match it against the manifest <b>before</b> any Agent dispatch — i.e. resolve reuse in-orchestrator and only dispatch <code>/sql-data</code> for true misses. Kills over-precision at the source (<b>F4</b>) and cuts dispatch volume.</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">R4 · DETERMINISTIC</span> Navigation parity — name a <code>authFixture</code> method in the shell template</h3>
+    <p>Change the shell template's Step-1 line from prose to a helper call, mirroring the data line:</p>
+    <pre>// Precondition: {entity shape} — use sqlDB.{method}() or sampled ID {id}
+// Step 1: navigate — authFixture.{method}(...)  e.g. authFixture.partyFullscreen(partyId)</pre>
+    <p>And add a one-line rule: <i>prefer a <code>authFixture</code> method over <code>page.goto</code> — it carries the correct URL shape and a built-in load-assert.</i> Fixes <b>F6</b>; same reuse-first principle, free flakiness reduction.</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">R5 · DETERMINISTIC</span> Close the loop — make Path B require a backlog entry</h3>
+    <p>When Path B genuinely composes new SQL, make the skill's exit <i>require</i> appending to <code>sql-helper-backlog.md</code> with a suggested <code>sqlDB.*</code> name (the hook already exists — it's just never fired). Surface the backlog count in <code>/sync</code> so bespoke sprawl is visible and convergent. Fixes <b>F7</b>; turns each bespoke query into a one-time event.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">R6 · MINIMAL GATE · LAST RESORT</span> One-line reuse-vs-compose confirm — only when undecidable</h3>
+    <p>For the rare case where the assertion needs a shape no finder covers, replace the heavyweight 6-option no-data block (for this case only) with a single confirm: <i>"Closest finder is <code>getX()</code> + one extra predicate <code>{p}</code>. Reuse <code>getX()</code> (good enough) / compose bespoke?"</i> This is the only place a human is asked, and only because R1–R3 could not auto-decide. The full 6-option stop remains for the true zero-data case (no candidate at all). Honors the owner's "gates as last resort" while keeping the safety net.</p>
+  </div>
+
+  <p class="note"><b>Sequencing &amp; effort:</b> R1 is the unlock (≈ a small script + a Step-2 rewrite). R2/R3 are skill-text edits gated on R1's manifest. R4 and R8-fix (the F8 alias) are one-line template edits, do them immediately. R5 is a skill-exit rule + a <code>/sync</code> check. None requires touching <code>sql.db.ts</code> itself — the reuse library is already strong; the fix is teaching the <i>process</i> to look at it.</p>
+
+  <footer class="rep">TDD-007 · Technical Due Diligence · QE · 2026-06-23 · scope: TC-creation data &amp; navigation setup slice · 0C/3H/4M/1L · read-only audit, no code mutated</footer>
+
+</div>
+</body>
+</html>

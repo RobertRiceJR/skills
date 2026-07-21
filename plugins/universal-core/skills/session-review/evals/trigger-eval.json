@@ -1,0 +1,159 @@
+[
+  {
+    "query": "ok i think the contracts.grid fix is done and both tests are green now — are we good?",
+    "should_trigger": true,
+    "set": "on-script"
+  },
+  {
+    "query": "before we move on to the next ticket, anything we missed on this party merge work?",
+    "should_trigger": true,
+    "set": "on-script"
+  },
+  {
+    "query": "is this done? the type-check passed and i'm about to commit the POM changes",
+    "should_trigger": true,
+    "set": "on-script"
+  },
+  {
+    "query": "let's wrap this up — i just finished the shell implementation batch for the opportunities specs",
+    "should_trigger": true,
+    "set": "on-script"
+  },
+  {
+    "query": "tests just went green across the board after that waiter fix, what now",
+    "should_trigger": true,
+    "set": "on-script"
+  },
+  {
+    "query": "i'm about to commit and push the summary panel locator changes, good to go?",
+    "should_trigger": true,
+    "set": "on-script"
+  },
+  {
+    "query": "that's the whole fix-loop round finished — 4 fixed, 2 exhausted. ready to close it out?",
+    "should_trigger": true,
+    "set": "on-script"
+  },
+  {
+    "query": "ok the vault frontmatter cleanup pass is settled, i think we're at a stopping point for today",
+    "should_trigger": true,
+    "set": "on-script"
+  },
+  {
+    "query": "fix the import on line 12 of party.grid.page.ts, it's using the wrong alias",
+    "should_trigger": false,
+    "set": "on-script"
+  },
+  {
+    "query": "the mergeParties call is still throwing Unexpected Execution Error on INT — let's keep digging into why",
+    "should_trigger": false,
+    "set": "on-script"
+  },
+  {
+    "query": "just bump the copyright year in the README header, nothing else",
+    "should_trigger": false,
+    "set": "on-script"
+  },
+  {
+    "query": "don't stop to review, keep moving fast — implement the next three test.fixme shells back to back",
+    "should_trigger": false,
+    "set": "on-script"
+  },
+  {
+    "query": "rename the variable oppId to opportunityId in this one test and leave everything else",
+    "should_trigger": false,
+    "set": "on-script"
+  },
+  {
+    "query": "why is this getByRole returning two elements instead of one? walk me through the DOM",
+    "should_trigger": false,
+    "set": "on-script"
+  },
+  {
+    "query": "add a one-line comment above this waiter explaining why the promise comes first",
+    "should_trigger": false,
+    "set": "on-script"
+  },
+  {
+    "query": "what does the CI filter clause RelationshipManagerId = 1 actually restrict in these SQL queries?",
+    "should_trigger": false,
+    "set": "on-script"
+  },
+  {
+    "query": "ok I think that is everything for the seasonal-contract work",
+    "should_trigger": true,
+    "set": "off-script",
+    "class": "paraphrased-positive",
+    "rationale": "Declares a feature complete without any verbatim cue word; the seam is real."
+  },
+  {
+    "query": "lets lock this in and move on to CI-7728",
+    "should_trigger": true,
+    "set": "off-script",
+    "class": "paraphrased-positive",
+    "rationale": "\"lock this in\" = settle + transition to a new ticket; paraphrase of wrap-up."
+  },
+  {
+    "query": "cool, green run. think we can call it for today?",
+    "should_trigger": true,
+    "set": "off-script",
+    "class": "paraphrased-positive",
+    "rationale": "Verification just passed + session-closing intent (\"call it\"); not a literal cue."
+  },
+  {
+    "query": "that POM refactor is settled and both grids pass now",
+    "should_trigger": true,
+    "set": "off-script",
+    "class": "paraphrased-positive",
+    "rationale": "Work settling + verification passed; scale/extend-adjacent seam, paraphrased."
+  },
+  {
+    "query": "let me just tweak one import in the party POM real quick",
+    "should_trigger": false,
+    "set": "off-script",
+    "class": "paraphrased-negative",
+    "rationale": "Single-file minor edit mid-flow; skip condition, paraphrased."
+  },
+  {
+    "query": "quick typo fix in a test title string, then carry on",
+    "should_trigger": false,
+    "set": "off-script",
+    "class": "paraphrased-negative",
+    "rationale": "Cosmetic edit + keep-going; two skip conditions, no verbatim cue."
+  },
+  {
+    "query": "hang on, still chasing why this waiter never resolves",
+    "should_trigger": false,
+    "set": "off-script",
+    "class": "paraphrased-negative",
+    "rationale": "Mid active problem-solving; reflection would interrupt flow."
+  },
+  {
+    "query": "actually just blast through the rest of the shells, no need to pause",
+    "should_trigger": false,
+    "set": "off-script",
+    "class": "paraphrased-negative",
+    "rationale": "Explicit keep-moving-fast signal, paraphrased."
+  },
+  {
+    "query": "should I push?",
+    "should_trigger": true,
+    "set": "off-script",
+    "class": "ambiguous",
+    "rationale": "Leans trigger: \"about to push\" is a named transition seam. BUT terse, no completed-work context — a model may read it as a yes/no logistics question and under-trigger."
+  },
+  {
+    "query": "what is left?",
+    "should_trigger": true,
+    "set": "off-script",
+    "class": "ambiguous",
+    "rationale": "Leans trigger: maps to \"anything else?\". BUT \"what is left?\" mid-task is a planning question — could correctly skip; genuinely 50/50."
+  },
+  {
+    "query": "are we done here or is there more to do?",
+    "should_trigger": true,
+    "set": "off-script",
+    "class": "ambiguous",
+    "rationale": "Leans trigger (session-closing intent), but the \"or is there more to do\" tail could read as mid-task planning."
+  }
+]

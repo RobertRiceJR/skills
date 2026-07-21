@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-021
+date: 2026-06-26
+scope: /align-pom Phase-5 self-grading judge (skill.md:195-230 + reference/conformance-rubric.md)
+jira: []
+severity: { critical: 0, high: 4, medium: 4, low: 3 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-021 — /align-pom self-grading judge</title>
+  <style>
+:root {
+  --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+  --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#ffffff;
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 var(--font-body); }
+.wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+header.report { background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%); color:#fff; border-radius:16px; padding:34px 36px; margin-bottom:28px; box-shadow:0 8px 28px rgba(27,31,29,.18); }
+header.report .eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:11.5px; font-weight:700; opacity:.85; margin:0 0 10px; }
+header.report h1 { margin:0 0 8px; font-size:29px; line-height:1.15; font-weight:750; font-family:var(--font-head); }
+header.report p.sub { margin:0; font-size:15px; opacity:.93; max-width:760px; }
+header.report .meta { margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.25); display:flex; flex-wrap:wrap; gap:22px; font-size:12.5px; opacity:.93; }
+h2.section { font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:750; margin:34px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--line); font-family:var(--font-head); }
+.legend { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px; }
+.legend .item { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:14px 16px; }
+.legend .item .k { font-weight:750; font-size:13px; margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+.legend .item .k .dot { width:10px; height:10px; border-radius:50%; }
+.legend .item .d { font-size:12.5px; color:var(--muted); line-height:1.45; }
+.tablecard { background:var(--card); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:0 2px 10px rgba(20,25,40,.04); }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+thead th { background:#eef1ee; text-align:left; padding:13px 14px; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:750; border-bottom:1px solid var(--line); white-space:nowrap; }
+thead th.num { text-align:center; }
+tbody td { padding:12px 14px; border-bottom:1px solid #eef0ee; vertical-align:top; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover { background:#f6faf4; }
+td.num { text-align:center; }
+.tier { border-left:5px solid var(--accent); border-radius:10px; padding:16px 20px; margin-bottom:14px; background:var(--card); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+.tier h3 { margin:0 0 8px; font-size:15px; display:flex; align-items:center; gap:9px; flex-wrap:wrap; font-family:var(--font-head); }
+.tier h3 .badge { font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; color:#fff; background:var(--accent); }
+.tier p { margin:0 0 8px; font-size:13.5px; color:var(--ink); }
+.tier ul { margin:6px 0 0; padding-left:18px; }
+.tier li { margin:6px 0; font-size:13.5px; }
+.tier.ok { border-left-color:var(--accent); } .tier.ok .badge { background:var(--accent); }
+.tier.warn { border-left-color:var(--accent-3); } .tier.warn .badge { background:var(--accent-3); }
+.tier.info { border-left-color:var(--accent-2); } .tier.info .badge { background:var(--accent-2); }
+.tier.muted { border-left-color:var(--muted); } .tier.muted .badge { background:var(--muted); }
+.tier.crit { border-left-color:var(--s1); } .tier.crit .badge { background:var(--s1); }
+.callout { background:var(--accent-soft); border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:12px; padding:18px 22px; margin:6px 0 30px; }
+.callout .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:750; color:var(--accent); margin-bottom:6px; }
+.callout p { margin:0; font-size:14.5px; line-height:1.55; }
+.callout p + p { margin-top:9px; }
+.note { font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.5; }
+code { background:#eef1ee; padding:1px 6px; border-radius:5px; font-size:.88em; font-family:"SF Mono",Consolas,monospace; }
+pre { background:#f0f3ef; border:1px solid var(--line); border-radius:8px; padding:12px 14px; overflow-x:auto; font-size:12.5px; line-height:1.5; font-family:"SF Mono",Consolas,monospace; margin:8px 0; }
+pre code { background:none; padding:0; }
+.ev { font-size:12px; color:var(--muted); font-family:"SF Mono",Consolas,monospace; }
+footer.rep { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); text-align:center; }
+@media print { body { background:#fff; } .wrap { padding:0; } .tablecard,.tier,.legend .item { box-shadow:none; } header.report { box-shadow:none; } }
+@media (max-width:720px) { .legend { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>The <code style="background:rgba(255,255,255,.16);color:#fff">/align-pom</code> self-grading judge</h1>
+    <p class="sub">An acquirer-grade review of the Phase-5 conformance gate — focus: improvements to the judge. Primary evidence is run #1 (accounts.create.e2e.spec.ts → CreateAccountsPage), which graded ⚠️ WARN mechanically over <b>zero real violations</b>.</p>
+    <div class="meta">
+      <span><b>Run:</b> TDD-021</span>
+      <span><b>Prepared for:</b> Robert Rice (skill owner) / QE</span>
+      <span><b>Date:</b> 2026-06-26</span>
+      <span><b>Scope:</b> align-pom/skill.md §Phase 5 + reference/conformance-rubric.md</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>Critical · 0</div><div class="d">No data/auth/money-class risk — this is a dev-tooling gate.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High · 4</div><div class="d">Gate credibility & reuse-debt accretion — the judge's core value.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium · 4</div><div class="d">Contract gaps that cause inconsistent grades/refactors over runs.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low · 3</div><div class="d">Hygiene: budget enforcement, naming, dependency semantics.</div></div>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">Verdict — the three findings that most change whether this gate is trustworthy</div>
+    <p><b>1. The deterministic checks false-positive (<a href="#f-sec1">F-SEC1</a>, High).</b> The greps are comment- and string-blind. Run #1's S2 fired on two <code>//</code> comment lines mirroring the old Ruby assertion — zero real violations — yet the band table mechanically dropped PASS→WARN and a human had to override it. A gate that cries wolf on its first run stops being read.</p>
+    <p><b>2. The reuse model has a subset/superset blind spot (<a href="#f-d1">F-D1</a>, High).</b> A spec block that is a strict <em>prefix</em> of an existing composite is neither REUSE nor EXTEND → forced NEW, and "never disturb existing members" forbids the clean fix. Run #1 produced <code>openCreateAccounts()</code> duplicating 3 lines of <code>openNewAccountForm()</code> — and DUP can't see it. The headline feature accretes near-duplicate composites every run.</p>
+    <p><b>3. The validator is itself unvalidated (<a href="#f-a1">F-A1</a> + <a href="#f-t1">F-T1</a>, High).</b> The check regexes are duplicated across the rubric <em>and</em> skill.md (two SSOTs that can drift), and there is no calibration corpus — so "any run gets the same answer" is true but "the same answer is correct" was never tested. Run #1 was the first exercise and immediately found a false positive.</p>
+  </div>
+
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier muted">
+    <p><b>Target.</b> The self-grading judge added to <code>/align-pom</code> this session: <code>skill.md</code> Phase 5 (lines 195–230) and its rubric <code>reference/conformance-rubric.md</code>. <b>Primary evidence:</b> the run-#1 validation report (the first and only live exercise of the judge).</p>
+    <p><b>In scope:</b> the judge mechanism — the six deterministic checks (S1·S2·P1·P2·DUP·TYPECHECK), the grade-band logic, the haiku-narrative subagent, and the two logs. <b>Out of scope (stated):</b> the correctness of the <code>CreateAccountsPage</code> refactor itself, and the extraction phases 1–4 except where they feed the grade. Single-context inline pass (two small files); no subagent fan-out.</p>
+    <p><b>Dimensions:</b> all 7 walked; 3 (security-trust, error-handling) reinterpreted for a grading tool; Performance had no material findings.</p>
+  </div>
+
+  <h2 class="section">Phase 1 — Surface Map</h2>
+  <div class="tier muted">
+    <p><b>Entry points (the judge's "API").</b> Phase 5a (static score) → 5b (haiku narrative) → 5c (log to both). Inputs: the final spec + POM files and the Phase-4 type-check exit code. Outputs: a PASS/WARN/FAIL <em>band</em>, an appended <code>reference/grades.jsonl</code> line, and the populated <code>runs.&lt;name&gt;.jsonl</code> entry (<code>quality</code>/<code>well</code>/<code>poorly</code>/<code>improve</code>).</p>
+    <p><b>Traced data flow.</b> Five greps + one boolean → grade-band table → <code>quality</code>. The band is asserted authoritative ("Only this table sets the band … fully reproducible", skill.md:211). The haiku output is explicitly non-authoritative and is parsed into the same logs.</p>
+    <p><b>Change-radius / blast surface.</b> (a) The band feeds two persisted logs and the user-facing Output Summary — a wrong band propagates to the trend file. (b) The check <em>definitions</em> exist in <b>two</b> files (rubric §A and skill.md §5a) — the highest-coupling hazard. (c) The reuse decision (Phase 2) is what the DUP check later audits — and they disagree about what "duplicate" means.</p>
+  </div>
+
+  <h2 class="section">Dimension 1 — Architecture, coupling, boundaries</h2>
+
+  <div class="tier warn" id="f-a1">
+    <h3><span class="badge">HIGH</span> F-A1 — Check definitions are duplicated across the rubric and the skill body (two SSOTs that can silently drift)</h3>
+    <p><b>Evidence:</b> <span class="ev">conformance-rubric.md:17</span> and <span class="ev">skill.md:204</span> state the same regex independently:</p>
+    <pre><code>rubric §A:  grep the spec for  page\.(getByTestId|getByRole|getByText|getByLabel|...|locator)\(
+skill 5a:   S1 spec: Grep      page\.(getByTestId|getByRole|getByText|getByLabel|...|locator)\(</code></pre>
+    <p><b>Why it matters:</b> the whole value of a gate is a trustworthy, single definition. Any fix to a pattern (e.g. the comment-stripping F-SEC1 needs) must be made in <em>both</em> places or the documented rubric and the executed check diverge — the exact "duplicated-thing drift" the repo's own bug-patterns #19 / CLAUDE.md warns against.</p>
+    <p><b>Call path / reach:</b> rubric §A is cited by skill.md:197 as the source of truth, yet skill.md:204–209 re-lists the patterns instead of referencing them.</p>
+    <p><b>Severity rationale:</b> High — credibility/maintainability of a gate; drift produces silently-wrong grades.</p>
+    <p><b>Remediation:</b> keep the regexes <em>only</em> in rubric §A; skill.md Phase 5a says "run the §A checks" with no inline patterns.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">NOTE</span> Band-authority tension (folded into F-SEC1 / F-E1)</h3>
+    <p>The rubric asserts the band is authoritative and reproducible (skill.md:211; rubric:37), but run #1's band had to be manually overridden ("mechanically WARN ⚠️, substantively PASS ✅"). Authority a human must correct on run #1 is not authority. Root cause is F-SEC1; recovery gap is F-E1.</p>
+  </div>
+
+  <h2 class="section">Dimension 2 — Test coverage, quality &amp; gaps (of the judge itself)</h2>
+
+  <div class="tier warn" id="f-t1">
+    <h3><span class="badge">HIGH</span> F-T1 — The validator has no calibration corpus; "reproducible" is conflated with "correct"</h3>
+    <p><b>Evidence:</b> <span class="ev">conformance-rubric.md:12</span> — "Each is a single reproducible grep / read — any run gets the same answer." There is no fixture set of known-good / known-bad spec+POM pairs the rubric is checked against.</p>
+    <p><b>Why it matters:</b> deterministic ≠ accurate. A check can return the same wrong answer every time. Run #1 was the judge's first exercise and immediately surfaced a false positive (F-SEC1) — there was no mechanism that would have caught it earlier.</p>
+    <p><b>Call path / reach:</b> the band feeds <code>grades.jsonl</code> (the stated trend-analysis source) and the run-log <code>quality</code>; an uncalibrated check pollutes both.</p>
+    <p><b>Severity rationale:</b> High — an unmeasured gate gives false confidence precisely where the user wants a guardrail.</p>
+    <p><b>Remediation:</b> add a tiny calibration corpus (2–3 existing verify-method POMs that must grade PASS, 1 crafted violator that must WARN/FAIL) and a "rubric self-test" runnable standalone or under <code>/sync</code>.</p>
+  </div>
+
+  <div class="tier info" id="f-t2">
+    <h3><span class="badge">MEDIUM</span> F-T2 — P1's over-strictness stayed unexercised even by a "passing" run</h3>
+    <p><b>Evidence:</b> the run #1 target <code>CreateAccountsPage</code> has zero <code>expect(</code>; a prior sweep of <code>src/pages/</code> found 25+ POMs with legitimate <code>await expect(this.x).toBeVisible()</code> in <code>verifyLoaded</code>-style helpers (e.g. <span class="ev">create.party.page.ts:58</span>, <span class="ev">dashboard.page.ts:69</span>). P1 (<span class="ev">rubric:19</span>, <code>grep POM for \bexpect\( → 0</code>) would false-FAIL every one of them.</p>
+    <p><b>Why it matters:</b> the planned validation could not trip P1, so a known latent false-positive survives a green run — it will fire on the next verify-method POM.</p>
+    <p><b>Severity rationale:</b> Medium — latent, but certain to fire; same defect class as F-SEC1.</p>
+    <p><b>Remediation:</b> drop P1 from the deterministic set (visibility-vs-business <code>expect</code> isn't reliably greppable); move "no business assertions in POM" to the haiku qualitative dimension.</p>
+  </div>
+
+  <h2 class="section">Dimension 3 — Trust boundaries &amp; input handling</h2>
+
+  <div class="tier warn" id="f-sec1">
+    <h3><span class="badge">HIGH</span> F-SEC1 — The greps trust raw file text: they count comments and strings as violations</h3>
+    <p><b>Evidence:</b> <span class="ev">conformance-rubric.md:18</span> defines S2 as <code>grep the spec for expect\(\s*page\. → 0 matches</code>. Run #1's two hits were both comment text mirroring the Ruby assertion:</p>
+    <pre><code>accounts.create.e2e.spec.ts:97   // `expect(page.accounts).to all(have_attributes(status: 'Ready'))`
+accounts.create.e2e.spec.ts:152  // `expect(page.accounts).to all(have_attributes(status: 'Ready'))`</code></pre>
+    <p>Zero real TypeScript assertions on raw <code>page.</code> locators. The grade-band table (rubric:34) then drops PASS→WARN on these phantom hits.</p>
+    <p><b>Why it matters:</b> this is the gate's credibility, which is its entire value. A line-oriented, comment-blind matcher over-reports; the first false WARN trains the reader to ignore the grade — and an ignored gate is a dead gate. It bit on run #1.</p>
+    <p><b>Call path / reach:</b> applies to S1, S2, P1, P2 — every text-grep check. P1 has the same exposure via doc-comment <code>expect(</code> examples.</p>
+    <p><b>Severity rationale:</b> High — the top finding; it directly defeats the deterministic gate's purpose.</p>
+    <p><b>Remediation:</b> strip <code>//</code> line-comments and <code>/* */</code> block comments (ideally string literals too) before counting; on any non-zero count, print the offending lines so a phantom is visible at a glance.</p>
+  </div>
+
+  <div class="tier info" id="f-sec2">
+    <h3><span class="badge">MEDIUM</span> F-SEC2 — Haiku output is logged with no schema validation; a non-schema field already crept in</h3>
+    <p><b>Evidence:</b> <span class="ev">conformance-rubric.md:69</span> fixes the <code>grades.jsonl</code> keys; run #1 appended a non-schema <code>note</code> field "to capture the S2 false-positive." The judge persists subagent/operator output without enforcing the contract.</p>
+    <p><b>Why it matters:</b> <code>grades.jsonl</code> exists for trend analysis; unvalidated key drift erodes that trend over runs (the same way ad-hoc columns rot a ledger).</p>
+    <p><b>Severity rationale:</b> Medium — slow-burn data-quality erosion of the stated purpose.</p>
+    <p><b>Remediation:</b> validate the haiku JSON against the §C schema before append; either reject extra keys or formally add an optional <code>note</code> to the schema.</p>
+  </div>
+
+  <h2 class="section">Dimension 4 — Error handling &amp; failure modes</h2>
+
+  <div class="tier info" id="f-e1">
+    <h3><span class="badge">MEDIUM</span> F-E1 — Haiku failure is handled; a wrong static check is not</h3>
+    <p><b>Evidence:</b> skill.md:219 gracefully degrades the <em>narrative</em> ("If the subagent fails or returns junk, proceed with — "). But skill.md:211 computes the band purely from grep counts with no recovery path when a count is itself wrong — the only fallback that existed on run #1 was a human override.</p>
+    <p><b>Why it matters:</b> the asymmetry is backwards — the authoritative half (the band) has no safety net while the non-authoritative half (haiku) does.</p>
+    <p><b>Severity rationale:</b> Medium — depends on F-SEC1 to trigger, but it's the missing guardrail that let the bad band stand.</p>
+    <p><b>Remediation:</b> after F-SEC1's comment-strip, add a band sanity-gate: any failing check must echo its raw (post-strip) matches; a zero-real-match "failure" cannot lower the band.</p>
+  </div>
+
+  <div class="tier muted" id="f-e2">
+    <h3><span class="badge">LOW</span> F-E2 — The haiku field-budget contract is unenforced</h3>
+    <p><b>Evidence:</b> <span class="ev">conformance-rubric.md:57</span> caps <code>well</code> at ≤15 words; run #1's subagent returned ~30 and the operator trimmed by hand. The prompt states the cap; nothing enforces it.</p>
+    <p><b>Why it matters:</b> log-field bloat and a manual cleanup step on every run.</p>
+    <p><b>Severity rationale:</b> Low — hygiene only; band unaffected.</p>
+    <p><b>Remediation:</b> truncate/normalize the haiku fields to budget before logging, or relax the cap to what the model reliably hits.</p>
+  </div>
+
+  <h2 class="section">Dimension 5 — Tech debt &amp; maintainability (the rule-set the judge enforces)</h2>
+
+  <div class="tier warn" id="f-d1">
+    <h3><span class="badge">HIGH</span> F-D1 — Reuse model blind spot: a strict prefix of an existing composite is forced to NEW, and the fix is forbidden</h3>
+    <p><b>Evidence:</b> the method match key is "the full ordered sequence" (<span class="ev">skill.md:118–120</span>); EXTEND is only "differs by a value" (<span class="ev">skill.md:113,122</span>); and "Never disturb existing members" (<span class="ev">skill.md:147,263</span>). Run #1 result — verbatim 3-line overlap:</p>
+    <pre><code>openNewAccountForm() // POM:95-100   flyoutCreate → summaryCreateAccount → waitForURL → newAccountAction
+openCreateAccounts() // POM:138-142  flyoutCreate → summaryCreateAccount → waitForURL        (NEW)</code></pre>
+    <p><b>Why it matters:</b> the skill's headline feature is reuse, yet a subset/superset relationship — the most common composite overlap — slips through as NEW, and the constraints actively forbid refactoring <code>openNewAccountForm</code> to call <code>openCreateAccounts</code>. DUP sees two different bodies → "unique." Across many runs this accretes near-duplicate composites that the gate reports as clean.</p>
+    <p><b>Call path / reach:</b> Phase-2 reconciliation feeds the Phase-5 DUP check; they disagree on "duplicate," so the debt is invisible to the grade.</p>
+    <p><b>Severity rationale:</b> High — systematic DRY-debt accretion in the feature the skill exists to provide.</p>
+    <p><b>Remediation:</b> add a <b>COMPOSE</b> disposition — when a move-block is a strict prefix/subset of an existing composite, extract the shared prefix and have both call it; grant a scoped exception to "never disturb existing members" for this case. Teach DUP to flag prefix-overlap, not just identity.</p>
+  </div>
+
+  <div class="tier info" id="f-d2">
+    <h3><span class="badge">MEDIUM</span> F-D2 — Internal contradiction: who owns the waiter wiring</h3>
+    <p><b>Evidence:</b> Purpose says the spec is "left owning … the waiter wiring" (<span class="ev">skill.md:29–30</span>), but the disposition table says "Move the whole triad" into a POM method (<span class="ev">skill.md:101</span>). Run #1 resolved it (action-triggered waiters → POM <code>saveAccounts()</code> at <span class="ev">POM:167–171</span>; navigation/load waiters → spec) but the doc never states that split.</p>
+    <p><b>Why it matters:</b> two runs can split waiters differently → inconsistent POMs, and no deterministic check detects either choice.</p>
+    <p><b>Severity rationale:</b> Medium — ambiguity that drives inconsistent refactors.</p>
+    <p><b>Remediation:</b> state the split explicitly — action-triggered waiters → POM method (waiter pattern); navigation/page-load waiters → spec. Fix the Purpose line to match.</p>
+  </div>
+
+  <div class="tier info" id="f-d3">
+    <h3><span class="badge">MEDIUM</span> F-D3 — No rule for "same intent, different locator mechanism" → soft twins DUP can't catch</h3>
+    <p><b>Evidence:</b> <code>selectStagingRow</code> (<code>getByRole('row').filter({hasText})</code>, <span class="ev">POM:120–122</span>) vs <code>selectDuplicateStagingRow</code> (<code>getByRole('row',{name: /Duplicate.*n/})</code>, <span class="ev">POM:174–176</span>) are behaviorally adjacent. The match key is the selector string (<span class="ev">skill.md:117</span>), so different selectors = "different" = NEW, and DUP treats them as unique.</p>
+    <p><b>Why it matters:</b> a second, softer class of duplication accretes invisibly — same user intent, two methods.</p>
+    <p><b>Severity rationale:</b> Medium — narrower than F-D1 but the same blind-spot family.</p>
+    <p><b>Remediation:</b> default such cases to NEW but surface them as a possible-duplicate in the haiku Reuse dimension, so a human sees the adjacency.</p>
+  </div>
+
+  <div class="tier muted" id="f-d4">
+    <h3><span class="badge">LOW</span> F-D4 — The pom-variable example contradicts the "match local convention" rule</h3>
+    <p><b>Evidence:</b> skill.md:160 hardcodes <code>const pom = new XxxPage(page)</code>; the style rule at skill.md:42–43 says match surrounding siblings. Run #1 correctly used <code>createAccountsPage</code> to match the sibling test — against the literal example.</p>
+    <p><b>Why it matters:</b> minor friction; the example and the rule point opposite ways.</p>
+    <p><b>Severity rationale:</b> Low — cosmetic.</p>
+    <p><b>Remediation:</b> note in skill.md:160 that the variable name yields to local sibling convention.</p>
+  </div>
+
+  <h2 class="section">Dimension 6 — Dependency health &amp; version risk</h2>
+
+  <div class="tier muted" id="f-dep1">
+    <h3><span class="badge">LOW</span> F-DEP1 — The judge inherits ripgrep's line-orientation and Explore's excerpt-reading</h3>
+    <p><b>Evidence:</b> the checks are <code>Grep</code> (ripgrep) calls — line-oriented, which is the proximate cause of F-SEC1's comment-blindness; a real fix needs a comment-strip pre-pass or a small tokenizer, not a richer regex. The narrative uses <code>Agent</code> <code>subagent_type:"Explore"</code> (<span class="ev">skill.md:216</span>), which "reads excerpts" and could under-read a longer POM.</p>
+    <p><b>Why it matters:</b> the toolchain shapes what's checkable; pretending greps are AST-aware is how F-SEC1 shipped.</p>
+    <p><b>Severity rationale:</b> Low — haiku is non-authoritative; the grep limit is captured under F-SEC1.</p>
+    <p><b>Remediation:</b> implement the comment-strip as an explicit pre-pass; instruct the subagent to read the full (small) files, or use a general-purpose haiku agent if Explore under-reads.</p>
+  </div>
+
+  <h2 class="section">Dimension 7 — Performance hotspots</h2>
+  <div class="tier muted">
+    <p>No material findings — one haiku subagent plus ~5 greps and one type-check per run. Cost is negligible and bounded; the static checks are O(file size). Traced: no loops, no fan-out, no repeated reads.</p>
+  </div>
+
+  <h2 class="section">Improvement punch-list (ranked)</h2>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>#</th><th>Finding</th><th>Fix</th><th class="num">Sev</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>F-SEC1 comment-blind greps</td><td>Strip comments/strings before counting; echo offending lines on any hit</td><td class="num"><span class="score s3">H</span></td></tr>
+        <tr><td>2</td><td>F-D1 subset/superset reuse</td><td>Add a COMPOSE disposition + scoped refactor exception; DUP flags prefix-overlap</td><td class="num"><span class="score s3">H</span></td></tr>
+        <tr><td>3</td><td>F-A1 duplicated check defs</td><td>Single-source regexes in rubric §A; skill.md references, never re-lists</td><td class="num"><span class="score s3">H</span></td></tr>
+        <tr><td>4</td><td>F-T1 no calibration corpus</td><td>2–3 known-good + 1 known-bad fixture; rubric self-test under /sync</td><td class="num"><span class="score s3">H</span></td></tr>
+        <tr><td>5</td><td>F-T2 P1 over-strict</td><td>Drop P1 from deterministic; "no business assertions" → haiku dim</td><td class="num"><span class="score s5">M</span></td></tr>
+        <tr><td>6</td><td>F-E1 no static-check recovery</td><td>Band sanity-gate: zero-real-match failure can't lower the band</td><td class="num"><span class="score s5">M</span></td></tr>
+        <tr><td>7</td><td>F-D2 waiter ownership</td><td>State action-waiter→POM / nav-waiter→spec split; fix Purpose line</td><td class="num"><span class="score s5">M</span></td></tr>
+        <tr><td>8</td><td>F-SEC2 unschema'd log</td><td>Validate haiku JSON vs §C schema before append</td><td class="num"><span class="score s5">M</span></td></tr>
+        <tr><td>9</td><td>F-D3 same-intent diff-mechanism</td><td>Default NEW but surface adjacency in haiku Reuse dim</td><td class="num"><span class="score s5">M</span></td></tr>
+        <tr><td>10</td><td>F-E2 unenforced haiku budget</td><td>Truncate fields to budget before logging</td><td class="num"><span class="score s7">L</span></td></tr>
+        <tr><td>11</td><td>F-D4 var-name example</td><td>Note example yields to local sibling convention</td><td class="num"><span class="score s7">L</span></td></tr>
+        <tr><td>12</td><td>F-DEP1 grep/Explore limits</td><td>Comment-strip pre-pass; read full files in the subagent</td><td class="num"><span class="score s7">L</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note"><b>Bottom line.</b> The judge's <em>architecture</em> is right — static score + non-authoritative haiku, logged, no auto-edit. The defects are in the <em>implementation of "deterministic"</em>: text-greps that can't tell code from comments, a band with no recovery when a check is wrong, a reuse model that can't see prefix-overlap, and a validator with no fixtures of its own. Fixes 1–4 convert it from "passed its first run by being overridden" to a gate you can trust unattended.</p>
+
+  <footer class="rep">TDD-021 · /align-pom self-grading judge · 2026-06-26 · Technical Due Diligence · QE · evidence-first, ranked by blast radius</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "_comment": "Optional config for the scorecard's 'by provenance' breakdown. A spec whose CREATING git commit was Claude-co-authored buckets as `_claude` regardless of author (= a Claude import). Otherwise the creating-commit author name is used, remapped through `authorBuckets` if listed (else the raw git name). Untracked files bucket as 'uncommitted'. EDIT FREELY — relabel juniors, group migration batches, etc. The names below are the real git authors as of 2026-06-15 (identity-mapped as a starting point).",
+  "_claude": "Claude-assisted",
+  "authorBuckets": {
+    "Robert Rice": "Robert Rice",
+    "Jessica Barciz": "Jessica Barciz",
+    "Ahmed Guled": "Ahmed Guled",
+    "Zach Atwood": "Zach Atwood"
+  }
+}

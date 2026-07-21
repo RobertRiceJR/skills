@@ -1,0 +1,9 @@
+{
+  "name": "qe-toolkit",
+  "version": "0.1.0",
+  "description": "QE / test-suite-flavored skills, tuned for Playwright suites but safe to run in any repo: roast-me (suite health roast), technical-due-diligence (acquirer-grade risk & quality review), devils-advocate (adversarial test-plan review).",
+  "author": {
+    "name": "Robert Rice",
+    "email": "robertrice12009@yahoo.com"
+  }
+}

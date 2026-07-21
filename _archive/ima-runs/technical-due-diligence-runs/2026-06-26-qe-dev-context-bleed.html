@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-022
+date: 2026-06-26
+scope: QE→developer context-bleed boundary (skill-sharing risk-mitigation strategy)
+jira: [—]
+severity: { critical: 0, high: 2, medium: 3, low: 1 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-022 · QE→Developer Context-Bleed Boundary</title>
+  <style>
+  :root{
+    --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+    --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#fff;
+    --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+  header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+  header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+  header.report h1{margin:0 0 8px;font-size:29px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+  header.report p.sub{margin:0;font-size:15px;opacity:.93;max-width:780px;}
+  header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+  h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+  .legend{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;}
+  .legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+  .legend .item .k{font-weight:750;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+  .legend .item .k .dot{width:10px;height:10px;border-radius:50%;}
+  .legend .item .d{font-size:12.5px;color:var(--muted);line-height:1.45;}
+  .tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  thead th{background:#eef1ee;text-align:left;padding:13px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);white-space:nowrap;}
+  tbody td{padding:12px 14px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#f6faf4;}
+  .tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:14px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .tier h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);}
+  .tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+  .tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+  .tier ul{margin:6px 0 0;padding-left:18px;}
+  .tier li{margin:6px 0;font-size:13.5px;}
+  .tier.ok{border-left-color:var(--accent);} .tier.ok .badge{background:var(--accent);}
+  .tier.warn{border-left-color:var(--accent-3);} .tier.warn .badge{background:var(--accent-3);}
+  .tier.info{border-left-color:var(--accent-2);} .tier.info .badge{background:var(--accent-2);}
+  .tier.muted{border-left-color:var(--muted);} .tier.muted .badge{background:var(--muted);}
+  .callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+  .callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:6px;}
+  .callout p{margin:0 0 9px;font-size:14.5px;line-height:1.55;}
+  .callout ol{margin:4px 0 0;padding-left:20px;} .callout ol li{margin:8px 0;font-size:14px;}
+  .note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+  code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.86em;font-family:"SF Mono",Consolas,monospace;}
+  pre{background:#f1f4f1;border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;font-size:12px;line-height:1.5;font-family:"SF Mono",Consolas,monospace;color:#23291f;margin:8px 0;}
+  .ev{font-size:12px;color:var(--muted);font-family:"SF Mono",Consolas,monospace;margin:2px 0 4px;}
+  footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+  .pillrow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;}
+  .pill{font-size:11.5px;font-weight:700;padding:3px 11px;border-radius:20px;border:1px solid var(--line);}
+  .pill.c{background:#fbe3e0;color:#b5261c;} .pill.h{background:#f7ebd9;color:#8a5a14;}
+  .pill.m{background:#dbe9f3;color:#1f5781;} .pill.l{background:#eef1ee;color:#5b6472;}
+  @media (max-width:720px){.legend{grid-template-columns:1fr;}}
+  @media print{body{background:#fff;}.wrap{padding:0;}.tablecard,.tier,.legend .item{box-shadow:none;}header.report{box-shadow:none;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE · TDD-022</p>
+    <h1>The QE → Developer Context-Bleed Boundary</h1>
+    <p class="sub">A risk-mitigation review of sharing QE Claude skills with developers without
+    Claude absorbing QE context and "getting confused about what a developer needs to do." Prompted by
+    direct junior-developer feedback after testing the platform in a developer repo.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> QE platform owner + dev stakeholders</span>
+      <span><b>Date:</b> 2026-06-26</span>
+      <span><b>Scope:</b> claude-skills platform × IMA QE passive surface</span>
+    </div>
+    <div class="pillrow">
+      <span class="pill c">0 Critical</span>
+      <span class="pill h">2 High</span>
+      <span class="pill m">3 Medium</span>
+      <span class="pill l">1 Low</span>
+    </div>
+  </header>
+
+  <!-- conceptual frame -->
+  <div class="legend">
+    <div class="item">
+      <div class="k"><span class="dot" style="background:var(--accent)"></span>Active context (skills)</div>
+      <div class="d">Opt-in, trigger-gated. Only fires on a matching prompt. Lower bleed risk — <em>if</em> triggers are scoped and the skill is portable. This is what the toolkit ships.</div>
+    </div>
+    <div class="item">
+      <div class="k"><span class="dot" style="background:var(--accent-3)"></span>Passive context</div>
+      <div class="d">Auto-loaded, always in the window: <code>CLAUDE.md</code>, the knowledge tree, <code>MEMORY.md</code>. Absorbed without being asked — this is where the junior dev's fear actually lives.</div>
+    </div>
+    <div class="item">
+      <div class="k"><span class="dot" style="background:var(--accent-2)"></span>Blast radius</div>
+      <div class="d">GLOBAL <code>~/.claude/skills/</code> = visible in every repo/session. PROJECT <code>.claude/skills/</code> = scoped to one repo. The install target decides the reach.</div>
+    </div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout">
+    <div class="lbl">Verdict — the three things that matter most</div>
+    <p>Bottom line: <b>the platform is already well-isolated by construction — the bleed the developer
+    fears is not what the toolkit ships.</b> The shared toolkit is 9/9 <code>scope: portable</code>
+    (domain-agnostic), and the installers copy <em>only</em> <code>qe-essentials/skills/*</code> — never
+    the QE <code>CLAUDE.md</code>, the 17,878-line knowledge tree, or <code>MEMORY</code>. The risk is
+    real but narrow, and it lives in the gaps below, not in the toolkit.</p>
+    <ol>
+      <li><b><a href="#h1">Isolation is convention, not enforced</a> (High).</b> Nothing in the platform
+      <em>prevents</em> the QE passive surface from being copied or loaded into a developer's context —
+      no "what never leaves the QE repo" boundary, no guard. The discipline holds today only because no
+      one has broken it.</li>
+      <li><b><a href="#h2"><code>init-qe-repo</code> is the real "Claude gets confused" vector</a> (High).</b>
+      It is globally invocable, fires on broad triggers like "bootstrap testing for this repo," and
+      <em>writes</em> a <code>CLAUDE.md</code> + knowledge tree + husky + settings into whatever repo it's
+      pointed at — turning a developer's app repo into a QE-shaped repo.</li>
+      <li><b><a href="#m1">Global-only install = maximal blast radius</a> (Medium).</b> The toolkit lands in
+      <code>~/.claude/skills/</code>, visible in every repo and session, with no project-scoped install
+      lever. The 9 skills are generic so the harm is mild — but the lever to contain them is missing.</li>
+    </ol>
+  </div>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier muted">
+    <p><b>Target (one cohesive subsystem):</b> the QE→developer skill-sharing boundary as a risk surface —
+    the <code>claude-skills</code> platform (<code>C:\Users\rrice\Repos\claude-skills-1</code>) as the
+    distribution mechanism, and the IMA QE project's passive context as the thing that must not leak.</p>
+    <p><b>Dimensions covered (reframed to the bleed question, per request):</b> context isolation &amp;
+    boundaries · install blast radius &amp; trust boundary · passive-context surface · trigger/description
+    hygiene · the scope-discipline control · failure modes of accidental bleed. Standard "performance
+    hotspots" is reframed as context-window cost; security is reframed as the contamination/trust
+    boundary.</p>
+    <p><b>Evidence read:</b> <code>qe-essentials/install-toolkit.ps1</code> + <code>.sh</code>; the 9
+    toolkit <code>SKILL.md</code> scope facets; <code>playbook/placement-rubric.md</code> +
+    <code>metadata-schema.md</code>; <code>promote-skill/SKILL.md</code>; <code>skill-scout/SKILL.md</code>;
+    <code>~/.claude/skills/init-qe-repo/SKILL.md</code>; the IMA project <code>CLAUDE.md</code> (234 lines),
+    the knowledge tree (<code>_shared/knowledge/</code>, 69 md files / 17,878 lines), and the
+    <code>MEMORY.md</code> index (111 lines).</p>
+    <p class="note"><b>Forward-looking review.</b> This is a risk-mitigation analysis, not a defect hunt —
+    where no enforcing code exists, the finding is framed as a <em>control gap + recommended guardrail</em>
+    rather than an inferred bug. Run shape: inline (small cohesive target, ~15 files).</p>
+  </div>
+
+  <!-- PHASE 1 SURFACE MAP -->
+  <h2 class="section">Phase 1 — Surface map (what travels vs. what stays)</h2>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Artifact</th><th>Type</th><th>Reaches a dev how?</th><th>Bleed reach</th></tr></thead>
+      <tbody>
+        <tr><td><code>qe-essentials/skills/*</code> (9 skills)</td><td>Active</td><td><code>install-toolkit</code> → global tree</td><td>Low — all <code>portable</code>, domain-agnostic</td></tr>
+        <tr><td><code>skill-starter</code>, <code>promote-skill</code>, <code>skill-scout</code></td><td>Active</td><td>manual copy / scout</td><td>Low — generic skill machinery</td></tr>
+        <tr><td><code>init-qe-repo</code></td><td>Active (writer)</td><td>global, user-invocable anywhere</td><td><b>High</b> — writes substrate into the target repo</td></tr>
+        <tr><td>IMA <code>CLAUDE.md</code> (234 ln)</td><td>Passive</td><td>only if repo is cwd / copied</td><td><b>High if loaded</b> — pure QE conventions</td></tr>
+        <tr><td>knowledge tree (69 files / 17,878 ln)</td><td>Passive</td><td>only if copied / referenced</td><td><b>High if loaded</b> — IMA domain</td></tr>
+        <tr><td><code>MEMORY.md</code> + memory files</td><td>Passive</td><td>harness-managed, per-project</td><td>Medium — QE work log</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Change-radius read: the only artifacts the platform <em>actively pushes</em> to a developer
+  are the 9 portable skills (low reach) and — critically — <code>init-qe-repo</code>, which is the one
+  active component that <em>writes QE-shaped files</em> into a target repo. The high-bleed passive
+  artifacts are <em>not pushed by anything</em>; their risk is accidental inclusion, not distribution.</p>
+
+  <!-- DIMENSION 1 -->
+  <h2 class="section">1 · Context isolation &amp; boundaries</h2>
+
+  <div class="tier warn" id="h1">
+    <h3><span class="badge">HIGH</span> Isolation is convention, not enforced — no "never leaves the QE repo" boundary</h3>
+    <p class="ev">Evidence: qe-essentials/install-toolkit.ps1:33-44 (copies only the skills dir) — and the <em>absence</em> of any export-guard anywhere in the platform.</p>
+    <pre>Get-ChildItem -Path $skillsDir -Directory | ForEach-Object {
+    $name = $_.Name
+    $dest = Join-Path $target $name
+    ...
+    Copy-Item -Recurse -Force -Path $_.FullName -Destination $dest</pre>
+    <p><b>Why it matters:</b> The installer is correctly narrow — it copies <code>qe-essentials/skills/*</code>
+    and nothing else, so it never ships <code>CLAUDE.md</code>, the knowledge tree, or <code>MEMORY</code>.
+    That is the good news. The gap: this is the <em>only</em> thing keeping QE passive context out of a dev's
+    session, and it holds by accident of what the script happens to copy. Nothing <em>states</em> what must
+    never be shared, and nothing <em>prevents</em> a well-meaning person from <code>cp -r</code>-ing the
+    knowledge tree into a dev repo, pointing Claude at the IMA repo as cwd while "helping" on dev work, or
+    pasting QE conventions into a global <code>~/.claude/CLAUDE.md</code> (which would then load in every repo).</p>
+    <p><b>Call path / reach:</b> The junior dev's exact fear realizes through this gap, not through the toolkit.</p>
+    <p><b>Severity rationale:</b> High — it's the controlling boundary for the entire concern, and it's undocumented and unenforced.</p>
+    <p><b>Remediation:</b> Add a one-page <code>playbook/context-boundary.md</code> — an explicit
+    SHARE / NEVER-SHARE list — and state the rule in the toolkit README. Optionally a guard (below).</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">SOLID</span> The scope-discipline control works — credit where due</h3>
+    <p class="ev">Evidence: all 9 toolkit skills <code>scope: portable</code> (grep, 9/9); playbook/metadata-schema.md + placement-rubric.md; promote-skill/SKILL.md gate.</p>
+    <pre>$ grep -rh "scope:" qe-essentials/skills/*/SKILL.md | sort | uniq -c
+      9   scope: portable</pre>
+    <p><b>Why it matters:</b> The <code>scope</code> facet (<code>portable</code> vs <code>project</code>) is a
+    real, load-bearing isolation control: <code>promote-skill</code> refuses to put a project-coupled skill on
+    the shared shelf, so the toolkit <em>cannot</em> accumulate QE-domain skills by design. This is why the
+    verdict is reassuring rather than alarming — the contamination most people would fear (QE orchestrators,
+    tickets, test cases riding along) is structurally excluded.</p>
+    <p><b>Maintainability note:</b> the control is only as good as its enforcement — see Dimension 5.</p>
+  </div>
+
+  <!-- DIMENSION 2 -->
+  <h2 class="section">2 · Install blast radius &amp; trust boundary</h2>
+
+  <div class="tier warn" id="h2">
+    <h3><span class="badge">HIGH</span> <code>init-qe-repo</code> is global, broadly-triggered, and writes QE substrate into any target repo</h3>
+    <p class="ev">Evidence: ~/.claude/skills/init-qe-repo/SKILL.md:12-16, :7-9, :63-66, :53-61 (lives in the GLOBAL tree — confirmed by directory listing).</p>
+    <pre>metadata:
+  kind: orchestrator
+  scope: portable          # globally available, invocable in ANY repo
+  ...
+  Use when someone says "set up a QE repo", "scaffold the QE ecosystem here",
+  "init qe repo", "bootstrap testing for this repo", or "stand up the substrate".
+
+### Step 3 — Stamp repo-root conventions
+- &lt;repo&gt;/CLAUDE.md from CLAUDE.md.template (fill project/slug/repo/framework).
+- &lt;repo&gt;/TODO.md from TODO.md.template.</pre>
+    <p><b>Why it matters:</b> This is the single most likely path to "Claude got confused about what I need as a
+    developer." It's in the global tree, so it's offered in <em>every</em> repo; its triggers ("bootstrap
+    testing for this repo") are exactly what a developer might say when they just want a test or two. When it
+    fires it writes a <code>CLAUDE.md</code>, a knowledge tree, husky hooks, and <code>settings.json</code> into
+    the dev's repo (Steps 2–4) and installs the toolkit globally (Step 1, :47-51) — converting an app repo into
+    a QE-shaped repo.</p>
+    <p><b>Mitigants already present:</b> it stamps <em>fresh, templated</em> substrate filled from the target
+    repo's own discovery — it does <b>not</b> copy IMA's actual CLAUDE.md or knowledge content — and it is
+    "idempotent-ish," refusing to overwrite a customized <code>CLAUDE.md</code> (:100-101). So it imposes QE
+    <em>shape</em>, not IMA <em>content</em>. That keeps it out of Critical.</p>
+    <p><b>Severity rationale:</b> High — broad trigger + structural writes into a dev repo from the always-present
+    global tree. Recoverable via git (no data loss), so not Critical.</p>
+    <p><b>Remediation:</b> (1) a loud confirm-gate that lists every file it will write before writing; (2)
+    re-scope the trigger phrasing so "add a test" / "write a test" does <em>not</em> match (reserve it for
+    explicit "stand up a QE repo"); (3) consider making it project-tree-only rather than global.</p>
+  </div>
+
+  <div class="tier info" id="m1">
+    <h3><span class="badge">MEDIUM</span> Toolkit installs to the GLOBAL tree only — no project-scoped option</h3>
+    <p class="ev">Evidence: qe-essentials/install-toolkit.ps1:~20 (and install-toolkit.sh: <code>TARGET="$HOME/.claude/skills"</code>).</p>
+    <pre>$target = Join-Path $HOME '.claude/skills'   # hardcoded global; no per-repo target</pre>
+    <p><b>Why it matters:</b> Global install is the maximal blast radius — every installed skill is offered in
+    every repo and session, including a developer's pure app repos. A developer who wants exactly one tool in
+    exactly one repo has no supported path; it's all-or-nothing-everywhere. The 9 skills are generic, so the
+    harm is mild, but the <em>lever to contain reach</em> is simply absent.</p>
+    <p><b>Severity rationale:</b> Medium — degrades the bleed posture but the payload is domain-agnostic.</p>
+    <p><b>Remediation:</b> add a <code>-Project &lt;path&gt;</code> / <code>--project</code> mode that copies into
+    <code>&lt;repo&gt;/.claude/skills/</code> instead of <code>$HOME</code>; recommend project-scope for anything
+    that could mis-trigger, reserve global for the truly universal (e.g. <code>todo</code>, <code>session-review</code>).</p>
+  </div>
+
+  <!-- DIMENSION 3 -->
+  <h2 class="section">3 · Passive-context surface (the real bleed surface)</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> The QE passive surface is large and domain-saturated — outsized steering if it ever loads</h3>
+    <p class="ev">Evidence: IMA CLAUDE.md (234 lines) — the "Known Conventions" table; knowledge tree <code>_shared/knowledge/</code> = 69 md files / 17,878 lines; MEMORY.md index = 111 lines.</p>
+    <pre>| Jira project      | `CI` — tickets are CI-####
+| Zephyr project    | `CI` — test cases are CI-T####, cycles are CI-R####
+| CI filter         | p.RelationshipManagerId = 1 AND p.CreateDate BETWEEN ...
+| Waiter Pattern    | the promise MUST be created before the triggering action</pre>
+    <p><b>Why it matters:</b> This is the literal substance of "Claude assumes QE work" — every line is Jira CI /
+    Zephyr / MSSQL / IMA-domain. It is auto-loaded and, at ~18k lines for the tree alone, it would dominate the
+    context window and the model's sense of "the task" if pulled into a dev session. The platform does not ship
+    it — but its sheer size and saturation mean <em>any</em> accidental inclusion (wrong cwd, a copied file, a
+    global CLAUDE.md) has outsized steering effect. The bleed risk is a function of this surface area.</p>
+    <p><b>Severity rationale:</b> Medium — not distributed by the platform, but high-impact-if-loaded and currently unfenced.</p>
+    <p><b>Remediation:</b> keep it strictly project-local — never lift QE conventions into a global
+    <code>~/.claude/CLAUDE.md</code>; name it in the NEVER-SHARE list (Dim 1 remediation); when assisting a dev,
+    run Claude with the dev's repo as cwd, never the IMA repo.</p>
+  </div>
+
+  <!-- DIMENSION 4 -->
+  <h2 class="section">4 · Trigger / description hygiene</h2>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> A few generic toolkit triggers can fire unprompted in a dev session</h3>
+    <p class="ev">Evidence: toolkit skill descriptions — e.g. <code>todo</code> ("add to the todo"), <code>session-review</code> ("are we good?", "before we move on"), <code>condense-claude-md</code>.</p>
+    <p><b>Why it matters:</b> These fire on generic phrasing a developer might use naturally, so Claude may offer
+    a QE-flavored skill action unprompted. But all three are genuinely generic engineering tools (a task list,
+    an end-of-phase review, a CLAUDE.md condenser) — firing them in a dev repo is mostly <em>helpful</em>, not
+    contaminating. This is hygiene, not harm.</p>
+    <p><b>Severity rationale:</b> Low — generic tools, graceful, no QE-domain assumption baked in.</p>
+    <p><b>Remediation:</b> accept (they're universal), or tighten descriptions if a dev reports noise.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> Two toolkit skills assume QE-shaped repo artifacts</h3>
+    <p class="ev">Evidence: qe-essentials/skills/sync-skills/SKILL.md (expects <code>_shared/skill-architecture.md</code> routing doc); condense-claude-md targets a <code>CLAUDE.md</code>.</p>
+    <p><b>Why it matters:</b> In a dev repo with no routing doc / no CLAUDE.md, these skills have nothing to act
+    on. <code>sync-skills</code> degrades gracefully (it falls back to a disk-only audit), so the failure mode is
+    benign — but it's a sign these were authored against a QE-shaped repo and merely <em>tolerate</em> a generic
+    one. They're portable in license, not fully in spirit.</p>
+    <p><b>Severity rationale:</b> Medium — they degrade rather than mislead, but they assume context a dev repo lacks.</p>
+    <p><b>Remediation:</b> confirm each toolkit skill degrades cleanly with no QE artifacts present; note the
+    assumption in their descriptions; the scout (Dim 5) should flag this when auditing portability.</p>
+  </div>
+
+  <!-- DIMENSION 5 -->
+  <h2 class="section">5 · The scope-discipline control — maintainability</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> Nothing automatically re-checks that the toolkit stays domain-agnostic over time</h3>
+    <p class="ev">Evidence: promote-skill/SKILL.md (the gate runs only at promotion time, on one skill); no recurring audit of the already-installed toolkit.</p>
+    <p><b>Why it matters:</b> The isolation guarantee ("the shelf holds only portable skills") is enforced once,
+    at the moment of promotion. There's no periodic check that a previously-portable skill hasn't drifted to
+    reference a project artifact, or that someone didn't hand-drop a coupled skill into
+    <code>qe-essentials/skills/</code>. Over months, the control can erode silently — the exact failure mode that
+    lets a QE-coupled skill end up on a developer's machine.</p>
+    <p><b>Severity rationale:</b> Medium — compounding maintainability tax on the control that the whole verdict rests on.</p>
+    <p><b>Remediation:</b> have <code>skill-scout</code> (or a CI check) re-run the portability test across the
+    whole toolkit on a cadence, flagging any shelf skill that no longer passes <code>scope: portable</code>.</p>
+  </div>
+
+  <!-- DIMENSION 6 -->
+  <h2 class="section">6 · Failure modes of accidental bleed</h2>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW→INFO</span> When bleed does happen, the failure is mostly graceful and recoverable</h3>
+    <p class="ev">Evidence: init-qe-repo/SKILL.md:100-101 (idempotent-ish, won't overwrite customized CLAUDE.md); sync-skills degrade-to-disk-only path.</p>
+    <p><b>Why it matters:</b> The blast of a realized bleed is bounded: <code>init-qe-repo</code> writes are
+    git-tracked and reversible and it won't clobber a customized CLAUDE.md; mis-triggered toolkit skills are
+    read-mostly and degrade rather than corrupt. There is no money/auth/data-loss path in this surface — which is
+    why nothing here is Critical. The residual harm is <em>wasted developer attention and confusion</em>, not
+    damage — real, but recoverable.</p>
+    <p><b>Severity rationale:</b> Informational — characterizes the ceiling on harm.</p>
+    <p><b>Remediation:</b> none beyond the above; this is the reassuring backstop.</p>
+  </div>
+
+  <!-- MITIGATION STRATEGY -->
+  <h2 class="section">Mitigation strategy — what to do</h2>
+  <div class="callout">
+    <div class="lbl">Share / Never-share — the boundary to write down</div>
+    <p><b>SHARE freely (domain-agnostic, safe for any developer):</b> the <code>qe-essentials</code> toolkit
+    (9 portable skills), the <code>playbook/</code>, <code>skill-starter</code>, <code>promote-skill</code>,
+    <code>skill-scout</code>. These carry no QE domain, tickets, or test cases.</p>
+    <p><b>NEVER share / never global-ize (QE passive surface):</b> the project <code>CLAUDE.md</code>, the
+    knowledge tree (<code>_shared/knowledge/</code>), <code>MEMORY</code>, any <code>ticket.md</code> /
+    Zephyr test-case artifacts, and the domain orchestrators (<code>three-amigos</code>,
+    <code>ready-for-*</code>, <code>prod-support</code>, etc. — all <code>scope: project</code>).</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">DO</span> The five guardrails, in priority order</h3>
+    <ul>
+      <li><b>1. Write the boundary down</b> (closes H1) — a <code>playbook/context-boundary.md</code> with the
+      SHARE / NEVER-SHARE lists above, echoed in the toolkit README. Cheapest, highest-leverage fix.</li>
+      <li><b>2. Gate <code>init-qe-repo</code></b> (closes H2) — loud confirm listing every file it will write;
+      re-scope its triggers so "write/add a test" does not match; reserve it for explicit "stand up a QE repo."</li>
+      <li><b>3. Add a project-scoped install</b> (closes M1) — <code>install-toolkit -Project &lt;path&gt;</code>
+      drops into one repo's <code>.claude/skills/</code>; reserve global for the truly universal.</li>
+      <li><b>4. Keep dev repos' <code>CLAUDE.md</code> their own</b> — never inherit QE's; when helping a dev,
+      run Claude with the dev's repo as cwd, never the IMA repo.</li>
+      <li><b>5. Make the scout audit the shelf</b> (closes Dim 5) — re-run the portability test across the whole
+      toolkit on a cadence so the isolation guarantee can't erode silently.</li>
+    </ul>
+    <p style="margin-top:10px"><b>Net:</b> the developer's instinct was right to ask, but the platform's
+    architecture already answers most of it. Two documented guardrails (#1 and #2) close the bulk of the
+    residual risk; the rest is hardening.</p>
+  </div>
+
+  <footer class="rep">
+    Technical Due Diligence · TDD-022 · QE → Developer Context-Bleed Boundary · 2026-06-26 ·
+    read-only review, no files in the audited platform were modified · evidence-first (file:line cited).
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coverage Gap Scan — whole-suite (minus party) — 2026-06-15</title>
+<style>
+  :root {
+    --bg:#0f1117; --panel:#171a22; --panel2:#1d212b; --ink:#e6e9ef; --muted:#9aa3b2;
+    --accent:#4f9cff; --accent2:#7dd3a0; --warn:#f0b35b; --danger:#f07b7b; --line:#2a2f3a;
+    --hi:#7dd3a0; --med:#f0b35b; --low:#f07b7b; --crit:#ff6b6b;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:1040px; margin:0 auto; padding:40px 28px 80px; }
+  header.title { border-bottom:2px solid var(--accent); padding-bottom:20px; margin-bottom:8px; }
+  h1 { font-size:30px; margin:0 0 6px; letter-spacing:-.4px; }
+  .sub { color:var(--muted); font-size:15px; }
+  .meta { color:var(--muted); font-size:12.5px; margin-top:12px; }
+  h2 { font-size:21px; margin:42px 0 14px; padding-bottom:6px; border-bottom:1px solid var(--line); }
+  h3 { font-size:16.5px; margin:26px 0 8px; color:var(--accent); }
+  p { margin:10px 0; }
+  .lead { background:var(--panel); border-left:4px solid var(--danger); padding:18px 20px;
+    border-radius:0 8px 8px 0; margin:18px 0; font-size:15.5px; }
+  .grid { display:grid; gap:14px; }
+  .cards { grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; text-align:center; }
+  .card .k { font-size:26px; font-weight:700; color:var(--accent); }
+  .card .l { color:var(--muted); font-size:13px; margin-top:2px; }
+  .card.crit .k { color:var(--crit); } .card.high .k { color:var(--med); }
+  .card.med .k { color:var(--accent); } .card.flag .k { color:var(--accent2); }
+  .finding { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:16px 20px; margin:14px 0; }
+  .finding.crit { border-left:4px solid var(--crit); }
+  .finding.high { border-left:4px solid var(--med); }
+  .finding h3 { margin-top:0; color:var(--ink); }
+  .badge { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:.5px; vertical-align:middle; margin-left:8px; }
+  .b-crit{ background:rgba(255,107,107,.16); color:var(--crit); border:1px solid var(--crit); }
+  .b-hi { background:rgba(125,211,160,.16); color:var(--hi); border:1px solid var(--hi); }
+  .b-med{ background:rgba(240,179,91,.16); color:var(--med); border:1px solid var(--med); }
+  .b-low{ background:rgba(240,123,123,.16); color:var(--low); border:1px solid var(--low); }
+  ul { margin:8px 0 8px 0; padding-left:22px; }
+  li { margin:5px 0; }
+  code { background:#11141b; border:1px solid var(--line); border-radius:5px; padding:1px 6px;
+    font:13px/1.5 "SF Mono",Consolas,Menlo,monospace; color:#cfe3ff; }
+  .esa { font-size:12px; color:var(--muted); }
+  table { width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px; }
+  th,td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--accent); font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+  tr:hover td { background:var(--panel2); }
+  .pill { font-size:11px; padding:1px 8px; border-radius:12px; background:var(--panel2);
+    border:1px solid var(--line); color:var(--muted); }
+  .rec { counter-reset:rec; padding-left:20px; }
+  .rec .step { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--accent2);
+    border-radius:0 8px 8px 0; padding:14px 18px; margin:12px 0; position:relative; }
+  .rec .step::before { counter-increment:rec; content:counter(rec);
+    position:absolute; left:-16px; top:14px; width:28px; height:28px; background:var(--accent2);
+    color:#06210f; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:14px; }
+  .caveat { background:rgba(240,179,91,.08); border:1px solid var(--med); border-radius:10px;
+    padding:14px 18px; margin:14px 0; }
+  .foot { margin-top:50px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="title">
+  <h1>Coverage Gap Scan — whole-suite (minus party)</h1>
+  <div class="sub">App GraphQL behaviors with <strong>zero test coverage</strong> in the IMA 360 Playwright suite, risk-ranked</div>
+  <div class="meta">IMA 360 QE &nbsp;·&nbsp; 2026-06-15 &nbsp;·&nbsp; branch <code>dev/robert_6152026</code> &nbsp;·&nbsp;
+    Source: <code>CRM/Igs.Crm.Query.Web/queryWeb.graphql</code> MutationRoot+QueryRoot vs <code>src/tests</code> + <code>src/data</code> + <code>waiters.types</code>
+    &nbsp;·&nbsp; Scope: opportunity · contract · accounts · dashboard/calendar · cross — <em>party &amp; Elastic-admin excluded</em></div>
+</header>
+
+<div class="lead">
+  <strong>Bottom line.</strong> The suite covers all three <em>merge</em> flows for parties and opportunities but
+  <strong>not account merge</strong>, and four <code>@authorize</code>-gated mutations (commissionable start dates, bulk-update
+  opportunities, bulk task/note apply) have their authorization gates entirely untested. <strong>5 CRITICAL</strong> and
+  <strong>7 HIGH</strong> genuine gaps survive verification. The dominant honest caveat: a large slice of mutation coverage is
+  <em>browser-only</em> (via <code>API_ENDPOINTS</code> waiters) with no API-layer assertion, and the C# XUnit layer is treated
+  as a <strong>heuristic</strong> — two ops are flagged "likely unit-covered, confirm," never asserted as mapped.
+</div>
+
+<div class="grid cards">
+  <div class="card crit"><div class="k">5</div><div class="l">CRITICAL</div></div>
+  <div class="card high"><div class="k">7</div><div class="l">HIGH</div></div>
+  <div class="card med"><div class="k">~28</div><div class="l">MEDIUM (grouped)</div></div>
+  <div class="card"><div class="k">~22</div><div class="l">LOW (ref reads)</div></div>
+  <div class="card flag"><div class="k">2</div><div class="l">FLAGGED unit</div></div>
+  <div class="card"><div class="k">2</div><div class="l">PARTIAL (authz)</div></div>
+  <div class="card"><div class="k">0</div><div class="l">@deprecated dropped</div></div>
+</div>
+
+<h2>CRITICAL gaps</h2>
+
+<div class="finding crit">
+  <h3>mergeAccounts — the only uncovered merge operation <span class="badge b-crit">Critical</span></h3>
+  <p><code>mergeAccounts(input: MergeAccountsInput!): MergeAccountsPayload!</code> &nbsp;<span class="pill">SDL L2189 · account · merge · persisted</span></p>
+  <p>No <code>src/data</code> op, no waiter endpoint, no spec reference. <code>mergeParties</code> and <code>mergeOpportunities</code>
+  are <em>both</em> covered — account merge is the lone merge with zero coverage. It is a data-loss-class mutation that cascades
+  across accounts → opportunities → contracts → legal-entities.</p>
+  <p class="esa">Evidence 9 · Severity 9 · Actionability 9 &nbsp;—&nbsp; base HIGH (merge) +1 data-cascade → CRITICAL</p>
+</div>
+
+<div class="finding crit">
+  <h3>updateCommissionableStartDates — untested authz gate on a financial field <span class="badge b-crit">Critical</span></h3>
+  <p><code>updateCommissionableStartDates(...) @authorize(policy: "Can Update Commissionable Start Dates")</code> &nbsp;<span class="pill">SDL L2081 · account · update · authz-denied + financial</span></p>
+  <p>Happy path is <em>plausibly</em> exercised by <code>accounts.grid.spec.ts</code> CI-T1218 ("uploading commissionables"),
+  but there is <strong>no API-level assertion and no authz-denied test</strong> — the authorization gate itself is unverified.
+  Commissionable dates drive commission/financial calc. <em>(Also counted under PARTIAL.)</em></p>
+  <p class="esa">Evidence 8 · Severity 7 · Actionability 8 &nbsp;—&nbsp; @authorize + financial → CRITICAL</p>
+</div>
+
+<div class="finding crit">
+  <h3>bulkUpdateOpportunitiesFromTemplate — distinct from the covered bulk-transfer op <span class="badge b-crit">Critical</span></h3>
+  <p><code>bulkUpdateOpportunitiesFromTemplate(...) @authorize(policy: "Can Bulk Update Opportunities")</code> &nbsp;<span class="pill">SDL L2116 · opportunity · update(bulk) · authz-denied</span></p>
+  <p>Easy to assume covered because <code>bulkTransferOpportunitiesFromTemplate</code> <em>is</em>. Only the template
+  <em>download</em> is tested (<code>opportunity.bulk-transfer.spec.ts</code> CI-T2425) — the staging→commit mutation and its
+  authz gate are not.</p>
+  <p class="esa">Evidence 8 · Severity 8 · Actionability 8 &nbsp;—&nbsp; @authorize + bulk-mutate → CRITICAL</p>
+</div>
+
+<div class="finding crit">
+  <h3>createOpportunitiesTask &amp; createOpportunitiesNote — bulk-apply behind an untested gate <span class="badge b-crit">Critical</span></h3>
+  <p><code>createOpportunitiesTask(...) @authorize("Can Bulk Update Opportunities")</code> &nbsp;<span class="pill">SDL L2117</span><br>
+     <code>createOpportunitiesNote(...) @authorize("Can Bulk Update Opportunities")</code> &nbsp;<span class="pill">SDL L2118</span></p>
+  <p>Both bulk-create tasks/notes across many opportunities; neither has a data op, waiter endpoint, or spec reference. The
+  shared "Can Bulk Update Opportunities" policy is unverified across all three of its mutations.</p>
+  <p class="esa">Evidence 8 · Severity 7 · Actionability 8 (each) &nbsp;—&nbsp; @authorize + bulk-create → CRITICAL</p>
+</div>
+
+<h2>HIGH gaps</h2>
+<table>
+  <tr><th>Op (raw SDL line)</th><th>Entity · Action</th><th>Why uncovered</th><th>E/S/A</th></tr>
+  <tr><td><code>createRenewalOpportunity</code> — L2110</td><td>opportunity · create</td><td>No data op / endpoint / spec. Core renewal-sales flow entirely uncovered.</td><td>9/8/9</td></tr>
+  <tr><td><code>manuallyAdjustOpportunityStatus</code> — L2123</td><td>opportunity · update(status)</td><td><code>manuallySetSalesActivity</code> covered; direct status-override is not.</td><td>8/7/8</td></tr>
+  <tr><td><code>deletePartyAccounts</code> — L2181</td><td>account · delete</td><td>Upsert / move / edit account covered; account <strong>delete</strong> is not.</td><td>8/8/8</td></tr>
+  <tr><td><code>createEmailSignature</code> — L2155</td><td>email · create (@authorize)</td><td>Template create/edit/image + category CRUD E2E-covered; signature create is the one uncovered comms mutation. Down-ranked from CRITICAL — trivial blast.</td><td>8/5/7</td></tr>
+  <tr><td><code>dfrFinalize</code> — L2077</td><td>dfr · finalize (@authorize)</td><td><code>DFR_FINALIZE</code> waiter referenced in <code>accounts.dfr.spec.ts</code>, but titles assert <em>resolving</em> DFRs, not the finalize authz-denied path. <em>(PARTIAL.)</em></td><td>7/6/7</td></tr>
+  <tr><td><code>bulkApplyContactToOpportunities</code> — L2109</td><td>opportunity·contact · update(bulk)</td><td>No data op / endpoint / spec reference.</td><td>8/6/7</td></tr>
+  <tr><td><code>createCalendarEvent</code> — L2128</td><td>calendar · create (MS Graph)</td><td>Calendar specs cover the task panel + summary-tab default, not Outlook event CRUD. Integration write.</td><td>8/6/7</td></tr>
+</table>
+
+<h2>FLAGGED — likely unit-covered (confirm with C# team)</h2>
+<div class="caveat">
+  Heuristic only — these name a <em>candidate</em> XUnit file, not a proven cross-language mapping.
+</div>
+<table>
+  <tr><th>Op</th><th>Rule</th><th>Candidate XUnit file</th><th>SDL</th></tr>
+  <tr><td><code>evaluateOpportunityStatus</code></td><td>D1 (evaluate/calc) + D4</td><td><code>Igs.Crm.Core.Services.Test/Opportunities/IndustrialOpportunityStatusServiceTests.cs</code></td><td>L2124</td></tr>
+  <tr><td><code>validateAccountsForOpportunity</code></td><td>D1 (validate) + D4</td><td><code>Igs.Crm.Query.Services.UnitTests/Account/Validation/AccountValidationServiceTests.cs</code></td><td>L2185</td></tr>
+</table>
+
+<h2>MEDIUM / LOW (condensed)</h2>
+<p>~28 MEDIUM state-mutating/read gaps grouped in the markdown report; ~22 LOW are QueryRoot reference-list reads
+(<code>linesOfBusiness</code>, <code>*Statuses</code>, <code>*Types</code>, …) + logging mutations — many exercised
+transitively by the covered <code>getReferenceData</code>, low standalone value. Representative MEDIUM clusters:</p>
+<ul>
+  <li><strong>Opportunity:</strong> <code>updatePrimaryOpportunityContact</code> · <code>updateDecisionMakerOpportunityContact</code> · <code>updateUserOpportunityFlags</code> · <code>completeSalesActivities</code>/<code>...ForParty</code> · <code>link/unlinkPartyAccountToOpportunity</code> (weakly covered).</li>
+  <li><strong>Accounts/LOA:</strong> <code>sendLoa</code> · <code>voidLoa</code> (upload covered, send/void lifecycle not) · <code>setCustomerAccountAlias</code>.</li>
+  <li><strong>Dashboard:</strong> dismiss/retain HU-tracking (×4) + EDSA-tracking (×2); read queries <code>dashboardTopCustomers</code>/<code>...HistoricalUsageModels</code>/<code>...SalesTrackerSeries</code>/<code>...EnergyDataSharingAgreements</code>/<code>...IncompleteOpportunities</code>.</li>
+  <li><strong>Tasks:</strong> <code>moveTasks</code> · <code>toggleTaskPriority</code> · <code>deleteTask(s)</code> · <code>openTask</code> · <code>closeTask</code> (<code>upsertTask</code> covered).</li>
+  <li><strong>MyAccount / contacts / calendar:</strong> profile update/associate ops · <code>createOrganizationContactInteraction</code> · <code>update/cancelCalendarEvent</code> · exchange room/schedule reads.</li>
+</ul>
+
+<h2>Caveats — the honest frame</h2>
+<div class="caveat">
+  <ul style="margin:0;">
+    <li><strong>Unit demotion is inference</strong> — FLAGGED rows are candidates to confirm, not coverage.</li>
+    <li><strong>E2E-depth, not API-depth:</strong> DFR resolve, email template CRUD, <code>updateContractFriendlyName</code>, <code>deleteOpportunity</code> are covered only through the browser via waiters — no API spec asserts <code>res.data.&lt;mutation&gt;.errors</code>. A lower-tier "API-depth gap" for those user-facing mutations.</li>
+    <li><strong>Integration-only paths</strong> (Outlook/MS-Graph, Exchange, Choice360/EDSA outbound) enumerated only where they surface in CRM's SDL; pure webhook/outbound paths are not enumerated.</li>
+    <li><strong>Elastic-index admin mutations</strong> (7 ops, all <code>@authorize</code>) are out of product-domain scope — noted, not ranked.</li>
+    <li><strong>Normalization is heuristic</strong> — every gap row prints its raw SDL line for human verification.</li>
+    <li><strong>Since last scan:</strong> the <code>runs.jsonl</code> baseline was a <em>party-only</em> scan — scope differs, no meaningful delta. First whole-suite-minus-party run.</li>
+  </ul>
+</div>
+
+<h2>Highest-leverage fix</h2>
+<div class="rec">
+  <div class="step">Cover <strong><code>mergeAccounts</code></strong> first. It is the only merge operation in the suite with
+  zero coverage (party and opportunity merge are both tested), it is a data-loss-class mutation cascading across accounts,
+  opportunities, contracts, and legal-entities, and a <code>companies.merge.spec.ts</code>-style fresh-data-per-run harness
+  already exists to clone. Then close the four <code>@authorize</code> gaps (commissionable / bulk-update-opportunities /
+  bulk task+note) — one negative authz-denied test each verifies the gate.</div>
+</div>
+
+<div class="foot">
+  Generated by <code>/coverage-gap-scan</code> (read-only) · markdown twin at
+  <code>.claude/skills/_shared/tickets/coverage-gap-scan-whole-suite-no-party-2026-06-15.md</code> ·
+  To close a gap, hand the op to <code>/ready-for-testing</code> or <code>/ruby-migration</code> — this skill fixes nothing.
+</div>
+
+</div>
+</body>
+</html>

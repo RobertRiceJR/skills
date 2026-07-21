@@ -1,0 +1,46 @@
+# =============================================================================
+# Duplication-Drift LLM Judge — batch harness (sweep & golden-set calibrate)
+# =============================================================================
+# Sibling of the spec-quality judge (../../promptfooconfig.yaml) — SAME plumbing
+# (scripts/llm-judge/lib.ts), DIFFERENT rubric (./dimensions.json) and a doc-reviewer
+# grader frame instead of the Playwright one.
+#
+# Run via:
+#   npm run judge:dup-sweep       → scripts/llm-judge/run-dup-sweep.ts (grader=Haiku)
+#   npm run judge:dup-calibrate   → scripts/llm-judge/run-dup-sweep.ts --calibrate (grader=Opus)
+#
+# Dimensions SSOT: ./dimensions.json
+#
+# HOW IT WORKS (no model-under-test — we grade a static artifact):
+#   providers: [echo]  → the `artifact` var (a CANONICAL _shared block + the skill's INLINE copy,
+#                        composed by run-dup-sweep) is echoed straight through as {{output}}.
+#   rubricPrompt       → the doc-consistency grader frame. {{rubric}} swaps in each DD criteria.
+# =============================================================================
+
+description: IMA 360 duplication-drift judge
+
+providers:
+  - id: echo
+
+prompts:
+  - '{{artifact}}'
+
+defaultTest:
+  options:
+    provider:
+      id: anthropic:messages:claude-haiku-4-5
+      config:
+        apiKeyRequired: false
+    rubricPrompt: |
+      [
+        {
+          "role": "system",
+          "content": "You are a senior technical-docs reviewer for the IMA 360 QE skill ecosystem. You are shown a CANONICAL source block (the single source of truth, in a _shared/ doc) and an INLINE copy of that material that lives inside a skill. Skills intentionally DUPLICATE shared context rather than importing it, so a terser or partial restatement is EXPECTED and FINE - only FACTUAL CONTRADICTIONS and material STALE claims are violations. You score ONE consistency dimension at a time, on the evidence in the artifact only. HIGH score = the copy is still in sync with canonical; LOW = it has drifted / gone stale. OUTPUT ONLY a JSON object {\"reason\": <one sentence>, \"score\": <number 0.0-1.0>, \"pass\": <boolean>}. Do NOT suggest fixes or rewrites. Scoring only."
+        },
+        {
+          "role": "user",
+          "content": "ARTIFACT (CANONICAL source block, then the skill's INLINE copy):\n\n{{output}}\n\nSCORE THIS DIMENSION ONLY:\n{{rubric}}\n\nUse the FULL scale, proportional to how in-sync the inline copy is:\n- 0.9-1.0 = fully consistent; any difference is terser-restatement only.\n- 0.6-0.8 = largely in sync, with one minor stale or imprecise point.\n- 0.4-0.6 = genuinely mixed: still-correct parts AND a real stale/contradictory claim.\n- 0.2-0.4 = mostly stale: several claims no longer match canonical.\n- 0.0-0.2 = reserve for a copy that is substantially wrong vs canonical.\nBeing shorter than canonical is NOT a deduction. Only contradictions and material stale claims lower the score. Return only the JSON object."
+        }
+      ]
+
+tests: file://generated-cases.json

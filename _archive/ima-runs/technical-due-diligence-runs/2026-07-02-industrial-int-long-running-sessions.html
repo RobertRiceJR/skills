@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-028
+date: 2026-07-02
+scope: mssql-industrial-int — 3 long-running sessions (405 billing proc, 383/340 DemandForecasting SSIS extracts)
+jira: []
+severity: { critical: 1, high: 2, medium: 3, low: 2 }
+status: complete
+updated: 2026-07-02 — follow-up: RAD burst self-resolved (queue drained, victims finished); novelty = recurring (CI-7868) + volume-flat, not new; 06-27 root cause unpinned (Query Store OFF); +R1-R6 recommendations
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-028 · Long-running sessions — mssql-industrial-int</title>
+  <style>
+:root {
+  --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+  --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#ffffff;
+  --crit:#b5261c;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+* { box-sizing:border-box; }
+html { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 var(--font-body); }
+.wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+header.report { background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%); color:#fff; border-radius:16px; padding:34px 36px; margin-bottom:28px; box-shadow:0 8px 28px rgba(27,31,29,.18); }
+header.report .eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:11.5px; font-weight:700; opacity:.85; margin:0 0 10px; }
+header.report h1 { margin:0 0 8px; font-size:29px; line-height:1.15; font-weight:750; font-family:var(--font-head); }
+header.report p.sub { margin:0; font-size:15px; opacity:.93; max-width:840px; }
+header.report .meta { margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.25); display:flex; flex-wrap:wrap; gap:22px; font-size:12.5px; opacity:.93; }
+h2.section { font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:750; margin:34px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--line); font-family:var(--font-head); }
+.legend { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px; }
+.legend .item { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:14px 16px; }
+.legend .item .k { font-weight:750; font-size:13px; margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+.legend .item .k .dot { width:10px; height:10px; border-radius:50%; }
+.legend .item .d { font-size:12.5px; color:var(--muted); line-height:1.45; }
+.tablecard { background:var(--card); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:0 2px 10px rgba(20,25,40,.04); margin-bottom:12px; }
+table { width:100%; border-collapse:collapse; font-size:13.5px; }
+thead th { background:#eef1ee; text-align:left; padding:12px 13px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:750; border-bottom:1px solid var(--line); white-space:nowrap; }
+thead th.num { text-align:right; }
+tbody td { padding:11px 13px; border-bottom:1px solid #eef0ee; vertical-align:top; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover { background:#f6faf4; }
+td.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+h2.section a { color:inherit; }
+.tier { border-left:5px solid var(--accent); border-radius:10px; padding:16px 20px; margin-bottom:14px; background:var(--card); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+.tier h3 { margin:0 0 8px; font-size:15px; display:flex; align-items:center; gap:9px; flex-wrap:wrap; font-family:var(--font-head); }
+.tier h3 .badge { font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; color:#fff; background:var(--accent); }
+.tier p { margin:0 0 8px; font-size:13.5px; color:var(--ink); }
+.tier p .lbl2 { font-weight:750; }
+.tier ul { margin:6px 0 0; padding-left:18px; }
+.tier li { margin:6px 0; font-size:13.5px; }
+.tier.crit { border-left-color:var(--crit); } .tier.crit .badge { background:var(--crit); }
+.tier.warn { border-left-color:var(--accent-3); } .tier.warn .badge { background:var(--accent-3); }
+.tier.info { border-left-color:var(--accent-2); } .tier.info .badge { background:var(--accent-2); }
+.tier.muted { border-left-color:var(--muted); } .tier.muted .badge { background:var(--muted); }
+.tier pre { background:#f4f6f4; border:1px solid var(--line); border-radius:8px; padding:12px 14px; overflow-x:auto; font-size:12px; line-height:1.5; font-family:"SF Mono",Consolas,monospace; margin:8px 0; color:#26302a; }
+.callout { background:var(--accent-soft); border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:12px; padding:18px 22px; margin:6px 0 30px; }
+.callout .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:750; color:var(--accent); margin-bottom:6px; }
+.callout p { margin:0; font-size:14.5px; line-height:1.55; }
+.callout p + p { margin-top:9px; }
+.callout ol { margin:10px 0 0; padding-left:20px; }
+.callout ol li { font-size:14px; margin:8px 0; line-height:1.5; }
+.callout.crit { background:#fbecea; border-left-color:var(--crit); }
+.callout.crit .lbl { color:var(--crit); }
+.note { font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.5; }
+code { background:#eef1ee; padding:1px 6px; border-radius:5px; font-size:.88em; font-family:"SF Mono",Consolas,monospace; }
+footer.rep { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); text-align:center; }
+.lozenge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.lozenge.green { background:#e3f1dc; color:#2f6e1f; }
+.lozenge.amber { background:#f7ebd9; color:#8a5a14; }
+.lozenge.red { background:#f6ddda; color:#9a271d; }
+.lozenge.gray { background:var(--line); color:var(--muted); }
+@media print { body { background:#fff; } .wrap { padding:0; } .tablecard,.tier,.legend .item { box-shadow:none; } header.report { box-shadow:none; } }
+@media (max-width:720px) { .legend { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE · TDD-028</p>
+    <h1>Three long-running sessions on Industrial&nbsp;INT — why, from where, and is this normal?</h1>
+    <p class="sub">A SQL slowdown investigation on <code style="background:rgba(255,255,255,.15);color:#fff">mssql-industrial-int</code>. Three sessions (405, 383, 340) have run 6–8&nbsp;hours. This report answers, evidence-first from the live DMVs: <b>why</b> they are slow, <b>who/what</b> triggered them, and <b>whether they normally take this long</b>.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice / QE + Industrial DBA</span>
+      <span><b>Date:</b> 2026-07-02 (08:18 + 08:55 CT snapshots)</span>
+      <span><b>Scope:</b> Sessions 405 / 383 / 340 on Industrial INT</span>
+    </div>
+  </header>
+
+  <!-- severity tally -->
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:#b5261c"></span>1 Critical</div><div class="d">Nightly billing-flag proc degraded 100&times;+ &amp; now overlapping; failures silently swallowed.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:#e08a3e"></span>2 High</div><div class="d">Instance CPU saturation from the RAD feed storm; heavy view-on-view extracts.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:#2c6e9b"></span>3 Medium</div><div class="d">Serial (DOP&nbsp;1) plans; non-sargable view predicates; error-swallowing CATCH.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:#5b6472"></span>2 Low</div><div class="d"><code>SELECT&nbsp;*</code> of a wide view; duplicated CTE; SQL Server 2016 build.</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout crit">
+    <div class="lbl">Verdict — the three things that matter</div>
+    <p>None of the three queries is <em>blocked</em> and none has a lock problem (<code>blocking_session_id&nbsp;=&nbsp;0</code>, waiting-tasks empty). They are slow because the <b>instance is CPU-starved</b> and the two DemandForecasting queries scan <b>expensive views</b>. Only one of the three is a genuine risk to the business:</p>
+    <ol>
+      <li><a href="#f1"><b>The nightly billing-flag proc (session 405) is 100&times;+ slower and now overlaps its own next run.</b></a> <code>IGS.SetIsManualBilledOnContractTerm</code> historically finishes in <b>~1–2&nbsp;minutes</b>; it has run <b>8.3&nbsp;hours</b> today, holds an open transaction on <code>dbo.ContractTerms</code>, and its <b>empty CATCH silently swallows any failure</b> — the 07-01 run left no completion record at all. This is a money-path (billing) job flying blind. <span class="lozenge red">Critical</span></li>
+      <li><a href="#f2"><b>A 128-request <code>Igs.Rad</code> IMAAccountFeed storm is saturating the box.</b></a> 128 of ~144 active requests come from one feeder (INT-QUEUE-03); 105 tasks are queued <em>runnable</em> on 24 cores. This is the noisy neighbor starving billing <em>and</em> ETL — the proximate cause of all three slowdowns. <span class="lozenge amber">High</span></li>
+      <li><a href="#f3"><b>The two 6-hour extracts are full <code>SELECT *</code> scans of heavy views.</b></a> SSIS pulls entire <code>DemandForecasting</code> views (CTEs, window functions, per-row correlated <code>TOP&nbsp;1</code> subqueries, non-sargable date predicates) with no filter — 76–81M logical reads each, on serial plans. <span class="lozenge amber">High</span></li>
+    </ol>
+  </div>
+
+  <!-- DIRECT ANSWERS -->
+  <h2 class="section">Direct answers to the three questions</h2>
+
+  <div class="tablecard">
+    <table>
+      <thead>
+        <tr><th>Session</th><th>What it is running</th><th>Who / where it came from</th><th class="num">Wall clock</th><th class="num">CPU</th><th class="num">Logical reads</th><th>Live state</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>405</b></td>
+          <td>Proc <code>IGS.SetIsManualBilledOnContractTerm</code> (marks <code>IN-%</code> Choice contract terms as <code>IsManualBilled</code>) &middot; DB <code>IGS_AppData</code></td>
+          <td><code>IGSDOMAIN\Choice_OpsEng</code> via <b>SQLCMD</b> from <b>INTAPP06</b> &middot; started <b>00:00:22</b> (midnight batch)</td>
+          <td class="num"><b>8.3 hr</b></td>
+          <td class="num">95 min<br><span class="note">(19% of wall)</span></td>
+          <td class="num">58.7 M</td>
+          <td><code>runnable</code> &middot; last wait <code>SOS_SCHEDULER_YIELD</code> (CPU) &middot; open txn = 2</td>
+        </tr>
+        <tr>
+          <td><b>383</b></td>
+          <td><code>SELECT&nbsp;*</code> from view <code>DemandForecasting.ContractVolumes</code> &middot; DB <code>Industrial</code></td>
+          <td><code>IGSDOMAIN\INT_SPLYSSIS_SVC</code> &middot; <b>SSIS</b> OLEDB extract from <b>INT-SPLYSSIS-01</b> &middot; started <b>02:18:21</b></td>
+          <td class="num"><b>6.0 hr</b></td>
+          <td class="num">3.8 min<br><span class="note">(1% of wall)</span></td>
+          <td class="num">76.2 M</td>
+          <td><code>runnable</code> &middot; last wait <code>PAGELATCH_EX</code> (tempdb)</td>
+        </tr>
+        <tr>
+          <td><b>340</b></td>
+          <td><code>SELECT&nbsp;*</code> from view <code>…ContractVolumes_MonthlyContractAccountVolumesByMarketArea</code> &middot; DB <code>Industrial</code></td>
+          <td><code>IGSDOMAIN\INT_SPLYSSIS_SVC</code> &middot; <b>SSIS</b> OLEDB extract from <b>INT-SPLYSSIS-01</b> &middot; started <b>02:18:44</b></td>
+          <td class="num"><b>6.0 hr</b></td>
+          <td class="num">4.0 min<br><span class="note">(1% of wall)</span></td>
+          <td class="num">81.4 M</td>
+          <td><code>runnable</code> &middot; last wait <code>PAGELATCH_EX</code> (tempdb)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">1 &middot; Why are they taking so long?</div>
+    <p><b>Not blocking, not locks — CPU starvation + heavy scans.</b> Every session is <code>runnable</code> (waiting for a CPU quantum), not <code>suspended</code> on a lock. The tell is the ratio of CPU to wall-clock: session 405 burned 95&nbsp;min of CPU across 8.3&nbsp;hr (81% of its life <em>not</em> on a CPU); the two extracts used ~4&nbsp;min of CPU across 6&nbsp;hr (99% waiting). The instance has <b>24 schedulers but 105 runnable tasks queued</b> (avg load factor 29) — roughly 4–5 requests deep per core. On top of that, the two DemandForecasting objects are <b>views</b>, so each <code>SELECT *</code> materialises the full view computation (76–81M logical reads) on a <b>serial (DOP&nbsp;1)</b> plan. Slow work, running on a starved box.</p>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">2 &middot; Where did they come from / who triggered them?</div>
+    <p><b>Two different scheduled batch systems, none of them a person.</b> Session <b>405</b> is the nightly <b>billing determination job</b> — <code>Choice_OpsEng</code> firing <code>sqlcmd</code> from the app server INTAPP06 at 00:00 (an external scheduler — Control-M / Windows Task, <em>not</em> SQL Agent, which would name itself differently). Sessions <b>383</b> and <b>340</b> are one <b>SSIS ETL package</b> on the supply SSIS host INT-SPLYSSIS-01 (service account <code>INT_SPLYSSIS_SVC</code>, OLEDB) that kicked off two data-flow extracts 23&nbsp;seconds apart at 02:18. They are unrelated jobs that happen to collide on the same instance — and both are being crushed by a third, unrelated workload (the RAD feed).</p>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">3 &middot; Is there historical usage — do they normally take this long?</div>
+    <p><b>No. The billing proc is wildly abnormal; the extracts have no clean baseline but are clearly starved, not inherently 6-hour jobs.</b> The proc self-logs each successful completion to <code>IGS.StoredProcedureAndFunctionExecutionLog</code>, and that history is unambiguous:</p>
+    <ol>
+      <li><b>2026-06-19 &rarr; 06-26:</b> completes at <b>00:01–00:02</b> every night — i.e. <b>~1–2 minutes</b> after its midnight start. This is normal.</li>
+      <li><b>2026-06-27 onward:</b> completions jump to <b>10:47, 10:42, 17:42, 16:15</b> — hours-long runs. A step-change regression begins on <b>06-27</b>.</li>
+      <li><b>2026-07-01:</b> <b>no completion row at all</b> — the run did not finish (or errored into the swallowing CATCH).</li>
+      <li><b>2026-07-02:</b> a completion at <b>05:08</b> <em>and</em> session 405 still running since 00:00 — runs are now <b>overlapping</b> (today's midnight run launched while the prior day's was still going).</li>
+    </ol>
+    <p>The two SSIS extracts leave no completed-run history on this instance (only lightweight SSIS metadata-validation probes are cached — 1–26 logical reads, created at the 02:17:46 connect). SSIS run durations would live in the SSISDB catalog on INT-SPLYSSIS-01. But the same CPU-to-wall ratio (1%) proves they are starved, not doing 6&nbsp;hours of real work.</p>
+  </div>
+
+  <!-- ============ FOLLOW-UP INVESTIGATION (continued diligence) ============ -->
+  <h2 class="section">Follow-up — RAD burst TRIAGE, novelty &amp; 06-27 traceability</h2>
+
+  <div class="callout">
+    <div class="lbl">What this adds &middot; snapshot @ 08:55 CT (≈40 min after the first)</div>
+    <p>Continued diligence chased the RAD burst with the <code>/rabbitmq</code> HEALTH/TRIAGE flow and pulled the historical trend. <b>The storm broke on its own.</b> Between 08:18 and 08:55 the <code>Igs.Rad</code> load on INT-QUEUE-03 fell from <b>128 requests to 1</b>, the account-feed queue drained to <b>0 pending</b>, and <b>all three long-running sessions (405 / 383 / 340) completed and disappeared</b> from <code>dm_exec_requests</code>. That is direct causal proof of the noisy-neighbor thesis: kill the CPU pressure and the starved jobs finish. It also reframes two things — the RAD storm is <em>not new</em>, and it is <em>not a volume event</em>.</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">TRIAGE</span> The burst was the account-feed queue — not the reindex queue you purged</h3>
+    <p><span class="lbl2">Live RabbitMQ state (INT, <code>bunny.int.igsenergy.net</code>, RabbitMQ 3.8.3, 08:55 CT):</span></p>
+    <div class="tablecard">
+      <table>
+        <thead><tr><th>Queue</th><th>Role</th><th class="num">Pending</th><th class="num">Consumers</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td><code>Rad_PartyAccountChangeQueue</code></td><td><b>Account-feed — the storm's queue</b> (drives <code>Rad.IMAAccountFeed</code> on INT-QUEUE-03)</td><td class="num">0</td><td class="num">100</td><td><span class="lozenge green">Drained / healthy</span></td></tr>
+          <tr><td><code>Rad_OrganizationAgentChangeQueue</code></td><td>Org sync (sibling account-feed path)</td><td class="num">0</td><td class="num">100</td><td><span class="lozenge green">Healthy</span></td></tr>
+          <tr><td><code>IMA_RAD_CrmChangeQueue_DeadLetter</code></td><td><b>Reindex/CDC feed DLQ</b> (the ES reindex path — a <em>different</em> queue/consumer)</td><td class="num">5,194</td><td class="num">—</td><td><span class="lozenge amber">Dead-lettering</span></td></tr>
+          <tr><td><code>IMA_RAD_IndustrialChangeQueue_DeadLetter</code></td><td>Reindex/CDC (industrial contracts) DLQ</td><td class="num">952</td><td class="num">—</td><td><span class="lozenge amber">Dead-lettering</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><span class="lbl2">Why it matters for the purge:</span> the storm rides the <b>account-feed</b> consumer (<code>Igs.Rad.Queue.ServiceHost</code>, ~100 receivers × prefetch 50 ≈ 5,000-way concurrency by design) on <code>Rad_PartyAccountChangeQueue</code>. The <b>reindex</b> feed is a separate queue (<code>IMA_RAD_CrmChangeQueue</code>) with a separate consumer (IndexService, 8×2). <b>Purging the reindex queue would not have stopped the account-feed storm</b> — and the reindex DLQ sitting at 5,194 says recent reindex messages are dead-lettering (a separate reindex-health issue worth its own look). The account-feed flood is <code>Rad_TR_*</code> triggers firing on bulk account/party churn, not the reindex path.</p>
+    <p><span class="lbl2">Signature:</span> this is a <b>recurrence of pattern P-MQ-006 / CI-7868</b> (documented in <code>rabbitmq/knowledge-base/session-log.md</code>) — the same box previously showed "147 active / 81 CPU-waiting / 0 blocked, RAD/account-sync 100-receiver host + a ~17h <code>Choice_OpsEng</code> SQLCMD runaway." <b>Ruled out:</b> P-MQ-001 (the <code>RAD.UpsertCustomer</code> <code>MERGE … WITH (HOLDLOCK)</code> deadlock) — <code>blocking_session_id = 0</code>, no 1205, waiting-tasks empty; and a classic P-MQ-003 sustained backlog — the queue drains fine to 0 with its 100 consumers. This is a <b>transient concurrency burst</b>, not a stuck consumer.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">NOVELTY</span> Not new, and not a volume spike — the daily RAD volume is flat across 06-27</h3>
+    <p><span class="lbl2">Evidence</span> — <code>Rad.IMAAccountFeed</code> self-logs every execution to <code>IGS.StoredProcedureAndFunctionExecutionLog</code> (15.5M rows since 2020). Daily execution counts across the regression boundary:</p>
+    <div class="tablecard">
+      <table>
+        <thead><tr><th>Date</th><th class="num">Rad.IMAAccountFeed / day</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>2026-06-25</td><td class="num">50,618</td><td>normal</td></tr>
+          <tr><td>2026-06-26</td><td class="num">50,982</td><td>last "good" billing night</td></tr>
+          <tr><td><b>2026-06-27</b></td><td class="num">50,553</td><td><b>regression begins — yet volume unchanged</b></td></tr>
+          <tr><td>2026-06-28</td><td class="num">50,118</td><td>&nbsp;</td></tr>
+          <tr><td>2026-06-29</td><td class="num">51,337</td><td>&nbsp;</td></tr>
+          <tr><td>2026-06-30</td><td class="num">46,781</td><td>&nbsp;</td></tr>
+          <tr><td>2026-07-01</td><td class="num">53,052</td><td>&nbsp;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><span class="lbl2">Why it matters:</span> the account-feed does the <b>same ~48–53K executions/day before and after 06-27</b> — there is <b>no volume step-change</b>. So the regression is <em>not</em> "more RAD work"; it is the <em>same</em> work delivered in tighter concurrency bursts (like today's 126-in-12-seconds) colliding with the serial billing/ETL jobs. Combined with the CI-7868 precedent, the storm shape is a <b>known, recurring capacity characteristic of the 100×50 account-feed on a shared box</b>, not a novel event.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">TRACEABILITY</span> The 06-27 onset is real but unpinned — because the traceability isn't there</h3>
+    <p><span class="lbl2">The regressed proc:</span> <code>IGS.SetIsManualBilledOnContractTerm</code> (DB <code>IGS_AppData</code>, schema <code>IGS</code>) — <b>created 2017-04-06, last modified 2020-04-28</b>. The proc code did <b>not</b> change on 06-27; this is not a deploy. What you have to trace it:</p>
+    <ul>
+      <li><b>Invocation:</b> <code>IGSDOMAIN\Choice_OpsEng</code> via <code>sqlcmd</code> from <b>INTAPP06</b> at 00:00 daily. Program name <code>SQLCMD</code> (not <code>SQLAgent…</code>) &rarr; an <b>external scheduler (Control-M / Windows Task), not a SQL Agent job</b>. The schedule definition and its logs live on INTAPP06 / Control-M — check there, not <code>msdb</code>.</li>
+      <li><b>Completion audit:</b> only the self-log <code>IGS.StoredProcedureAndFunctionExecutionLog</code> — and it is <b>fragile</b>. The 13 completion rows visible at 08:18 were <b>gone by 08:56</b> (server <code>INT-OPSSQL-02</code>, no HADR; total log rows <em>today</em> = 2,153,322). The log takes 2M+ rows/day and is actively trimmed, so this daily proc's handful of entries are needles that get swept. No start time, no duration, no row count is ever recorded.</li>
+      <li><b>No plan/duration history:</b> <b>Query Store is OFF</b> on <code>IGS_AppData</code>, and the proc recompiles each run (<code>SELECT INTO</code> temp tables), so <code>dm_exec_procedure_stats</code> holds nothing. There is no stored plan or duration to compare 06-26 vs 06-27.</li>
+      <li><b>Dependent objects:</b> every table the proc reads (<code>IGS.Accounts</code>, <code>Contract.*</code>, <code>dbo.Contract/ContractTerms</code>, and <code>Industrial.IMA.ServiceLocations/ContractDetails/…</code>) shows <code>modify_date</code> of <b>today 08:51</b> — i.e. a schema-touch/maintenance op runs regularly across them, but <code>sys.objects</code> keeps only the <em>latest</em> date, so it can't confirm or rule out a 06-27 change.</li>
+    </ul>
+    <p><span class="lbl2">Net:</span> the 06-27 step-change is documented (the 08:18 completion trail: ~1–2 min through 06-26, then 10:47 / 10:42 / 17:42 / 16:15, missing 07-01, overlap on 07-02) but its <b>root cause cannot be pinned from current telemetry</b> — QS off, proc unchanged, RAD volume flat, log volatile, no plan history. Candidates that remain open: a statistics/plan regression on the heavy cross-DB joins, gradual base-table growth crossing a plan tipping point, or a shift in RAD burst <em>timing</em> (not volume). Closing that gap is itself a recommendation (R6).</p>
+  </div>
+
+  <!-- RECOMMENDATIONS -->
+  <h2 class="section">Recommendations (owner-assigned · handoff only, no DDL applied)</h2>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>#</th><th>Recommendation</th><th>Owner</th><th>Ties to</th></tr></thead>
+      <tbody>
+        <tr><td><b>R1</b></td><td>Add a <b>run-guard</b> to <code>SetIsManualBilledOnContractTerm</code> (skip/abort if the prior instance is still running) to stop day-over-day overlap; add <b>start/end/duration/row-count logging</b>; make the empty <code>CATCH</code> <b>log + alert</b> instead of swallow.</td><td>CRM / IGS_AppData dev</td><td>F1, F6</td></tr>
+        <tr><td><b>R2</b></td><td>Give the account-feed some <b>isolation</b> — cap the 100×50 consumer concurrency and/or fence it with <b>Resource Governor</b> so a burst can't starve billing/ETL. Investigate what produces the 126-in-12s trigger cascades (bulk load / merge / reindex churn).</td><td>Messaging + DBA</td><td>F2</td></tr>
+        <tr><td><b>R3</b></td><td><b>Filter</b> the SSIS <code>SELECT *</code> extracts to the needed delta instead of full-view materialisation; review data-flow buffer/commit sizing so a slow OLEDB consumer doesn't throttle the source.</td><td>Demand-forecasting ETL owner</td><td>F3</td></tr>
+        <tr><td><b>R4</b></td><td>Review instance <b>MAXDOP / cost-threshold</b> for the 24-core box — the heavy queries run serial (DOP 1) on 58–81M-read scans.</td><td>DBA</td><td>F4</td></tr>
+        <tr><td><b>R5</b></td><td>Make the view date predicates <b>sargable</b> (<code>DAY()</code>, <code>EOMONTH()</code>), factor the duplicated <code>UnwoundContractDetails</code> CTE, and normalise the text-encoded volume columns to numeric.</td><td>Industrial DB dev</td><td>F5, F7</td></tr>
+        <tr><td><b>R6</b></td><td><b>Close the traceability gap:</b> enable <b>Query Store</b> on <code>IGS_AppData</code> (capture plans + durations), protect the billing proc's completion records from the 2M/day log churn (dedicated table or retention exemption), and confirm the Control-M/Windows-Task schedule + logs on INTAPP06. Without this, the next 06-27-style regression is equally un-diagnosable.</td><td>DBA + CRM dev</td><td>F1, F6</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">These are recommendations for handoff — the proc, views, MAXDOP, and consumer config are Industrial/CRM DB objects outside the QE test-suite repo. No DDL or config change was made by this review.</p>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier muted">
+    <p><span class="lbl2">Run ID / Date:</span> TDD-028 &middot; 2026-07-02 &middot; Jira: —</p>
+    <p><span class="lbl2">Target:</span> Live instance behind <code>mssql-industrial-int</code> (SQL Server 2016, 13.0.4466, Standard). Databases touched: <code>IGS_AppData</code>, <code>Industrial</code>.</p>
+    <p><span class="lbl2">Method:</span> read-only DMV inspection — <code>dm_exec_requests / _sessions / _connections</code>, <code>dm_exec_sql_text</code>, <code>dm_exec_query_stats</code>, <code>dm_exec_procedure_stats</code>, <code>dm_os_waiting_tasks</code>, <code>dm_os_schedulers</code>, <code>dm_os_sys_info</code>, <code>sys.sql_modules</code>, and the <code>IGS.StoredProcedureAndFunctionExecutionLog</code> table. No writes, no <code>KILL</code>, no config changes.</p>
+    <p><span class="lbl2">Dimensions in scope:</span> this is a <b>performance-incident</b> run, so Dim&nbsp;7 (Performance), Dim&nbsp;1 (Architecture / tenancy), Dim&nbsp;4 (Error handling / failure modes) and Dim&nbsp;5 (Tech debt) carry the findings; Dim&nbsp;6 (Dependency / version) gets one Low. <b>Out of scope</b> (stated explicitly, no silent cap): Dim&nbsp;2 (test coverage) and Dim&nbsp;3 (security) — not meaningful for a live-session slowdown; the service-account surface was noted but not audited.</p>
+    <p><span class="lbl2">Scope-down:</span> analysis is confined to the three named sessions and the instance-level context needed to explain them. It is <b>not</b> a full health audit of the instance, the views' full dependency trees, or the SSIS package internals.</p>
+  </div>
+
+  <!-- PHASE 1 SURFACE MAP -->
+  <h2 class="section">Phase 1 — Surface map (what is actually on the box right now)</h2>
+  <div class="tier info">
+    <h3><span class="badge">CONTEXT</span> The instance at 08:18 CT</h3>
+    <ul>
+      <li><b>Hardware / scheduling:</b> 24 CPUs / 24 visible schedulers. <b>286 current tasks, 105 runnable</b> (queued for CPU), work-queue 0, avg load factor 29 &rarr; <b>CPU-bound, no worker-thread exhaustion yet</b>.</li>
+      <li><b>Dominant workload:</b> <code>Igs.Rad</code> from <b>INT-QUEUE-03</b> = <b>128 active requests</b> (73 runnable + 38 suspended) running <code>Rad.IMAAccountFeed</code> — 126 of them spun up inside a single ~12-second window. This is the RAD <b>account-feed</b> (account-sync) path — CRM party/account changes &rarr; <code>Rad_PartyAccountChangeQueue</code> &rarr; 100-receiver consumer &rarr; Industrial <code>IMA.*</code> writes; it owns the box. <em>(Distinct from the ES reindex feed — see the follow-up section.)</em></li>
+      <li><b>Everyone else is a rounding error:</b> next-busiest sources are INT-QUEUE-02 (7), the two SSIS extracts (2, INT-SPLYSSIS-01), and the billing SQLCMD (1, INTAPP06).</li>
+      <li><b>No blocking chain:</b> all three victims report <code>blocking_session_id = 0</code>; <code>dm_os_waiting_tasks</code> returns nothing for them. Their "wait" is the CPU run-queue, not a lock.</li>
+      <li><b>tempdb:</b> 16 data files / 32&nbsp;GB — a reasonable config, so the <code>PAGELATCH_EX</code> on 383/340 is allocation contention from the <em>volume</em> of concurrent spilling queries (the RAD storm), not a one-file misconfiguration.</li>
+    </ul>
+  </div>
+
+  <!-- FINDINGS -->
+  <h2 class="section">Findings — ranked by blast radius</h2>
+
+  <div class="tier crit" id="f1">
+    <h3><span class="badge">CRITICAL</span> F1 · Nightly billing-flag proc degraded 100&times;+ and now overlapping — failures silently swallowed</h3>
+    <p><span class="lbl2">Evidence — historical baseline vs. now</span> (<code>IGS.StoredProcedureAndFunctionExecutionLog</code>, completion timestamps):</p>
+    <pre>2026-06-24 00:02:29   2026-06-27 10:47:41   2026-06-30 16:15:16
+2026-06-25 00:01:49   2026-06-28 10:42:35   2026-07-01  (no row — did not complete)
+2026-06-26 00:01:53   2026-06-29 17:42:57   2026-07-02 05:08:39  + session 405 STILL running (started 00:00:22)</pre>
+    <p><span class="lbl2">Evidence — the swallowing CATCH</span> (proc body, currently executing in session 405):</p>
+    <pre>update dbo.contractterms
+set IsManualBilled = 1
+where contractid in (select contractid from #iscomplexbilledcontractids)
+...
+BEGIN TRY
+  DECLARE @... NVARCHAR(1000) = 'INSERT INTO IGS.StoredProcedureAndFunctionExecutionLog ...'
+  EXEC sp_executesql @...
+END TRY
+BEGIN CATCH        <span style="color:#b5261c">-- empty: any failure is discarded, no log, no rethrow</span>
+END CATCH</pre>
+    <p><span class="lbl2">Why it matters:</span> this proc writes a <b>billing determination</b> — it sets <code>IsManualBilled = 1</code> on <code>dbo.ContractTerms</code> for complex-billed <code>IN-%</code> Choice contracts. A run that overruns or dies means those flags are <b>stale or unset for the day</b>, and because the completion log is the <em>only</em> observability and it lives behind an empty CATCH, a failure looks identical to "never ran." The 07-01 gap is exactly that signature. Session 405 currently holds <code>open_transaction_count = 2</code> while starved, so its final <code>UPDATE dbo.ContractTerms</code> can also become a blocker for other billing writers.</p>
+    <p><span class="lbl2">Severity rationale:</span> High &rarr; <b>Critical (money/billing path + silent failure + no rollback visibility)</b>.</p>
+    <p><span class="lbl2">Remediation sketch:</span> add duration + start/row-count logging (not just an end timestamp) and make the CATCH log/alert instead of swallow; add a run-guard (skip/abort if the prior instance is still running) to stop overlap; medium-term, filter the work set and index the join (see F4) so it returns to ~minutes.</p>
+  </div>
+
+  <div class="tier warn" id="f2">
+    <h3><span class="badge">HIGH</span> F2 · Instance CPU saturation from a 128-request RAD IMAAccountFeed storm (the noisy neighbor)</h3>
+    <p><span class="lbl2">Evidence</span> (<code>dm_os_schedulers</code> + active-request census):</p>
+    <pre>schedulers(VISIBLE ONLINE)=24   current_tasks=286   runnable_tasks=105   avg_load_factor=29
+program_name        host_name        active  runnable  suspended
+Igs.Rad             INT-QUEUE-03        128       73        38     <span style="color:#b5261c">&larr; ~89% of all active user requests</span>
+Core SqlClient      INT-QUEUE-02          7        7         0
+Microsoft SQL Srvr  INT-SPLYSSIS-01       2        2         0     (the two extracts)
+SQLCMD              INTAPP06              1        1         0     (the billing proc)</pre>
+    <p><span class="lbl2">Why it matters:</span> 105 runnable tasks on 24 cores means every CPU-hungry batch on this instance is queued 4–5 deep behind other work. The RAD feed is the overwhelming source of that pressure, and it is the <b>proximate cause of all three slowdowns</b> — session 405's <code>SOS_SCHEDULER_YIELD</code> (couldn't get CPU) and 383/340's <code>PAGELATCH_EX</code> (tempdb allocation contention from mass concurrent spills) are both symptoms of this one storm. The three long-runners are victims, not the disease.</p>
+    <p><span class="lbl2">Call path / reach:</span> RAD, billing, and DemandForecasting ETL are three unrelated workloads co-tenanted on one 2016 Standard instance with no Resource Governor isolation — any burst in one starves the others.</p>
+    <p><span class="lbl2">Severity rationale:</span> High — broad blast radius across every workload on the instance; contained to INT (not prod), so not bumped to Critical.</p>
+    <p><span class="lbl2">Remediation sketch:</span> find out why 126 <code>IMAAccountFeed</code> executions launched in one 12-second window (a reindex backfill? a stuck queue consumer fanning out?) — cross-reference <code>/rabbitmq</code> TRIAGE. Longer term, throttle the feed's consumer concurrency and/or isolate it with Resource Governor.</p>
+  </div>
+
+  <div class="tier warn" id="f3">
+    <h3><span class="badge">HIGH</span> F3 · Full <code>SELECT *</code> extracts of heavy view-on-view definitions (76–81M logical reads, serial)</h3>
+    <p><span class="lbl2">Evidence</span> — both <code>DemandForecasting</code> objects are <b>views</b>, not tables (<code>sys.objects.type_desc = 'VIEW'</code>), and the SSIS extract runs an unfiltered <code>SELECT</code> of every column. The definitions contain per-row correlated subqueries and non-sargable predicates:</p>
+    <pre>-- ContractVolumes: a per-row correlated TOP 1 subquery in the SELECT list
+,ISNULL((SELECT TOP 1 '[Component: ' + cdrdt.Description + ', Index: ' + cdrd.IndexName + ']'
+          FROM IMA.ContractDetailRateDetails cdrd
+          INNER JOIN IMA.ContractDetailRateDetailTypes cdrdt ON ...
+          WHERE cdrd.ContractDetailId = cd.Id AND (cdrdt.Code = 'GasCapacityVariable' OR ...)), (...)) as IndexText
+-- ...and self-joins on ContractDetails via BETWEEN date ranges (secondary/tertiary details)
+LEFT JOIN IMA.ContractDetails secondaryDetails ON secondaryDetails.termid = cd.termid
+     AND cd.fromdate BETWEEN secondaryDetails.FromDate AND secondaryDetails.ToDate AND secondaryDetails.typeid = 2</pre>
+    <p>The <code>…ByMarketArea</code> view stacks a <code>GROUP BY</code> CTE (<code>MonthlyContractAccountVolumesByMarketArea</code>, aggregating <code>SUM(...)</code> across service-location components) and a market-area zip-code CTE <em>on top of</em> the same base joins — a second, heavier layer that reads even more (81.4M vs 76.2M logical reads).</p>
+    <p><span class="lbl2">Why it matters:</span> pulling an entire computed view with no <code>WHERE</code> forces SQL Server to materialise the whole thing every run. On a quiet box this might be tolerable; on the saturated box (F2) it stretches to 6 hours. The SSIS side is also draining rows slowly (near-zero physical reads on 340 — data is cached — yet still 6 hr), pointing at a slow OLEDB consumer compounding the problem.</p>
+    <p><span class="lbl2">Severity rationale:</span> High — a core ETL feed that can't reliably complete; INT-only keeps it off Critical.</p>
+    <p><span class="lbl2">Remediation sketch:</span> push a date/LOB filter into the extract instead of <code>SELECT *</code> (the view already self-limits to one year, but the extract can scope to the delta it needs); review the SSIS data-flow buffer/commit size so the source isn't throttled by a slow destination; consider a materialised/indexed intermediate for the market-area aggregation.</p>
+  </div>
+
+  <div class="tier info" id="f4">
+    <h3><span class="badge">MEDIUM</span> F4 · All three heavy queries run serial (DOP = 1) despite tens of millions of reads</h3>
+    <p><span class="lbl2">Evidence:</span> <code>dm_exec_requests.dop = 1</code> for sessions 405, 383, and 340 (from the live request snapshot). Each is doing 58–81M logical reads on a single scheduler.</p>
+    <p><span class="lbl2">Why it matters:</span> million-read scans are exactly the workload parallelism exists for; a serial plan multiplies wall-clock and makes each query far more sensitive to the CPU contention in F2. This is consistent with a low <code>max degree of parallelism</code> / high <code>cost threshold for parallelism</code> at the instance level, or plans cheap-enough-per-row that the optimiser never parallelises them.</p>
+    <p><span class="lbl2">Severity rationale:</span> Medium — amplifies F1–F3 but is not itself the trigger; needs a config/plan review, not an emergency change.</p>
+    <p><span class="lbl2">Remediation sketch:</span> check instance <code>MAXDOP</code> / cost-threshold vs. this hardware (24 cores); confirm whether the serial plans are chosen or forced before changing anything.</p>
+  </div>
+
+  <div class="tier info" id="f5">
+    <h3><span class="badge">MEDIUM</span> F5 · Non-sargable date predicates in the views defeat index seeks</h3>
+    <p><span class="lbl2">Evidence</span> (both view <code>WHERE</code> clauses):</p>
+    <pre>WHERE cd.typeid = 1
+  AND cd.FromDate IS NOT NULL AND cd.ToDate IS NOT NULL
+  AND DAY(cd.FromDate) = 1                              <span style="color:#8a5a14">-- function on column</span>
+  AND cd.ToDate = EOMONTH(cd.FromDate)                  <span style="color:#8a5a14">-- function on column</span>
+  AND cd.FromDate > DATEADD(year, -1, getdate())        <span style="color:#8a5a14">-- ok, but paired with the above</span>
+  AND cd.IsUnwind = 0</pre>
+    <p><span class="lbl2">Why it matters:</span> wrapping <code>cd.FromDate</code> in <code>DAY()</code> and comparing <code>cd.ToDate</code> to <code>EOMONTH(cd.FromDate)</code> makes those predicates non-sargable — the optimiser can't seek an index on <code>FromDate/ToDate</code> and falls back to scanning <code>ContractDetails</code>, feeding the large logical-read counts in F3.</p>
+    <p><span class="lbl2">Severity rationale:</span> Medium — a real scan driver, but bounded by the 1-year filter.</p>
+    <p><span class="lbl2">Remediation sketch:</span> where possible, express the "first-of-month / full-month" test with sargable range boundaries or a computed persisted column that can be indexed.</p>
+  </div>
+
+  <div class="tier info" id="f6">
+    <h3><span class="badge">MEDIUM</span> F6 · The proc's only failure signal is an empty CATCH — no error surface, no duration</h3>
+    <p><span class="lbl2">Evidence:</span> see the <code>BEGIN CATCH … END CATCH</code> block quoted in F1. The log row is written <em>inside</em> the TRY, only on success, and records just <code>Name</code>, <code>ExecutionDate</code>, <code>ExecutedBy</code> — no start time, no duration, no row count.</p>
+    <p><span class="lbl2">Why it matters:</span> operationally you cannot tell "slow" from "failed" from "never scheduled" — precisely the ambiguity around the missing 07-01 row. A billing job deserves better than write-only-on-success logging behind a swallowing CATCH.</p>
+    <p><span class="lbl2">Severity rationale:</span> Medium — observability gap on a money path; separate from the perf regression itself.</p>
+    <p><span class="lbl2">Remediation sketch:</span> log start + end + duration + affected-row count; in CATCH, capture <code>ERROR_MESSAGE()</code> and re-raise or alert.</p>
+  </div>
+
+  <div class="tier muted" id="f7">
+    <h3><span class="badge">LOW</span> F7 · Wide <code>SELECT *</code> with in-view string parsing, and a CTE duplicated across both views</h3>
+    <p><span class="lbl2">Evidence:</span> the extracts select ~35 columns including several that parse numeric volumes out of text at read time:</p>
+    <pre>,NULLIF(LTRIM(RTRIM((CASE WHEN cd.TTLExpectedBillingMonthVolume LIKE '(%)'
+     THEN REPLACE(REPLACE(cd.TTLExpectedBillingMonthVolume,'(','-'),')','') ELSE ... END))),'-')</pre>
+    <p>The <code>UnwoundContractDetails</code> CTE is copy-pasted verbatim into <b>both</b> views, so the same window-function computation is maintained (and executed) twice.</p>
+    <p><span class="lbl2">Why it matters:</span> maintainability tax and wasted per-row work; storing volumes as numerics upstream and factoring the shared CTE would shrink both the code and the read cost. Low because it compounds F3 rather than causing it.</p>
+    <p><span class="lbl2">Remediation sketch:</span> normalise the volume columns to numeric at write time; extract the shared CTE into one reusable view.</p>
+  </div>
+
+  <div class="tier muted" id="f8">
+    <h3><span class="badge">LOW</span> F8 · SQL Server 2016 (13.0.4466), Standard Edition</h3>
+    <p><span class="lbl2">Evidence:</span> the proc's scripting header and <code>dm_os_sys_info</code> confirm build 13.0.4466 (SQL Server 2016). Standard Edition caps usable memory and lacks some parallelism/columnstore refinements that would help these scan-heavy views.</p>
+    <p><span class="lbl2">Why it matters:</span> SQL Server 2016 mainstream support has ended and extended support is closing; version and edition ceilings quietly limit the remediation options for F3/F4. Low — a background risk, not today's cause.</p>
+    <p><span class="lbl2">Remediation sketch:</span> factor the edition/version ceiling into any capacity or upgrade planning for this instance.</p>
+  </div>
+
+  <!-- CLOSING -->
+  <h2 class="section">Bottom line</h2>
+  <div class="callout">
+    <div class="lbl">Where it landed &middot; what's left</div>
+    <p><b>The incident self-resolved by 08:55 CT</b> — the RAD account-feed burst drained (queue to 0 / 100 consumers), and sessions 405, 383, and 340 all completed once CPU freed up. Nothing needed to be killed. That confirms the mechanism: these three jobs were <b>victims of transient noisy-neighbor CPU starvation</b>, not broken queries.</p>
+    <p><b>But the durable risks remain</b> and will recur on the next burst: the billing proc can still run 8+ hours, overlap itself, and hide failures (F1/F6); the account-feed still has no isolation (F2); the SSIS extracts and views are still heavy and serial (F3–F5). The <b>06-27 regression root cause stays unpinned</b> because the traceability to diagnose it doesn't exist yet — see R6. Priorities: <b>R1 + R6</b> (make the billing proc guarded, logged, and diagnosable), then <b>R2</b> (isolate the account-feed), then the durable perf work (R3–R5).</p>
+    <p class="note">Findings from read-only inspection of <code>mssql-industrial-int</code> (server <code>INT-OPSSQL-02</code>) at ~08:18 CT (initial) and ~08:55 CT (follow-up) on 2026-07-02, plus a read-only RabbitMQ HEALTH probe of <code>bunny.int.igsenergy.net</code>. No writes, no DDL, no config or broker changes. This is INT — the billing proc and its Control-M schedule almost certainly have a production twin worth checking with the same query set.</p>
+  </div>
+
+  <footer class="rep">Technical Due Diligence · TDD-028 · mssql-industrial-int long-running sessions · 2026-07-02 (updated w/ RAD TRIAGE + novelty + traceability) · read-only, evidence-first</footer>
+
+</div>
+</body>
+</html>

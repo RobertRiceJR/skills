@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-016
+date: 2026-06-25
+scope: src/utils/sql — Config (sql.config.ts + sql.industrial.config.ts + context.ts env routing) — SQL utilities overhaul, part 2 of 4
+jira: []
+severity: { critical: 0, high: 0, medium: 4, low: 4 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-016 — SQL Config due diligence</title>
+  <style>
+:root {
+  --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+  --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#ffffff;
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 var(--font-body); }
+.wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+header.report { background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%); color:#fff; border-radius:16px; padding:34px 36px; margin-bottom:28px; box-shadow:0 8px 28px rgba(27,31,29,.18); }
+header.report .eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:11.5px; font-weight:700; opacity:.85; margin:0 0 10px; }
+header.report h1 { margin:0 0 8px; font-size:29px; line-height:1.15; font-weight:750; font-family:var(--font-head); }
+header.report p.sub { margin:0; font-size:15px; opacity:.93; max-width:760px; }
+header.report .meta { margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.25); display:flex; flex-wrap:wrap; gap:22px; font-size:12.5px; opacity:.93; }
+h2.section { font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:750; margin:34px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--line); font-family:var(--font-head); }
+.legend { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px; }
+.legend .item { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:14px 16px; }
+.legend .item .k { font-weight:750; font-size:13px; margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+.legend .item .k .dot { width:10px; height:10px; border-radius:50%; }
+.legend .item .d { font-size:12.5px; color:var(--muted); line-height:1.45; }
+.tablecard { background:var(--card); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:0 2px 10px rgba(20,25,40,.04); }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+thead th { background:#eef1ee; text-align:left; padding:13px 14px; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:750; border-bottom:1px solid var(--line); white-space:nowrap; }
+tbody td { padding:12px 14px; border-bottom:1px solid #eef0ee; vertical-align:top; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover { background:#f6faf4; }
+.tier { border-left:5px solid var(--accent); border-radius:10px; padding:16px 20px; margin-bottom:14px; background:var(--card); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+.tier h3 { margin:0 0 8px; font-size:15px; display:flex; align-items:center; gap:9px; flex-wrap:wrap; font-family:var(--font-head); }
+.tier h3 .badge { font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; color:#fff; background:var(--accent); }
+.tier p { margin:0 0 8px; font-size:13.5px; color:var(--ink); }
+.tier ul { margin:6px 0 0; padding-left:18px; } .tier li { margin:6px 0; font-size:13.5px; }
+.tier.ok { border-left-color:var(--accent);} .tier.ok .badge{ background:var(--accent);}
+.tier.warn { border-left-color:var(--accent-3);} .tier.warn .badge{ background:var(--accent-3);}
+.tier.info { border-left-color:var(--accent-2);} .tier.info .badge{ background:var(--accent-2);}
+.tier.muted { border-left-color:var(--muted);} .tier.muted .badge{ background:var(--muted);}
+.tier.crit { border-left-color:var(--s1);} .tier.crit .badge{ background:var(--s1);}
+.callout { background:var(--accent-soft); border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:12px; padding:18px 22px; margin:6px 0 30px; }
+.callout .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:750; color:var(--accent); margin-bottom:6px; }
+.callout p { margin:0; font-size:14.5px; line-height:1.55; } .callout p + p { margin-top:9px; }
+.callout ol { margin:6px 0 0; padding-left:20px; } .callout li { font-size:14px; margin:8px 0; line-height:1.5; }
+.callout a { color:var(--accent-2); font-weight:650; text-decoration:none; } .callout a:hover { text-decoration:underline; }
+.note { font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.5; }
+code { background:#eef1ee; padding:1px 6px; border-radius:5px; font-size:.88em; font-family:"SF Mono",Consolas,monospace; }
+pre { background:#1b1f1d; color:#e9eee9; border-radius:9px; padding:14px 16px; overflow-x:auto; font-size:12.5px; line-height:1.5; font-family:"SF Mono",Consolas,monospace; margin:10px 0; }
+pre .cmt { color:#7f8c7a; }
+.ev { font-size:12px; color:var(--muted); font-family:"SF Mono",Consolas,monospace; margin:2px 0 0; }
+footer.rep { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); text-align:center; }
+@media print { body { background:#fff; } .wrap { padding:0; } .tablecard,.tier,.legend .item { box-shadow:none; } header.report { box-shadow:none; } }
+@media (max-width:720px) { .legend { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>SQL Config — connection &amp; environment routing</h1>
+    <p class="sub">Part 2 of 4 of the <code>src/utils/sql</code> overhaul review: the CRM config (<code>sql.config.ts</code>), the Industrial pool + its inline finders (<code>sql.industrial.config.ts</code>), and the env-routing layer they depend on (<code>context.ts</code>). Companion runs: TDD-015 (client/facade), TDD-017 (queries), TDD-018 (types), and the <a href="2026-06-25-sql-layer-rollup.html">layer roll-up</a>.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice / QE inheriting + overhauling this layer</span>
+      <span><b>Date:</b> 2026-06-25</span>
+      <span><b>Run:</b> TDD-016</span>
+      <span><b>Scope:</b> sql.config.ts + sql.industrial.config.ts (+ context.ts dep)</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>Critical — 0</div><div class="d">Data loss · auth bypass · secret exposure · money wrong</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High — 0</div><div class="d">Core capability silently breaks for many; shared-infra failure mode</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium — 4</div><div class="d">Coupling / debt / weakened trust boundary that compounds</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low — 4</div><div class="d">Localized smell · consistency · advisory</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout">
+    <div class="lbl">Verdict — the three things to fix first in this slice</div>
+    <p>The environment routing (<code>context.ts</code>) is the strongest part of the whole layer: clean, centralized, fail-loud. The config <em>files</em>, though, carry the layer’s boundary and trust-boundary smells:</p>
+    <ol>
+      <li><a href="#f1"><b>[Medium] The “config” file is half a data-access layer.</b></a> <code>sql.industrial.config.ts</code> holds 10 finder functions (HU-eligibility gates, contract-term readers, merge-verification queries) alongside the one thing that belongs there — <code>getIndustrialPool</code>. The CRM side keeps finders in <code>sql.db.ts</code>; the Industrial side mixes config, pool lifecycle, and queries in one 244-line file.</li>
+      <li><a href="#f3"><b>[Medium] <code>trustServerCertificate: true</code> on every credentialed connection.</b></a> Both config blocks disable TLS certificate validation, so the “encrypted” connection to CRM and Industrial (including QA) isn’t authenticated. Likely required by internal self-signed certs — but it’s a blanket default, not a scoped, documented decision.</li>
+      <li><a href="#f2"><b>[Medium] Two near-identical config blocks, copy-pasted.</b></a> CRM and Industrial repeat the same user/password/domain/timeout/TLS shape, differing only in server + database name — so a TLS or timeout policy change must be made in two places and will drift.</li>
+    </ol>
+    <p>Net: extract a shared connection-config builder, scope the cert-trust decision, and relocate the Industrial finders out of the “config” file into the finder layer.</p>
+  </div>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tablecard"><table><tbody>
+    <tr><td><b>Run ID</b></td><td>TDD-016 (sequential after TDD-015 in this batch)</td></tr>
+    <tr><td><b>Date</b></td><td>2026-06-25</td></tr>
+    <tr><td><b>Jira</b></td><td>—</td></tr>
+    <tr><td><b>Target</b></td><td><code>src/utils/sql/sql.config.ts</code> (21 LOC) · <code>src/utils/sql/sql.industrial.config.ts</code> (244 LOC)</td></tr>
+    <tr><td><b>Read as dependency</b></td><td><code>src/utils/context.ts</code> (env → server-host routing) — assessed, not a finding target in its own right</td></tr>
+    <tr><td><b>In scope</b></td><td>CRM config builder, Industrial pool factory + the 10 inline Industrial finders, env routing &amp; TLS/credential handling</td></tr>
+    <tr><td><b>Excluded</b></td><td>Facade (TDD-015), query bodies (TDD-017), types (TDD-018)</td></tr>
+    <tr><td><b>Size / shape</b></td><td>265 LOC across 2 files (+ context.ts dep) — <b>inline single-context run</b>, all 7 dimensions</td></tr>
+  </tbody></table></div>
+  <p class="note">Knowledge-base intake (the documented <code>.env override:true</code> env trap, the Industrial-TVP/MCP and Kerberos-double-hop gotchas, env routing via <code>Context.getCrmSqlServer/getIndustrialSqlServer</code>) drives the severity weighting below.</p>
+
+  <!-- PHASE 1 -->
+  <h2 class="section">Phase 1 — Surface Map</h2>
+  <div class="tier muted">
+    <h3>Public surface &amp; change-radius</h3>
+    <ul>
+      <li><b><code>sqlConfig()</code></b> (<code>sql.config.ts:6–21</code>) — async; resolves creds via <code>getServiceAccount('service-account')</code>, targets <code>Context.getCrmSqlServer()</code>, database <code>'CRM'</code>. Consumed only by <code>getClient()</code> in the facade.</li>
+      <li><b><code>getIndustrialPool(env?)</code></b> (<code>sql.industrial.config.ts:15–29</code>) — returns a <em>connected</em> pool (database <code>'Industrial'</code>); the caller owns <code>close()</code>.</li>
+      <li><b>10 inline Industrial finders</b> (<code>sql.industrial.config.ts:37–244</code>) — <code>filterAccountIdsWithServiceLocations</code>, <code>filterAccountIdsWithoutStagedHu</code>, <code>getActiveContractTerms</code>, <code>getContractTermsWith/WithoutSut</code>, <code>getNullLeenSlcaIdsForCustomer</code>, <code>getTriggerIsDisabled</code>, <code>resolveImaUserId</code>, <code>getColumnIsNullable</code>, <code>getSlcaLegalEntityNames</code>.</li>
+      <li><b><code>Context</code></b> (<code>context.ts:37–61</code>) — <code>getCrmSqlServer()</code> / <code>getIndustrialSqlServer(env?)</code> switch on <code>NODE_ENV</code> to a server hostname; throw on an unknown env.</li>
+    </ul>
+    <p><b>Change-radius:</b> <code>sqlConfig</code> feeds the entire CRM facade (one hop to all 228 call sites). <code>getIndustrialPool</code> + the inline finders are imported by the facade (10 finders re-exported on <code>sqlDB</code>) and the Industrial finders flow into HU/merge/contract-term tests. <code>context.ts</code> routing is reached by both DB paths <em>and</em> the app/API base URLs — the single env switch for the suite.</p>
+  </div>
+
+  <!-- DIM 1 -->
+  <h2 class="section">Dimension 1 — Architecture, Coupling, Boundaries</h2>
+
+  <div class="tier info" id="f1">
+    <h3><span class="badge">MEDIUM</span> The “config” file is half a data-access layer — 10 finders live beside the pool factory</h3>
+    <p class="ev">Evidence: src/utils/sql/sql.industrial.config.ts:37, 64, 91, 112, 130, 152, 175, 193, 207, 226</p>
+    <pre>export const getIndustrialPool = async (env?) =&gt; { ... }                 <span class="cmt">// :15 — belongs in "config"</span>
+export const filterAccountIdsWithServiceLocations = async (...) =&gt; {...} <span class="cmt">// :37 — a FINDER</span>
+export const getActiveContractTerms = async (topN = 400) =&gt; {...}       <span class="cmt">// :112 — a FINDER</span>
+export const getContractTermsWithSut = async (topN = 400) =&gt; {...}      <span class="cmt">// :130 — a FINDER</span>
+export const getSlcaLegalEntityNames = async (slcaIds) =&gt; {...}         <span class="cmt">// :226 — a FINDER</span></pre>
+    <p><b>Why it matters:</b> The CRM half of the layer cleanly separates config (<code>sql.config.ts</code>) from finders (<code>sql.db.ts</code>). The Industrial half collapses them: a file named <code>sql.industrial.config.ts</code> is 90% query functions — HU-eligibility post-filters, Industrial contract-term readers, and party-merge verification helpers (CI-7759/7760) — with only <code>getIndustrialPool</code> actually being “config.” A reader auditing connection setup wades through 200 lines of business queries; a reader looking for an Industrial finder won’t think to look in a “config” file. The boundary the overhaul wants to draw is already drawn on the CRM side and ignored on the Industrial side.</p>
+    <p><b>Call path / reach:</b> The facade imports all 10 from here (<code>sql.db.ts:39–50</code>) and re-exports them on <code>sqlDB</code>; moving them is a same-file-barrel change, low risk.</p>
+    <p><b>Severity rationale:</b> Medium — coupling/naming boundary that makes the layer harder to reason about and to split during the overhaul.</p>
+    <p><b>Remediation sketch:</b> Keep only <code>getIndustrialPool</code> (and the shared config builder, F2) in a <code>config</code> module; move the 10 finders into a <code>finders/industrial.ts</code> alongside the CRM finder split proposed in TDD-015 F6.</p>
+  </div>
+
+  <!-- DIM 3 -->
+  <h2 class="section">Dimension 3 — Security Surface &amp; Trust Boundaries</h2>
+
+  <div class="tier info" id="f3">
+    <h3><span class="badge">MEDIUM</span> <code>trustServerCertificate: true</code> disables TLS validation on every credentialed DB connection</h3>
+    <p class="ev">Evidence: src/utils/sql/sql.config.ts:15–18 and src/utils/sql/sql.industrial.config.ts:24–27</p>
+    <pre>options: {
+  trustServerCertificate: true,   <span class="cmt">// accept ANY server cert — no validation</span>
+  encrypt: true                    <span class="cmt">// encrypted, but the endpoint is unauthenticated</span>
+}</pre>
+    <p><b>Why it matters:</b> <code>encrypt: true</code> with <code>trustServerCertificate: true</code> means the channel is encrypted but the server is <em>not</em> authenticated — a man-in-the-middle on the path to <code>Crm.Sql.{INT,QA}.Igsenergy.net</code> / <code>industrial.sql.{int,qa}.igsenergy.net</code> could present any certificate and harvest the service-account credentials and query traffic. It is duplicated across both config blocks, so the trust-all posture is the layer-wide default. On an internal corporate network with self-signed DB certs this is the usual pragmatic setting and the real-world risk is low — but it is a blanket default applied identically to every environment, not a scoped, documented decision, and it’s the kind of thing an acquirer flags on sight.</p>
+    <p><b>Severity rationale:</b> Medium (security multiplier: it sits on credentialed DB connections). Held below High because the connections are internal-network and the data is non-production test traffic; the credential, however, is a real service account.</p>
+    <p><b>Remediation sketch:</b> Pin the internal CA / server cert thumbprint instead of trust-all, or at minimum gate <code>trustServerCertificate</code> behind an explicit, commented “internal self-signed cert” flag in the shared config builder (F2) so the decision is visible and overridable per env.</p>
+  </div>
+
+  <!-- DIM 4 -->
+  <h2 class="section">Dimension 4 — Error Handling &amp; Failure Modes</h2>
+
+  <div class="tier info" id="f4">
+    <h3><span class="badge">MEDIUM</span> Each Industrial finder opens a brand-new pool (TCP connect + Key Vault fetch) per call</h3>
+    <p class="ev">Evidence: src/utils/sql/sql.industrial.config.ts:16, 39–55, 92–106, 131–144</p>
+    <pre>const pool = await getIndustrialPool();   <span class="cmt">// → getServiceAccount(...) + new ConnectionPool().connect(), EVERY call</span>
+try { ... } finally { await pool.close(); }  <span class="cmt">// correctly closed (unlike the CRM path, TDD-015 F1)</span></pre>
+    <p><b>Why it matters:</b> The Industrial finders get pool <em>lifecycle</em> right — every one closes in a <code>finally</code> (this is the correct pattern the CRM path is missing in TDD-015 F1). But each call still constructs a fresh pool, which means a credential resolution (<code>getServiceAccount</code> at <code>:16</code>) plus a full TCP connect per finder. The HU-eligibility path is the sharp edge: <code>sqlDB.getProspectCiElectricAccountWithNoHu</code> calls two Industrial finders back-to-back (<code>filterAccountIdsWithServiceLocations</code> then <code>filterAccountIdsWithoutStagedHu</code>), and <code>getCiContractWithSut</code> opens-and-closes an Industrial pool then opens a CRM client — three connect cycles for one data fixture.</p>
+    <p><b>Severity rationale:</b> Medium — connect + secret cost per finder; the correct close means it’s a latency tax, not a leak.</p>
+    <p><b>Remediation sketch:</b> A memoized per-worker Industrial pool (paralleling the CRM singleton in TDD-015 F1), with the inline finders sharing it; drop the per-call <code>connect()</code>/<code>close()</code> in favor of pool reuse.</p>
+  </div>
+
+  <!-- DIM 5 -->
+  <h2 class="section">Dimension 5 — Tech Debt &amp; Maintainability</h2>
+
+  <div class="tier info" id="f2">
+    <h3><span class="badge">MEDIUM</span> Two near-identical connection-config blocks, copy-pasted</h3>
+    <p class="ev">Evidence: src/utils/sql/sql.config.ts:8–19 vs src/utils/sql/sql.industrial.config.ts:17–28</p>
+    <pre><span class="cmt">// sql.config.ts (CRM)                         // sql.industrial.config.ts (Industrial)</span>
+{ user, password, domain,                        { user, password, domain,
+  server: Context.getCrmSqlServer(),               server: Context.getIndustrialSqlServer(env),
+  database: 'CRM',                                 database: 'Industrial',
+  requestTimeout: 60000,                           requestTimeout: 60000,
+  options: { trustServerCertificate: true,         options: { trustServerCertificate: true,
+             encrypt: true } }                                 encrypt: true } }</pre>
+    <p><b>Why it matters:</b> The two configs differ only in <code>server</code> and <code>database</code>; everything else — credential resolution, the 60s timeout, the TLS options — is duplicated verbatim. A change to the timeout, the TLS posture (F3), or pool sizing must be made in (at least) two places, and the credential-fetch call is copied rather than shared. This is the textbook drift surface the overhaul should close.</p>
+    <p><b>Severity rationale:</b> Medium — duplication that compounds; the natural home for the F3 cert decision and any future pool-size tuning.</p>
+    <p><b>Remediation sketch:</b> One <code>buildSqlConfig({ server, database })</code> that resolves creds once and returns the common shape; CRM and Industrial call it with their two differing fields. The cert-trust flag lives there, once.</p>
+  </div>
+
+  <div class="tier muted" id="f5">
+    <h3><span class="badge">LOW</span> Three different ways to load the <code>mssql</code> module across the layer</h3>
+    <p class="ev">Evidence: sql.industrial.config.ts:7–8 (createRequire shim) · sql.config.ts:4 (<code>import * as mssql</code>) · sql.client.ts:3–6 (createRequire shim)</p>
+    <pre>const require = createRequire(import.meta.url); const sql = require('mssql') as typeof mssqlTypes;  <span class="cmt">// industrial.config + client</span>
+import * as mssql from 'mssql';                                                                     <span class="cmt">// config.ts — different</span></pre>
+    <p><b>Why it matters:</b> The CJS-in-ESM <code>require('mssql')</code> shim appears in <code>sql.client.ts</code> and <code>sql.industrial.config.ts</code>, while <code>sql.config.ts</code> uses a plain ESM <code>import</code>. Three spellings of one dependency-load is a small inconsistency that complicates the eventual module split. (Same root as TDD-015 F9.)</p>
+    <p><b>Severity rationale:</b> Low — works; consistency only.</p>
+    <p><b>Remediation sketch:</b> One internal typed <code>mssql</code> re-export module consumed everywhere.</p>
+  </div>
+
+  <div class="tier muted" id="f6">
+    <h3><span class="badge">LOW</span> Inconsistent IN-list parameterization within the same file</h3>
+    <p class="ev">Evidence: interpolated IN-lists at sql.industrial.config.ts:49, 77, 100, 238 vs correct <code>.input()</code> at 178, 196, 210–213</p>
+    <pre>WHERE PartyAccountId IN (${idList})     <span class="cmt">// :49 — idList = parseInt+Number.isFinite+join (safe-by-construction)</span>
+WHERE c.CustomerId = ${id}              <span class="cmt">// :100 — id = parseInt(...) (safe)</span>
+.input('triggerName', triggerName)...   <span class="cmt">// :178 — CORRECT parameterization</span>
+.input('userName', userName)...         <span class="cmt">// :196 — CORRECT (UserName carries a backslash)</span></pre>
+    <p><b>Why it matters:</b> The file does both: scalar string params are correctly bound with <code>.input()</code> (and the <code>resolveImaUserId</code> comment even notes “Parameterized — UserName carries a backslash”), but ID lists are interpolated. The interpolated lists are sanitized (every element is <code>parseInt</code>+<code>Number.isFinite</code>-filtered before <code>join</code>), so there is no live injection — but two styles for the same job is the inconsistency the overhaul should resolve, and it sets the wrong example next to the correct one.</p>
+    <p><b>Severity rationale:</b> Low — safe today; consistency, and it pairs with the genuine string-interpolation finding in the queries layer (TDD-017 F1).</p>
+    <p><b>Remediation sketch:</b> Standardize on table-valued parameters or repeated <code>.input()</code> placeholders for IN-lists; if interpolation is kept for sanitized integer lists, centralize it in one <code>toIdList()</code> helper with the guard, so the pattern is named and auditable.</p>
+  </div>
+
+  <!-- DIM 2 -->
+  <h2 class="section">Dimension 2 — Test Coverage, Quality &amp; Gaps</h2>
+  <div class="tier muted" id="f7">
+    <h3><span class="badge">LOW</span> The HU-eligibility gates decide test data but are unverified</h3>
+    <p class="ev">Evidence: sql.industrial.config.ts:37–86 (filterAccountIdsWith/WithoutStagedHu); sql sanity spec covers query strings, not these post-filters</p>
+    <p><b>Why it matters:</b> <code>filterAccountIdsWithServiceLocations</code> and <code>filterAccountIdsWithoutStagedHu</code> silently return <code>[]</code> on no match, and they are the gates that decide whether an HU test gets runnable data (the finder chain in <code>sql.db.ts:377–386</code> throws domain errors when they empty). They’re inline Industrial queries not covered by the SQL sanity spec (which runs the <code>queries/*</code> strings), so a column rename on the Industrial side (e.g. the documented <code>IMA.ServiceLocations</code> drift) would make them quietly return fewer/zero rows. Low because the downstream throws give a clear symptom — but the gate logic itself is unverified.</p>
+    <p><b>Severity rationale:</b> Low — failure is loud at the call site even though the gate is untested.</p>
+    <p><b>Remediation sketch:</b> Add the Industrial finders to the sanity-spec sweep (or a sibling Industrial sanity spec) so their column references are exercised against the live schema.</p>
+  </div>
+
+  <!-- DIM 6 / 7 -->
+  <h2 class="section">Dimension 6 — Dependency Health &amp; Version Risk</h2>
+  <div class="tier muted" id="f8">
+    <h3><span class="badge">LOW</span> Correct, centralized env routing — with one cosmetic inconsistency (advisory)</h3>
+    <p class="ev">Evidence: context.ts:5 (dotenv override), 37–46 (CRM), 52–61 (Industrial), 9–20 (base URLs)</p>
+    <pre>dotenv.config({ override: true, path: ... });  <span class="cmt">// context.ts:5 — .env beats shell NODE_ENV (documented trap)</span>
+static getCrmSqlServer() { switch(this.env){ case 'int':...; default: throw ... } }  <span class="cmt">// :37–46 — throws (no prod)</span>
+static getBaseURL()      { switch(this.env){ ... case 'prod': return ''; ... } }      <span class="cmt">// :15 — returns '' for prod</span></pre>
+    <p><b>Why it matters:</b> The routing layer is the healthiest code in scope — one switch per resource, hosts confirmed against <code>.mcp.json</code>, fail-loud <code>throw</code> on an unknown env, and an explicit <code>env</code> override on the Industrial server for the INT/PRO migration verifiers. Two advisories: (1) <code>dotenv.config({ override: true })</code> at module load means the <code>.env</code> file beats the shell <code>NODE_ENV</code> — the documented “green run against the wrong env” trap (<code>known-gotchas.md</code>); the config layer’s correctness silently depends on it. (2) Minor inconsistency: for <code>prod</code>, <code>getBaseURL</code> returns <code>''</code> while <code>getCrmSqlServer</code> <code>throw</code>s — two different “no prod” behaviors. No dependency/version risk in this slice.</p>
+    <p><b>Severity rationale:</b> Low / informational — by-design behavior; the override trap is a documentation/awareness item, not a defect here.</p>
+    <p><b>Remediation sketch:</b> Leave routing as-is; add a one-line comment at <code>context.ts:5</code> pointing to the env-override gotcha, and make the prod behavior uniform (both throw, or both return a sentinel) if prod is ever wired.</p>
+  </div>
+
+  <h2 class="section">Dimension 7 — Performance Hotspots</h2>
+  <div class="tier muted">
+    <h3>No standalone findings — perf cost is the per-call connect/secret fetch (F4)</h3>
+    <p>The only performance concern in this slice is structural and already captured in F4 (a fresh pool + credential fetch per Industrial finder call). The queries these finders run are <code>TOP</code>-bounded and single-statement; no loops, no N+1, no unbounded result sets in the config layer itself.</p>
+  </div>
+
+  <footer class="rep">Technical Due Diligence · TDD-016 · 2026-06-25 · src/utils/sql config + env routing · Read-only audit — no files in the target were modified.</footer>
+
+</div>
+</body>
+</html>

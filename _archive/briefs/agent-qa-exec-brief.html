@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Executive Brief — vostride/agent-qa vs QE Ecosystem</title>
+<style>
+:root{--bg:#0e0e10;--bg-elev:#18181b;--fg:#fafafa;--fg-muted:#a1a1aa;--fg-subtle:#71717a;
+--accent:#a855f7;--accent-soft:#c4b5fd;--good:#34d399;--warn:#fbbf24;--bad:#f87171;
+--border:#27272a;--max-w:880px}
+@media (prefers-color-scheme:light){:root{--bg:#fff;--bg-elev:#fafafa;--fg:#18181b;
+--fg-muted:#52525b;--fg-subtle:#71717a;--accent:#7c3aed;--accent-soft:#6d28d9;--good:#059669;
+--warn:#b45309;--bad:#dc2626;--border:#e4e4e7}}
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+font-size:16.5px;line-height:1.65;-webkit-font-smoothing:antialiased}
+body{max-width:var(--max-w);margin:0 auto;padding:3.5rem 1.5rem 6rem}
+.badge{display:inline-block;padding:.4rem .85rem;margin-bottom:.9rem;background:var(--bg-elev);
+border:1px solid var(--border);border-radius:999px;font-family:ui-monospace,'Cascadia Code',Consolas,monospace;
+font-size:.78rem;color:var(--fg-muted)}
+.badge .accent{color:var(--accent)}
+h1{font-size:1.7rem;margin:.2rem 0 .4rem;letter-spacing:-.01em}
+.sub{color:var(--fg-subtle);font-size:.9rem;margin-bottom:2rem;
+font-family:ui-monospace,'Cascadia Code',Consolas,monospace}
+h2{font-size:1.2rem;margin:2.6rem 0 .5rem;padding-top:1.2rem;border-top:1px solid var(--border)}
+h3{font-size:1rem;margin:1.4rem 0 .3rem;color:var(--accent-soft)}
+p{margin:.5rem 0}ul{padding-left:1.15rem;margin:.4rem 0}li{margin:.4rem 0}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+a:hover{border-bottom-color:var(--accent)}
+strong{color:var(--fg);font-weight:600}em{color:var(--accent-soft);font-style:normal}
+.tldr{background:var(--bg-elev);border:1px solid var(--border);border-left:3px solid var(--accent);
+border-radius:10px;padding:1.1rem 1.3rem;margin:1.4rem 0}
+.tldr p{margin:.35rem 0}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.92rem}
+th,td{text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--fg-subtle);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+td:first-child{color:var(--fg);font-weight:500;width:21%}
+.col-a{color:var(--accent-soft)}
+.pill{display:inline-block;font-size:.72rem;padding:.1rem .5rem;border-radius:999px;
+border:1px solid var(--border);background:var(--bg-elev);color:var(--fg-muted)}
+.g{color:var(--good)}.w{color:var(--warn)}.b{color:var(--bad)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+.card{background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem}
+.card h3{margin-top:.2rem}
+.foot{margin-top:3.5rem;padding-top:1.3rem;border-top:1px solid var(--border);
+color:var(--fg-subtle);font-size:.8rem}
+@media(max-width:680px){.grid{grid-template-columns:1fr}td:first-child{width:auto}}
+</style></head><body>
+
+<div class="badge">📊 executive brief · <span class="accent">agent-qa</span> vs your QE ecosystem · 2026-06-15</div>
+<h1>vostride/agent-qa — what it is, and how it stacks up</h1>
+<div class="sub">source: github.com/vostride/agent-qa · 105★ · TS monorepo · created 2026-05-07 · active (pushed 2026-06-14)</div>
+
+<div class="tldr">
+<p><strong>Bottom line:</strong> agent-qa and your QE ecosystem are <strong>not competitors — they sit at different layers.</strong></p>
+<p>agent-qa is a <strong>horizontal, runtime agentic test-execution engine</strong>: write tests in plain English, an LLM agent drives the browser/app, heals around UI drift mid-run, and curates a memory that makes future runs smarter. It's a product you'd <em>adopt</em>.</p>
+<p>Your QE ecosystem is a <strong>vertical, workflow-automation layer</strong> bonded to IMA 360: deterministic Playwright + GraphQL tests, plus a deep skills/orchestrator stack wired into Jira, Zephyr, ADO, SQL, and App Insights — the parts agent-qa doesn't touch. That integration depth is your moat.</p>
+<p><strong>Recommendation:</strong> don't replace anything. <em>Mine agent-qa for three architectural ideas</em> (runtime self-healing, a formal curated-memory subsystem, and an action/plan cache for token savings), and optionally pilot it as a <em>self-healing smoke-runner</em> for cross-browser/mobile — but clear the <span class="b">FSL license</span> first.</p>
+</div>
+
+<h2>What agent-qa actually does</h2>
+<p>A "self-improving Agentic QA harness with Memory." You describe a test in natural language; agent-qa's LLM agent works from on-screen roles, labels, and state to execute and assert it across <strong>web and mobile</strong>.</p>
+<ul>
+<li><strong>Natural-language tests as code</strong> — YAML with plain-English <code>setup / steps / teardown</code> (e.g. "Open the hooks demo page", "Verify hook-provided data is visible"). Versioned, diffable, reviewable.</li>
+<li><strong>Self-healing at runtime</strong> — when a click/fill/select fails, the agent re-observes the UI and tries another path <em>in the same run</em>, so tests survive UI drift instead of failing on first break.</li>
+<li><strong>A real memory subsystem</strong> — an LLM curator builds execution memory across product/suite/test tiers, each observation carrying a <em>trust score</em> and confirm/deprecate/delete lifecycle; it learns specifically from <em>healed</em> steps so future runs avoid the same mistake. Includes a security scanner over remembered text.</li>
+<li><strong>Action cache</strong> — reuses validated plans across similar runs to cut planner work, tokens, and runtime (the token-efficiency angle you noticed in your own loop).</li>
+<li><strong>Sandboxed hooks</strong> — Node / Bun / Python / Bash hooks in isolated Docker containers for env setup, API calls, fixture seeding, teardown.</li>
+<li><strong>Built for humans + machines</strong> — polished dashboard, CLI, JUnit/console reporters, PostHog analytics, an <strong>MCP server</strong>, and packaged <strong>skills</strong> (authoring / debug-fix / result-triage) for coding agents.</li>
+<li><strong>Bring-your-own LLM</strong> — OpenAI/Anthropic-compatible, Gemini, local models, and subscriptions including Codex and Claude Code.</li>
+</ul>
+<p><span class="pill">Packages</span> core (agent loop · memory · reporter · analytics · auth-state) · cli · android (Appium) · dashboard-server · web dashboard · subscription-auth.</p>
+
+<h2>Head-to-head</h2>
+<table>
+<tr><th>Dimension</th><th class="col-a">agent-qa</th><th>Your QE ecosystem</th></tr>
+<tr><td>Primary role</td><td class="col-a">Runtime test-execution <em>engine</em> (general-purpose)</td><td>End-to-end QA <em>workflow automation</em> for one product (IMA 360)</td></tr>
+<tr><td>Test definition</td><td class="col-a">Plain-English YAML, agent-interpreted</td><td>Deterministic Playwright TS (POMs/specs) + GraphQL API tests</td></tr>
+<tr><td>Execution model</td><td class="col-a">LLM agent loop (planner→runner→verifier→asserter) w/ vision fallback</td><td>Scripted, deterministic, repeatable</td></tr>
+<tr><td>Healing</td><td class="col-a"><span class="g">Runtime</span> — re-observe & re-route mid-run</td><td><span class="g">Author-time</span> — fix-loop / fix-me rewrite the spec</td></tr>
+<tr><td>Self-improvement</td><td class="col-a">Formal curated memory w/ trust scores & lifecycle</td><td>Knowledge tree + memory + session learnings (more manual)</td></tr>
+<tr><td>Coverage</td><td class="col-a">Web <strong>+ mobile</strong> (Appium/WebdriverIO)</td><td>Web E2E + GraphQL API (deep), no mobile</td></tr>
+<tr><td>Enterprise integration</td><td class="col-a"><span class="b">None built-in</span> (JUnit/PostHog only)</td><td><span class="g">Deep</span> — Jira/CI, Zephyr, ADO, MSSQL, App Insights, Kibana, Confluence</td></tr>
+<tr><td>Domain knowledge</td><td class="col-a">Generic</td><td><span class="g">Deep IMA 360</span> — schema, enums, gotchas, sales process</td></tr>
+<tr><td>Agent interfaces</td><td class="col-a">Dashboard · CLI · MCP · 3 skills</td><td>Large Claude Code skills/orchestrator suite (three-amigos → ready-for-qa)</td></tr>
+<tr><td>Token strategy</td><td class="col-a">Action/plan cache + token budget</td><td>Prompt/skill discipline, knowledge routing, keyless research loop</td></tr>
+<tr><td>Maturity / openness</td><td class="col-a">105★, active, <span class="w">FSL source-available</span>, ~5 wks old</td><td>Internal/proprietary, production-tied</td></tr>
+<tr><td>Best at</td><td class="col-a">Resilient cross-platform execution with little upkeep</td><td>Precise, audited, ticket-to-report QA for a regulated CRM</td></tr>
+</table>
+
+<h2>Where they overlap (and what to borrow)</h2>
+<div class="grid">
+<div class="card"><h3>🩹 Runtime self-healing</h3>
+<p>Yours heals at author-time (fix-loop rewrites specs). agent-qa heals <em>mid-run</em>. Borrowable idea: a re-observe-and-retry wrapper for your flakiest Playwright steps before a hard fail — fewer false reds without rewriting code.</p></div>
+<div class="card"><h3>🧠 Curated memory with trust</h3>
+<p>agent-qa's memory has trust scores + confirm/deprecate/delete deltas + a security scanner. Your knowledge store is richer in domain depth but more manual. Worth lifting: a <em>trust/lifecycle</em> model and "learn from healed steps" pattern into your memory + session-review loop.</p></div>
+<div class="card"><h3>⚡ Action cache</h3>
+<p>You just praised the token efficiency of your research loop. agent-qa formalizes this with a validated-plan cache. A plan/observation cache keyed on stable selectors could cut tokens in any agentic step you add to your skills.</p></div>
+<div class="card"><h3>🔌 Packaged agent surface</h3>
+<p>Both ship skills + MCP. agent-qa proves the "QA capabilities as installable skills + MCP for any coding agent" packaging. Validates your skills-ecosystem bet; a reference for how to expose pieces externally.</p></div>
+</div>
+
+<h2>Strategic options</h2>
+<ul>
+<li><strong>A. Ideas only (lowest risk, recommended):</strong> treat agent-qa as an architecture reference. Adopt runtime-heal-before-fail, a memory trust model, and a plan cache inside your existing stack. No license/vendor exposure.</li>
+<li><strong>B. Complementary pilot:</strong> use agent-qa as a <em>self-healing smoke/exploratory runner</em> for cross-browser or (net-new) mobile coverage, with your orchestrators triggering it and your Zephyr/Jira layer recording results. Keep deterministic Playwright for regulated regression + SQL/GraphQL verification.</li>
+<li><strong>C. Not advised:</strong> replacing deterministic IMA 360 regression with NL agent runs — you'd trade auditability, precision, and DB-level verification for resilience you can get more cheaply via option A.</li>
+</ul>
+
+<h2>Risks &amp; due diligence</h2>
+<ul>
+<li><span class="b">License:</span> <strong>FSL-1.1-ALv2</strong> (Functional Source License), not OSI open source. Permits internal use; <em>prohibits "Competing Use,"</em> converts to Apache-2.0 two years after each release. Fine for internal QA; legal should confirm before any product-adjacent use.</li>
+<li><span class="w">Maturity:</span> ~5 weeks old, single-author copyright, fast-moving — expect churn and breaking changes.</li>
+<li><span class="w">Cost &amp; non-determinism:</span> LLM-driven runs cost tokens and vary run-to-run; the action cache helps but a large regression suite on agent execution is pricier and less repeatable than scripted Playwright.</li>
+<li><span class="w">Telemetry &amp; sandbox:</span> PostHog analytics and Docker-sandboxed hooks — confirm opt-out/data-handling and container posture against IGS policy.</li>
+</ul>
+
+<div class="foot">Prepared from the public repo (README, file tree, memory curator, sample tests, LICENSE) on 2026-06-15.
+Comparison reflects your documented QE ecosystem: IMA 360 Playwright/GraphQL suite + Claude Code skills orchestration + knowledge store + enterprise integrations.</div>
+</body></html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-005
+date: 2026-06-19
+scope: GraphQL failure surface (IMA360-INT App Insights) × this suite's test coverage + diagnosis process
+jira: []
+severity: { critical: 0, high: 5, medium: 4, low: 2 }
+post_release_rerun: 2026-06-20 (12h) — F2 updatePreset FIXED; F11 NEW masked regression AssociateAccountsToOpportunity 500 (ULOB COH, no auth strategy); ParseTemplate 500s up; F1/F6/F7 ~halved but persist; masking drill: 1:1 exceptions, nothing lost
+status: complete
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDD-005 — GraphQL App Insights × Suite Coverage</title>
+<style>
+:root{--ink:#1b1f1d;--bg:#f7f9f7;--muted:#5b6472;--line:#e4e9e5;--accent:#4f9d3a;--accent-2:#2c6e9b;--accent-3:#e08a3e;--accent-soft:#eef5ea;--card:#fff;--font-head:"Inter","Segoe UI",Arial,sans-serif;--font-body:"Inter","Segoe UI",Arial,sans-serif;}
+*{box-sizing:border-box;}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+header.report h1{margin:0 0 8px;font-size:29px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+header.report p.sub{margin:0;font-size:15px;opacity:.93;max-width:760px;}
+header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+.legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+.legend .item .k{font-weight:750;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.legend .item .k .dot{width:10px;height:10px;border-radius:50%;}
+.legend .item .d{font-size:12.5px;color:var(--muted);line-height:1.45;}
+.tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead th{background:#eef1ee;text-align:left;padding:13px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);white-space:nowrap;}
+thead th.num{text-align:center;}
+tbody td{padding:12px 14px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f6faf4;}
+td.num{text-align:center;}
+.tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:14px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.tier h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);}
+.tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+.tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+.tier ul{margin:6px 0 0;padding-left:18px;}
+.tier li{margin:6px 0;font-size:13.5px;}
+.tier.warn{border-left-color:var(--accent-3);}.tier.warn .badge{background:var(--accent-3);}
+.tier.info{border-left-color:var(--accent-2);}.tier.info .badge{background:var(--accent-2);}
+.tier.muted{border-left-color:var(--muted);}.tier.muted .badge{background:var(--muted);}
+.callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+.callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:6px;}
+.callout p{margin:0 0 9px;font-size:14.5px;line-height:1.55;}
+.callout ol{margin:0;padding-left:20px;}.callout li{margin:7px 0;font-size:14px;}
+.note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.88em;font-family:"SF Mono",Consolas,monospace;}
+pre{background:#1b1f1d;color:#e8ece8;padding:12px 14px;border-radius:8px;overflow-x:auto;font:12.5px/1.5 "SF Mono",Consolas,monospace;margin:8px 0;}
+pre code{background:none;color:inherit;padding:0;}
+.ev{font-size:12.5px;color:var(--muted);margin:4px 0;}
+footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+@media print{body{background:#fff;}.wrap{padding:0;}.tablecard,.tier,.legend .item{box-shadow:none;}header.report{box-shadow:none;}}
+@media (max-width:720px){.legend{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>GraphQL Failure Surface (IMA360-INT) × Suite Coverage</h1>
+    <p class="sub">An acquirer's read on what's failing in the IMA 360 GraphQL surface (per App Insights), whether this Playwright suite would catch it, and how to streamline the diagnosis loop. Read-only; evidence is live telemetry + the suite's code.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> QE / prospective acquirer</span>
+      <span><b>Date:</b> 2026-06-19</span>
+      <span><b>Scope:</b> TDD-005 · GraphQL App Insights × test coverage</span>
+      <span><b>Findings:</b> 0C / 4H / 4M / 2L</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Critical · 0</div><div class="d">No data-loss / auth-bypass / money-path finding in scope.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High · 5</div><div class="d">Top GraphQL error untested; failures masked as 200; SQL timeouts; index handler throwing; + post-release regression (F11).</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium · 4</div><div class="d">Untested mutation; brittle waiter; red-suite signal loss; 499 noise inflation.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent)"></span>Low · 2</div><div class="d">MS Graph permission error; no saved/scheduled diagnosis path.</div></div>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">Verdict — the three things an acquirer should price</div>
+    <ol>
+      <li><b>The #1 user-facing GraphQL failure has zero test coverage.</b> <code>getCurrentUserTeam</code> fails <b>244×/24h</b> on INT (resolver crash) yet is not referenced by any test — it isn't even codegen'd into the suite. The suite is blind to its largest real GraphQL error. <i>(See F1.)</i></li>
+      <li><b>GraphQL failures are invisible to HTTP-status monitoring.</b> ~271 of the real failures return <b>HTTP 200 with <code>success==false</code></b> (the error rides in the <code>errors[]</code> body). Anything keying on <code>resultCode &gt;= 400</code> — dashboards, alerts, naive tests — misses them entirely. <i>(See F5.)</i></li>
+      <li><b>The bulk of the volume is app-side and beyond this suite's reach.</b> A search-index handler throws <b>976×/24h</b> and Industrial SQL queries time out <b>~640×/24h</b>; both are background/server paths an E2E suite cannot exercise. Coverage stops at the API boundary — these need server-side tests/alerts. <i>(See F7, F6.)</i></li>
+    </ol>
+    <p style="margin-top:11px;"><b>Post-release (2026-06-20):</b> the updated release <b>fixed F2</b> (updatePreset) but introduced a <b>masked regression — F11</b>: <code>AssociateAccountsToOpportunity</code> 500s for ULOB <code>COH</code> ("no authorization strategy"), new on release day. The masking drill (F5) confirms <b>nothing is lost</b> — every masked-200 failure has a 1:1 logged exception — so monitor on <code>success==false</code> / the <code>exceptions</code> table, never <code>resultCode</code>.</p>
+  </div>
+
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier muted">
+    <p><b>Target:</b> the GraphQL failure surface of IMA 360 as observed in App Insights <code>AI-IMA360(INT)</code> (role <code>CrmQueryWeb</code>), cross-referenced against this Playwright suite's test coverage, plus the diagnosis workflow itself.</p>
+    <p><b>Evidence sources:</b> (1) live App Insights telemetry — 24h window re-run 2026-06-19, sampling-adjusted via <code>sum(itemCount)</code>; (2) suite code under <code>src/</code> (grep + read for each failing operation).</p>
+    <p><b>Dimensions in scope:</b> 2 (Test coverage &amp; gaps — primary), 4 (Error handling &amp; failure modes), 7 (Performance hotspots), plus a Process/Streamline section per the request. <b>Out of scope (stated explicitly):</b> Dim 1 (architecture), Dim 3 (security — only the auth-adjacent <code>getCurrentUserTeam</code> noted), Dim 5 (tech debt), Dim 6 (dependencies). This is a <b>scoped</b> run, not a whole-repo audit.</p>
+    <p class="note">Note on attribution: some findings are <b>app-side defects</b> (the failing resolver/indexer lives in the QueryGateway/CRM apps, not this repo) surfaced via telemetry; others are <b>suite coverage gaps</b>. Each finding states which.</p>
+  </div>
+
+  <h2 class="section">Phase 1 — Surface Map: the 24h failure inventory (live re-run)</h2>
+  <p class="note">IMA360-INT, <code>AI-IMA360(INT)</code>, last 24h, <code>sum(itemCount)</code> (matches the portal's ~1.14k). <b>Failures are 82% noise:</b> 944 of ~1,149 are HTTP 499 (client-closed) — see F8. The real server-side failures are ~205 (GraphQL-200 resolver errors + 500 + 400).</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Failing operation</th><th class="num">24h</th><th>Code</th><th>Class</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /graphql</code> (no op name)</td><td class="num">714</td><td>499</td><td>client-closed noise</td></tr>
+        <tr><td><code>GET Office365/GetOffice365Photo</code></td><td class="num">230</td><td>499</td><td>client-closed noise (F3)</td></tr>
+        <tr><td><code>/graphql<b>getCurrentUserTeam</b></code></td><td class="num">244</td><td>200</td><td>resolver crash, masked (F1)</td></tr>
+        <tr><td><code>POST Document/OnPostUploadDocuments</code></td><td class="num">33</td><td>500</td><td>upload failure (F4)</td></tr>
+        <tr><td><code>POST Document/OnPostUploadEmails</code></td><td class="num">19</td><td>400</td><td>upload failure (F4)</td></tr>
+        <tr><td><code>Account/ParseTemplate</code></td><td class="num">12</td><td>400/500</td><td>template parse (F4)</td></tr>
+        <tr><td><code>/graphqlmergeParties</code> · <code>deleteOpportunity</code> · <code>createParty</code> · <code>deleteSalesOrCollectionsNote</code></td><td class="num">~22</td><td>200</td><td>resolver errors (covered)</td></tr>
+        <tr><td><code>/graphql<b>updatePreset</b></code></td><td class="num">4</td><td>500</td><td>schema drift (F2)</td></tr>
+        <tr><td><code>/graphqlcreateCalendarEvent</code></td><td class="num">3</td><td>200</td><td>MS Graph Forbidden (F9)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Top exceptions (24h, itemCount): <code>DuplicateIdentificationResolverHandler.GetIndexMapper</code> ArgumentOutOfRange <b>976</b> · HotChocolate <code>OperationCanceledException</code> 558 (= the 499s) · <code>Win32Exception</code> SQL timeout on <code>GetImaCustomerCustomerSegments</code> <b>504</b> (+ sibling Industrial loads ~140) · <code>BestOrganizationAgentIdDataLoader</code> ArgumentOutOfRange 206 (= getCurrentUserTeam).</p>
+
+  <h2 class="section">Phase 1b — Post-release re-run (last 12h, 2026-06-20)</h2>
+  <p class="note">Re-measured after the updated release deployed. <b>Caveat:</b> 12h is half the baseline window and overall volume is lower (237 vs 845 × 499), so read rate-adjusted trends + presence/absence, not raw counts — a drop to zero in a shorter/lower-traffic window is suggestive, not proof.</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Signal</th><th class="num">24h base</th><th class="num">12h post</th><th>Read</th></tr></thead>
+      <tbody>
+        <tr><td><code>updatePreset</code> 500 + SerializationException (F2)</td><td class="num">4 / 8</td><td class="num">0 / 0</td><td><b>FIXED</b> — gone from requests <i>and</i> exceptions; the descriptions/count schema drift shipped resolved</td></tr>
+        <tr><td><code>OnPostUploadEmails</code> 400 / <code>OnPostUploadDocuments</code> 500 (F4)</td><td class="num">19 / 33</td><td class="num">0 / 0</td><td>CLEARED (or low upload activity in-window — confirm)</td></tr>
+        <tr><td>HTTP 400 validation errors (total)</td><td class="num">32</td><td class="num">0</td><td>cleared</td></tr>
+        <tr><td><code>getCurrentUserTeam</code> 200 (F1)</td><td class="num">244</td><td class="num">43</td><td>IMPROVED ~65% rate-adj — <b>still failing, still untested</b></td></tr>
+        <tr><td>DuplicateIdentification indexer (F7)</td><td class="num">976</td><td class="num">232</td><td>IMPROVED ~50% — still the #1 exception</td></tr>
+        <tr><td>Industrial SQL timeouts — CustomerSegments (F6)</td><td class="num">504</td><td class="num">112</td><td>IMPROVED ~55% — still timing out</td></tr>
+        <tr><td><code>Account/ParseTemplate</code> 500 (F4)</td><td class="num">12 <span class="note">(400/500)</span></td><td class="num">25 <span class="note">(all 500)</span></td><td><b>WORSE — regression candidate</b>; rate up + now all 500s (maps to CI-T1344/T596)</td></tr>
+        <tr><td><code>AssociateAccountsToOpportunity</code> 200</td><td class="num">0</td><td class="num">4</td><td><b>NEW</b> failing op — release regression candidate</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="tier info">
+    <h3><span class="badge">POST-RELEASE</span> Net read of the updated release</h3>
+    <p><b>Wins:</b> <code>updatePreset</code> schema drift fixed (F2 closed — gone from exceptions too, a strong signal); upload 400/500s and all HTTP-400 validation errors cleared. <b>Persisting (improved, not fixed):</b> <code>getCurrentUserTeam</code> (F1) still untested + failing; the DuplicateID indexer (F7) and Industrial SQL timeouts (F6) roughly halved but remain the top two exceptions. <b>Watch:</b> <code>Account/ParseTemplate</code> 500s rose and are now exclusively 500 — a possible regression on the account-template path (CI-T1344/T596); and a new <code>AssociateAccountsToOpportunity</code> failure appeared. <b>Verdict unchanged on F1 + F5</b> — the top untested error and the HTTP-200 masking persist.</p>
+  </div>
+
+  <h2 class="section">Error → Test association (the core ask)</h2>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Failing operation</th><th class="num">24h (real)</th><th>Test in this suite</th><th>Coverage verdict</th></tr></thead>
+      <tbody>
+        <tr><td><code>getCurrentUserTeam</code></td><td class="num">244</td><td>— none —</td><td><b>GAP</b> — not tested, not even codegen'd (only the SPA sends it)</td></tr>
+        <tr><td><code>updatePreset</code></td><td class="num">4</td><td>— none —</td><td><b>GAP</b> — mutation exists in schema (<code>graphql.ts:4114</code>), no test drives it</td></tr>
+        <tr><td><code>Account/ParseTemplate</code></td><td class="num">12</td><td><code>accounts.create.e2e.spec.ts:58</code> (CI-T1344), <code>party.record.accounts.e2e.spec.ts:41</code> (CI-T596)</td><td>COVERED — but both tests are currently <b>RED</b> in the suite (F4)</td></tr>
+        <tr><td><code>Document/OnPostUploadEmails</code></td><td class="num">19</td><td><code>party.record.overview.e2e.spec.ts:43</code> (CI-T1086), <code>summary.panel.activity.e2e.spec.ts:114</code> (CI-T91)</td><td>COVERED — both currently <b>RED</b> (F4)</td></tr>
+        <tr><td><code>Document/OnPostUploadDocuments</code></td><td class="num">33</td><td>partial — LOA/email upload flows (HU + overview)</td><td>PARTIAL</td></tr>
+        <tr><td><code>mergeParties</code> / <code>getMergePartiesPreview</code></td><td class="num">9</td><td><code>party.merge.*</code>, <code>opportunities.api.spec.ts</code>, <code>rabbitmq/party-merge.api.spec.ts</code></td><td>COVERED</td></tr>
+        <tr><td><code>deleteOpportunity</code> / <code>createParty</code> / <code>deleteSalesOrCollectionsNote</code></td><td class="num">~15</td><td><code>party.record.opportunities</code>, dataFactory, <code>party.api.spec.ts</code></td><td>COVERED</td></tr>
+        <tr><td><code>createCalendarEvent</code></td><td class="num">3</td><td><code>calendar.e2e.spec.ts</code></td><td>COVERED (failure is env permission, F9)</td></tr>
+        <tr><td><code>Office365Photo</code></td><td class="num">230</td><td><code>pipeline.management.e2e.spec.ts:151</code> (CI-T1258) — as a <i>waiter</i></td><td>MIS-USED — gates a search assertion on a noisy fetch (F3)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section">Dimension 2 — Test coverage &amp; gaps</h2>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> F1 — The #1 user-facing GraphQL failure (<code>getCurrentUserTeam</code>) has zero test coverage</h3>
+    <p class="ev"><b>Evidence:</b> App Insights 24h: <code>/graphqlgetCurrentUserTeam</code> = 244 failures (HTTP 200, <code>success==false</code>), exception <code>BestOrganizationAgentIdDataLoader…GetBestOrganizationAgentId</code> ArgumentOutOfRange ×206. Suite grep:</p>
+    <pre><code>$ grep -rln "getCurrentUserTeam" src/
+src/generated/graphql.ts        # ← only here? NO — query name absent even from generated
+# (no match in src/data, src/tests, src/api, src/pages — and not codegen'd as an operation)</code></pre>
+    <p><b>Why it matters:</b> <code>getCurrentUserTeam</code> bootstraps the signed-in user's sales-team context. It is the single largest <i>real</i> GraphQL error on INT, it crashes server-side, and <b>no test in this suite exercises it</b> — the suite cannot regress-detect the app's most frequent GraphQL failure. An acquirer inherits a blind spot on the app's startup path.</p>
+    <p><b>Severity rationale:</b> High — a user-context bootstrap failing undetected reaches many users; not Critical (read/bootstrap path, no data loss).</p>
+    <p><b>Remediation:</b> add an API test that issues <code>getCurrentUserTeam</code> for the automation user and asserts <code>res.errors.length === 0</code>; codegen the operation so it's typed.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F2 — <code>updatePreset</code> mutation is untested and failing on FE/BE schema drift</h3>
+    <p class="ev"><b>Evidence:</b> App Insights: <code>/graphqlupdatePreset</code> 500 ×4; exception <code>HotChocolate.Types.SerializationException: The fields `descriptions`, `count` do not exist on the type `PreferenceDetailModelInput`</code>. Schema has the mutation, no test drives it:</p>
+    <pre><code>src/generated/graphql.ts:4114:  updatePreset: OrganizationAgentPreferenceModel;
+$ grep -rln "updatePreset" src/   →  only src/generated/graphql.ts</code></pre>
+    <p><b>Why it matters:</b> the client sends input fields (<code>descriptions</code>, <code>count</code>) that no longer exist on <code>PreferenceDetailModelInput</code> — a front-end/back-end contract drift. No API test asserts the <code>updatePreset</code> input shape, so this drift shipped silently and only surfaces as a prod 500.</p>
+    <p><b>Severity rationale:</b> Medium — preset save is a non-critical feature; localized blast radius.</p>
+    <p><b>Remediation:</b> an API test that sends a valid <code>UpdatePresetInput</code> and asserts no <code>errors[]</code> — would catch input-type drift at PR time.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F3 — A brittle, abortable fetch is used as a functional waiter (<code>Office365Photo</code>)</h3>
+    <p class="ev"><b>Evidence:</b> <code>src/tests/dashboard/pipeline.management.e2e.spec.ts:151</code></p>
+    <pre><code>const promise = waiters.getResponsePromise(page, API_ENDPOINTS.OFFICE_365_PHOTO);
+await searchComponent.fillSearchTextBox('Inc');
+await waiters.waitForResponseSuccess(promise);</code></pre>
+    <p><b>Why it matters:</b> <code>Office365Photo</code> is a user-avatar fetch that aborts constantly (230 × 499 in 24h — the 2nd-noisiest op on INT). Gating the party-search assertion (CI-T1258) on it makes the test flaky/false-negative regardless of whether search works, and it isn't the search's completion signal. CI-T1258 is one of the 44 current red survivors.</p>
+    <p><b>Severity rationale:</b> Medium — test reliability defect, not an app defect.</p>
+    <p><b>Remediation:</b> wait on the actual search/pipeline response (or the rendered rows), not the avatar fetch.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F4 — The suite <i>does</i> catch real prod failures — but they're lost in the red backlog</h3>
+    <p class="ev"><b>Evidence:</b> the prod-failing upload endpoints map 1:1 to currently-RED suite tests:</p>
+    <pre><code>// CI-T1086 — party.record.overview.e2e.spec.ts:43  (hits Document/OnPostUploadEmails, 400 ×19 prod)
+await partyOverview.uploadEmail(emlPath);
+...
+const afterCount = await partyOverview.getEmailCardCount();
+expect(afterCount).toBeGreaterThan(beforeCount);   // ← fails: count stays 0 (upload 400s)</code></pre>
+    <p><b>Why it matters:</b> <code>Account/ParseTemplate</code> (400/500) ↔ CI-T1344/T596 (account-template upload, "Ready"=0); <code>OnPostUploadEmails</code> (400) ↔ CI-T1086/T91 (email upload, count=0). The suite <b>is</b> exercising the failing endpoints and going red for the right reason — but those reds sit among 44 survivors, so the genuine prod signal is indistinguishable from data-drift/flake noise. Coverage exists; <b>triage discipline</b> is the gap.</p>
+    <p><b>Severity rationale:</b> Medium — signal loss / process risk, not missing coverage.</p>
+    <p><b>Remediation:</b> tag prod-correlated tests so a red there escalates differently than a data-drift red; or a nightly that diffs suite reds against App Insights top failures.</p>
+  </div>
+
+  <h2 class="section">Dimension 4 — Error handling &amp; failure modes</h2>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> F5 — GraphQL failures are masked as HTTP 200 — invisible to status-code monitoring</h3>
+    <p class="ev"><b>Evidence:</b> 24h — <code>getCurrentUserTeam</code> (244), <code>mergeParties</code>/<code>createParty</code>/<code>deleteOpportunity</code>/<code>createCalendarEvent</code> all return <b>resultCode 200</b> with <code>success==false</code>; the error lives in the GraphQL <code>errors[]</code> body, not the HTTP status. (Verified: <code>requests | where name contains "graphql" and success==false</code> returns 200s.)</p>
+    <p><b>Why it matters:</b> any monitor/alert/test that filters on <code>resultCode &gt;= 400</code> misses the majority of GraphQL failures. The App Insights "Failures" blade only surfaces them because it keys on <code>success</code>. This is the single biggest reason GraphQL errors are easy to miss — the correct filter is <code>success == false</code> + <code>name contains "graphql"</code>, never <code>resultCode</code>.</p>
+    <p><b>Drill (2026-06-20):</b> the masking loses <i>nothing</i> — every masked-200 GraphQL failure has a <b>1:1 logged exception</b> in the <code>exceptions</code> table (24h join: getCurrentUserTeam 104/104, mergeParties 6/6, AssociateAccounts 1/1 — <code>reqs == with_exception</code> for every op). HotChocolate catches the resolver exception, logs it, and returns 200 with the error in <code>errors[]</code> (GraphQL spec). The danger is purely the misleading HTTP status, not data loss.</p>
+    <p><b>Severity rationale:</b> High — systemic observability gap across the whole GraphQL surface.</p>
+    <p><b>Remediation:</b> monitor on <code>success==false</code> or the <code>exceptions</code> table (both 1:1 reliable), never <code>resultCode</code> (now captured in <code>app-insights-diagnose/reference/README.md</code>). Optional app-side hardening: configure HotChocolate to emit a non-200 status on execution errors so plain HTTP monitoring catches them too (QueryGateway config).</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH · POST-RELEASE</span> F11 — New regression: <code>AssociateAccountsToOpportunity</code> 500s for ULOB "COH" (masked 200)</h3>
+    <p class="ev"><b>Evidence:</b> App Insights — <code>/graphqlAssociateAccountsToOpportunity</code> first failed <b>2026-06-20</b> (release day; 4 fails, 0 across the prior 6 days), HTTP 200 / <code>success==false</code>. Underlying logged exception:</p>
+    <pre><code>System.Net.WebException: {"message":"No strategy found to resolve authorizations for ulobs: COH", "statusCode":500}
+  at Igs.MarketIntegrations.ApiClients.AuthorizationClient.SearchAuthorizations(...)
+  at Igs.Operations.Core.Services.MarketIntegrations.AuthorizationService.SearchAuthorizationsAsync(...)  AuthorizationService.cs:179
+  at Igs.Operations.Service.Web.Controllers.Operations.AuthorizationsController.SearchAuthorizations(...)  AuthorizationsController.cs:59</code></pre>
+    <p><b>Why it matters:</b> associating accounts to an opportunity calls the Operations <code>AuthorizationService.SearchAuthorizations</code> for the account's ULOB; the service has <b>no authorization-resolution strategy registered for ULOB COH</b> → downstream 500 → masked as a GraphQL 200. New on the release day = a release regression. This is market/utility authorization, <b>not</b> Auth0/user auth.</p>
+    <p><b>Call path / suite reach:</b> driven by <code>src/tests/opportunities/opportunity.record.accounts.e2e.spec.ts:11</code> (CI-T1301 "Adding party accounts to an opportunity") and <code>opportunities.bulk.actions.e2e.spec.ts</code> (CI-T1253) via <code>waiters.types.ts:2 ASSOCIATE_ACCOUNTS_TO_OPPORTUNITY</code> + <code>dataFactory.account.ts</code>. The suite <b>will</b> catch it — but only when the sampled account's ULOB is COH (data-dependent), so it reads as an intermittent flake unless explicitly seeded.</p>
+    <p><b>Severity rationale:</b> High — a new release regression on a core flow (account↔opportunity association), masked so HTTP monitoring won't see it; held below Critical by low volume + single-ULOB scope.</p>
+    <p><b>Remediation:</b> register an authorization-resolution strategy for ULOB COH in Igs.Operations <code>AuthorizationService</code> (or handle the missing-strategy case gracefully) — QueryGateway/Operations work; add a CI-T1301 variant seeded with a COH account to regression-detect it.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F8 — 499 client-closed dominates the failure count (~82%), inflating the alarm</h3>
+    <p class="ev"><b>Evidence:</b> 24h — 944 of ~1,149 failures are HTTP 499 (POST /graphql 714 + Office365Photo 230); the matching exception is HotChocolate <code>OperationCanceledException</code> ×558. No server fault — the caller closed the socket.</p>
+    <p><b>Why it matters:</b> the "1.14k failures" headline is ~82% client-abort noise (navigation/timeout). Triage that doesn't strip 499 first burns on noise and buries the ~205 real failures. (Same class as the EvaluateAll 499 drilled earlier — a 499 is a timeout/abort, not a server error.)</p>
+    <p><b>Severity rationale:</b> Medium — distorts triage; no direct user impact.</p>
+    <p><b>Remediation:</b> exclude <code>resultCode == "499"</code> in the standard failure query; treat 499 spikes as a latency/timeout signal, separately.</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> F9 — <code>createCalendarEvent</code> fails with MS Graph "Forbidden" (environment permission)</h3>
+    <p class="ev"><b>Evidence:</b> <code>/graphqlcreateCalendarEvent</code> 200/<code>success==false</code> ×3; exception <code>Igs.MicrosoftGraph.Exceptions.MicrosoftGraphCalendarException: Forbidden</code>.</p>
+    <p><b>Why it matters:</b> a Microsoft Graph calendar permission denial (downstream), not an app-code defect. Covered by <code>calendar.e2e.spec.ts</code>, but the failure is environmental — worth confirming the INT service principal's Graph calendar scope.</p>
+    <p><b>Severity rationale:</b> Low — env/permission, low volume.</p>
+    <p><b>Remediation:</b> verify the Graph app registration's Calendars permission in INT; don't chase as a code bug.</p>
+  </div>
+
+  <h2 class="section">Dimension 7 — Performance hotspots (app-side; suite-untestable)</h2>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> F6 — Industrial entity SQL queries are timing out (~640×/24h)</h3>
+    <p class="ev"><b>Evidence:</b> 24h exceptions — <code>Win32Exception: Execution Timeout Expired</code> at <code>Igs.Crm.Core.Data.Ima.IndustrialEntities.GetImaCustomerCustomerSegments</code> ×504, <code>GetImaOpportunityCustomerSegments</code> ×70, <code>GetBrokersByPartyAccountId</code> ×25, <code>ParallelForEachAsync</code> ×40.</p>
+    <p><b>Why it matters:</b> the Industrial customer-segment/broker lookups exceed the SQL command timeout at volume — driving 500s and feeding the 499s (callers give up). This is server-side DB performance; an E2E suite cannot exercise or assert it (no test boundary touches these batch loaders).</p>
+    <p><b>Severity rationale:</b> High — a core data path failing ~640×/day; cross-cuts opportunity/party reads.</p>
+    <p><b>Remediation:</b> index/plan review on the customer-segment + broker-by-account queries; add a server-side timeout/perf SLO + alert. Out of this suite's reach — flag to the app team.</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> F7 — Duplicate-identification index handler throws on an unhandled table (976×/24h)</h3>
+    <p class="ev"><b>Evidence:</b> 24h top exception — <code>System.ArgumentOutOfRangeException</code> at <code>Igs.Crm.Ima.Search.Index.ResolverHandlers.DuplicateIdentificationResolverHandler.GetIndexMapper</code>: <i>Table 'Party.OrganizationContactAddresses' was not handled by DuplicateIdentificationResolver</i> (sibling ×2 for <code>Opportunity.IndustrialLargeVolumeTransportOpportunities</code>). Empty <code>operation_Name</code> → fires in the background RAD/indexing path.</p>
+    <p><b>Why it matters:</b> the dominant exception by volume. The duplicate-identification search-index mapper hits a table case it doesn't handle and throws — meaning dedup indexing is partially broken (the CI-7764/CI-7826 search-index class). It's background/server-side, so this suite cannot catch it (no E2E or API path covers the indexer). An acquirer should see this as an unmonitored index-integrity defect.</p>
+    <p><b>Severity rationale:</b> High — index-integrity defect at high volume; not Critical (no confirmed user-facing data loss yet), app-side.</p>
+    <p><b>Remediation:</b> add the missing table case(s) to the index mapper; this is QueryGateway/CRM-app work, not test-suite work — surface to the indexer owners (ties to <code>/elastic-drift</code>).</p>
+  </div>
+
+  <h2 class="section">Streamline — making this diagnosis a repeatable loop</h2>
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> F10 — The diagnosis is manual and trap-laden; no saved query or scheduled pull</h3>
+    <p><b>What slows it down today (all now captured in <code>app-insights-diagnose/reference/</code>):</b></p>
+    <ul>
+      <li><b>Sampling trap:</b> <code>count()</code> undercounts (adaptive sampling); must use <code>sum(itemCount)</code> to match the portal — cost me a wrong "419 vs 1.14k" until corrected.</li>
+      <li><b>499 noise:</b> 82% of "failures" are client-aborts; the standard query must exclude <code>resultCode=="499"</code>.</li>
+      <li><b>GraphQL is 200-on-error:</b> filter <code>success==false</code> + <code>name contains "graphql"</code>, never <code>resultCode</code>.</li>
+      <li><b>Tooling:</b> system Python lacks azure-cli; <code>az.cmd</code> chokes on the <code>(INT)</code> parens → use the bundled CLI2 python.</li>
+    </ul>
+    <p><b>Recommended streamlined loop:</b></p>
+    <ol style="margin:0;padding-left:20px;">
+      <li>Canonical 24h GraphQL-failure query (saved): <code>requests | where name contains "graphql" and success==false and resultCode!="499" | summarize n=sum(itemCount) by name, resultCode | order by n desc</code>.</li>
+      <li>Auto-map each failing op → suite test (the table above) and <b>flag untested ops</b> (today: <code>getCurrentUserTeam</code>, <code>updatePreset</code>) as coverage gaps.</li>
+      <li>Run it on a schedule (a <code>/elastic-drift</code>-style nightly, or a cron agent) that diffs the top failing ops against suite coverage + current reds, and posts the delta.</li>
+    </ol>
+    <p class="note">This run already hardened the reference (sampling rule, 499 rule, GraphQL-200 rule, no-browser-table rule) so the next person doesn't re-learn the traps.</p>
+  </div>
+
+  <footer class="rep">TDD-005 · Technical Due Diligence · QE · 2026-06-19 · read-only · evidence: live App Insights (AI-IMA360 INT, 24h, sum(itemCount)) + suite code under src/</footer>
+
+</div>
+</body>
+</html>

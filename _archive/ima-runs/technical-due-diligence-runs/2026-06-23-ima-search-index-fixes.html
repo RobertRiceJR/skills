@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-008
+date: 2026-06-23
+scope: IMA 360 search-index propagation — 5 proposed indexing fixes (CI-7868, CI-7869, CI-7862, CI-7863, CI-7864)
+jira: [CI-7868, CI-7869, CI-7862, CI-7863, CI-7864]
+severity: { critical: 0, high: 3, medium: 2, low: 0 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-008 — IMA 360 Search-Index Propagation: Review of 5 Proposed Indexing Fixes</title>
+  <style>
+  :root{
+    --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+    --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#ffffff;
+    --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+  header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+  header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+  header.report h1{margin:0 0 8px;font-size:27px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+  header.report p.sub{margin:0;font-size:14.5px;opacity:.93;max-width:820px;}
+  header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+  h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+  .legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+  .legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+  .legend .item .k{font-weight:750;font-size:20px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+  .legend .item .k .dot{width:11px;height:11px;border-radius:50%;}
+  .legend .item .d{font-size:12px;color:var(--muted);line-height:1.4;text-transform:uppercase;letter-spacing:.05em;font-weight:700;}
+  .tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);margin-bottom:8px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{background:#eef1ee;text-align:left;padding:11px 13px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);white-space:nowrap;}
+  thead th.num{text-align:center;}
+  tbody td{padding:10px 13px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#f6faf4;}
+  td.num{text-align:center;}
+  .tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:16px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .tier h3{margin:0 0 8px;font-size:16px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);}
+  .tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);letter-spacing:.03em;}
+  .tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+  .tier ul{margin:6px 0 10px;padding-left:18px;}
+  .tier li{margin:5px 0;font-size:13.5px;}
+  .tier.warn{border-left-color:var(--accent-3);} .tier.warn .badge{background:var(--accent-3);}
+  .tier.info{border-left-color:var(--accent-2);} .tier.info .badge{background:var(--accent-2);}
+  .tier.muted{border-left-color:var(--muted);} .tier.muted .badge{background:var(--muted);}
+  .tier.crit{border-left-color:#b5261c;} .tier.crit .badge{background:#b5261c;}
+  .sev-crit{background:#b5261c !important;} .sev-high{background:#d4541f !important;} .sev-med{background:#2c6e9b !important;} .sev-low{background:#5b6472 !important;}
+  .callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+  .callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:8px;}
+  .callout p{margin:0 0 10px;font-size:14px;line-height:1.55;}
+  .callout ol{margin:6px 0 4px;padding-left:20px;} .callout ol li{margin:9px 0;font-size:13.8px;line-height:1.5;}
+  .callout a{color:var(--accent-2);font-weight:650;text-decoration:none;} .callout a:hover{text-decoration:underline;}
+  h4.sub2{margin:13px 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:750;}
+  pre.code{background:#1b1f1d;color:#e6ede6;padding:11px 14px;border-radius:9px;overflow-x:auto;font:12px/1.5 "SF Mono",Consolas,monospace;margin:6px 0 10px;white-space:pre;}
+  .ev{font-size:12px;color:var(--muted);font-family:"SF Mono",Consolas,monospace;margin:4px 0 2px;}
+  code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.88em;font-family:"SF Mono",Consolas,monospace;}
+  .note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+  .lozenge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .lozenge.green{background:#e3f1dc;color:#2f6e1f;} .lozenge.blue{background:#dbe9f3;color:#1f5781;}
+  .lozenge.amber{background:#f7ebd9;color:#8a5a14;} .lozenge.gray{background:var(--line);color:var(--muted);}
+  footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+  @media print{body{background:#fff;}.wrap{padding:0;}.tablecard,.tier,.legend .item{box-shadow:none;}header.report{box-shadow:none;}}
+  @media (max-width:720px){.legend{grid-template-columns:repeat(2,1fr);}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE · Three-Amigos</p>
+    <h1>IMA 360 Search-Index Propagation — Review of 5 Proposed Indexing Fixes</h1>
+    <p class="sub">Five developer-proposed fixes to the Elasticsearch search-index pipeline, evaluated as one story: each diagnosis confirmed against live CRM / DB-Industrial source, the proposed fix assessed for correctness and completeness, the open product/architecture decisions surfaced with a recommendation, and an honest account of where QE can actually verify each.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> C&amp;I Engineering &amp; QE — sprint refinement</span>
+      <span><b>Date:</b> 2026-06-23</span>
+      <span><b>Run:</b> TDD-008</span>
+      <span><b>Scope:</b> CI-7868 · CI-7869 · CI-7862 · CI-7863 · CI-7864 (epic CI-4032)</span>
+    </div>
+  </header>
+
+  <!-- severity tally -->
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:#b5261c"></span>0</div><div class="d">Critical</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:#d4541f"></span>3</div><div class="d">High</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:#2c6e9b"></span>2</div><div class="d">Medium</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:#5b6472"></span>0</div><div class="d">Low</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout">
+    <div class="lbl">Verdict — the three things that most change go / no-go</div>
+    <p>These five fixes are real and the diagnoses are largely sound — but three concerns dominate whether they can be picked up as written this sprint:</p>
+    <ol>
+      <li><b><a href="#ci-7863">CI-7863 is the highest-volume failure and the only fix with no agreed direction.</a></b> ≥250 dead-letters/30 days, firing nightly <em>and</em> during business hours. The proc genuinely runs a distributed query against the <code>CHSQL</code> linked server over an <b>80.8-million-row</b> remote <code>Opportunities</code> table, filtered by a local TVP that SQL cannot remote. It needs an architecture decision before any code — recommendation below is <b>Option A (HTTP into CRM)</b>, reusing a pattern already in the same file.</li>
+      <li><b><a href="#fix-reality">Three of the five fixes do not line up with <code>main</code>.</a></b> CI-7868 and CI-7869 name reader classes (<code>IndustrialAccountReader</code>, <code>ProspectDeletionReader</code>) that <b>do not exist</b> on the current branch — the real seams are inline in <code>ImaAccountDataProvider.cs</code>. CI-7862 points at line 430, which is an <b>intentional sibling-propagation feature</b>; scoping it as the ticket says would change aging results. Each is fixable, but each needs reconciliation against the actual tree before a developer starts.</li>
+      <li><b><a href="#ci-7864">CI-7864 is mis-scoped and its blast radius is wider than the ticket states.</a></b> <em>All five</em> activity queries are unbounded, not two — a two-query fix would pass a notes/calls repro and still dead-letter on email-heavy parties. One timeout fails the <code>ima-parties</code>, <code>ima-contracts</code>, and <code>ima-opportunities</code> writes together, and the date cutoff also truncates the live user-facing activity feed. It is blocked on a product decision (the lookback window).</li>
+    </ol>
+    <p>Also material: <a href="#ci-7868">CI-7868</a> is the one <b>confirmed silent data-correctness defect</b> with user-facing reach (genuinely-seasonal accounts indexed <code>IsSeasonal=false</code> drop out of search) — and it ships into a coverage gap (no test exercises the accounts-index seasonal path). And a structural caveat for both accounts fixes: <code>ima-accounts</code> is the one <b>asymmetric</b> index in this set — a full bulk reindex would purge ~130K rows of load-bearing mass-market residue, so these fixes must stay on the build seam and <b>not</b> trigger a reindex.</p>
+  </div>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <p>Run <b>TDD-008</b> · 2026-06-23 · Jira CI-7868, CI-7869, CI-7862, CI-7863, CI-7864 (all children of epic <b>CI-4032 Technical Debt</b>, reporter Emil Heineking). This is a <b>three-amigos × technical-due-diligence</b> hybrid: the five tickets are treated as a single indexing story, evaluated evidence-first (every finding cites <code>file:line</code> + quoted code) with the QE lens layered on (what is verifiable, where, and is each AC testable).</p>
+  <p><b>Targets (read-only):</b> CRM at <code>C:\Users\rrice\Repos\CRM</code> (branch <code>main</code> @ <code>f561ffd3</code>); <code>DB-Industrial</code> (numbered-migration repo — live proc body = highest-numbered script, confirmed against INT via <code>OBJECT_DEFINITION</code> where it mattered); this Playwright suite for coverage. Grounded in our own prior analysis: the elastic-drift baseline, the account-data-lineage and RAD/RabbitMQ nodes, and the prior indexer review (TDD-003).</p>
+  <h4 class="sub2">Dimensions in scope</h4>
+  <p>Adapted to a per-fix structure. The dominant TDD dimensions here are <b>#4 Error handling &amp; failure modes</b> (timeout → nack → dead-letter), <b>#7 Performance hotspots</b> (the unbounded queries), <b>#2 Test coverage &amp; gaps</b> (the QE roll-up), and <b>#1 Architecture</b> (the CHSQL distributed query, the two-write-path asymmetry). Security (#3), dependency health (#6) and broad tech debt (#5) are not the focus of these query-level fixes and are noted only where they intersect.</p>
+  <p class="note"><b>On severities:</b> the Critical/High/Medium/Low ratings here are TDD <em>blast-radius</em> assessments, independent of the filers' Jira priorities (CI-7868 Medium · CI-7869 Medium · CI-7862 Low · CI-7863 High · CI-7864 Medium). This review rates <b>CI-7868</b> and <b>CI-7864</b> High and <b>CI-7862</b> Medium — above their Jira priority; each per-fix card states the blast-radius rationale for the bump.</p>
+  <h4 class="sub2">Explicit scope-downs (no silent caps)</h4>
+  <ul>
+    <li><b>Evidence gap — reader seams absent on <code>main</code>:</b> <code>IndustrialAccountReader.cs</code> / <code>GetSeasonalAccountIdsAsync</code> (CI-7868) and <code>ProspectDeletionReader.cs</code> / <code>GetCanDeleteProspectAccountsAsync</code> (CI-7869) do not exist in the checkout. The real seams were located inline in <code>ImaAccountDataProvider.cs</code> and assessed there; the cited classes are treated as an in-flight refactor not yet on <code>main</code>.</li>
+    <li><b>Out of scope by design:</b> BPL (bulk party-load) flooding and queue depth/throughput. These five are per-message query fixes; the flooding/concurrency problem is a different fix family (see <a href="#not-fixed">What these fixes do not address</a>).</li>
+    <li><b>"Debt letters" linkage is a hypothesis, not a finding.</b> No ticket and no source node references debt letters; the plausible bridge (stale aging-transfer / customer-segment) is flagged for the product owner to confirm, not asserted.</li>
+    <li><b>Quantities are dev-supplied / point-in-time.</b> Dead-letter counts, p50 latencies and per-night failure rates come from the tickets' prod telemetry; this was a read-only source pass and did not re-run prod queries. The one number independently confirmed live is the 80.8M-row <code>CHSQL Opportunities</code> table (CI-7863). The specific Control-M clock times (03:04 / 02:00 ET) are from the tickets; our knowledge base documents the <em>cadences</em> only.</li>
+  </ul>
+
+  <!-- SURFACE MAP -->
+  <h2 class="section">The indexing story — one transport, two write paths, one failure mode</h2>
+  <p>Every <code>ima-*</code> index is populated by <b>two paths that do not always agree</b>, and all five fixes sit on this backbone:</p>
+  <ul>
+    <li><b>Bulk reindex</b> (the "nightly rebuild" the opportunity/party fixes touch): a Control-M job → <code>Ima*ReindexingService</code> → <code>GetIdsAsync()</code>, membership = the C&amp;I-gated SQL.</li>
+    <li><b>Incremental RAD CDC</b> (the "build seam" the accounts fixes touch): a SQL <code>Rad_TR_*</code> trigger batches changed PKs → Service Broker → RAD host → RabbitMQ topic exchange → <code>IMA_RAD_CrmChangeQueue</code> (500 party IDs/message) → table gate → resolver maps leaf keys to root IDs (party → opportunity / account IDs) → <code>GetEntitiesByIdsAsync(ids)</code> hydrates the document → ES.</li>
+  </ul>
+  <p><b>The shared failure mode this report is really about:</b> a hydration/resolver step runs a slow or unbounded query → it exceeds the EF Core default <b>30-second</b> command timeout (no override on these paths) → the exception propagates through <code>DataChangeResponderService</code>, which has <b>no try/catch around its <code>Task.WhenAll</code></b> across index handlers → the RAD consumer faults → the message is <b>nacked, the dead-letter exchange retries once, the second attempt fails identically, and the batch is dropped</b>. Net effect: the ES document goes <b>stale for up to 24 hours</b> (until the next nightly bulk reindex heals it); the SQL system-of-record is untouched. This is data <em>staleness</em>, not data loss — but because one slow query can fault the whole batch's <code>Task.WhenAll</code>, a single bad party can stale several indices at once.</p>
+
+  <h4 class="sub2">Which index each fix touches, and how much drift it can actually move</h4>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Fix</th><th>Index</th><th>Archetype / gate</th><th>Path</th><th>Drift baseline (PROD, as-of 2026-06-17)</th></tr></thead>
+      <tbody>
+        <tr><td><b>CI-7868</b> IsSeasonal<br><b>CI-7869</b> CanDelete</td><td><code>ima-accounts</code></td><td>A (CRM-native RAD) over C lineage — <b>asymmetric</b>: bulk C&amp;I-gated, incremental ungated</td><td>Build seam (RAD incremental + bulk)</td><td>11 actionable (new-account lag) + <b>~130,457 expected MM residue</b> (load-bearing, 0 truly orphaned). <span class="lozenge amber">caveat</span> a bulk reindex purges the residue</td></tr>
+        <tr><td><b>CI-7862</b> aging-transfer<br><b>CI-7863</b> customer-segment</td><td><code>ima-opportunities</code></td><td>A — symmetric (C&amp;I + 4 subtypes), valid 1:1</td><td>Nightly rebuild + business-hours UPDATE</td><td>~1,814 active missing (the actionable target); ~31,816 terminal "missing" = expected full-reindex artifact</td></tr>
+        <tr><td><b>CI-7864</b> activity scan</td><td><code>ima-parties</code></td><td>A — symmetric (C&amp;I), valid 1:1</td><td>Nightly rebuild</td><td><b>0 — in exact sync.</b> A fix here is preventive/correctness; there is no existing gap to close</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Total actionable drift across all nine indices at the baseline was ~3,556 records against ~330K of expected (non-drift) mass-market residue. These five fixes target the <em>failure rate</em> of the pipeline, not the residue. <code>ima-parties</code> being at zero means CI-7864's value is keeping it there under load, not recovering a backlog.</p>
+
+  <!-- ===================== PER-FIX BREAKDOWN ===================== -->
+  <h2 class="section">Per-fix breakdown — highest severity first</h2>
+
+  <!-- CI-7863 -->
+  <div class="tier warn" id="ci-7863">
+    <h3><span class="badge sev-high">HIGH</span> CI-7863 — Customer-segment linked-server timeout <span class="lozenge gray">ima-opportunities</span> <span class="lozenge amber">no agreed fix</span></h3>
+    <p><b>Ticket:</b> Bug · priority High · "Nightly party index rebuild dead-letters opportunity batches — <code>Rad.GetImaOpportunityCustomerSegments</code> linked-server timeout." ≥250 dead-letters/30 days (first seen 2026-05-25), and it also fires during business-hours <code>Opportunity.Opportunities</code> UPDATE batches.</p>
+
+    <h4 class="sub2">Diagnosis — confirmed (and the "Organic stub" red herring resolved)</h4>
+    <p>The live proc <b>does</b> join three tables across the <code>CHSQL</code> linked server. The earlier reading of a hardcoded <code>'Organic'</code> return was the <em>superseded 2020 CREATE</em> (<code>02091</code>); the deployed body is <code>02316-CI5193</code>, independently confirmed against INT via <code>OBJECT_DEFINITION</code>:</p>
+    <p class="ev">DB-Industrial/02316-CI5193-FixImaOpportunityCustomerSegmentProc.sql:17-33 (live INT body matches)</p>
+    <pre class="code">SELECT o.opportunityid AS OpportunityId, obog.brokerorganizationGroupid
+INTO #oppInfo
+FROM chsql.crm.opportunity.Opportunities o                                  -- remote, 80,857,194 rows
+JOIN chsql.crm.opportunity.IndustrialLdcOpportunities ilo ON ilo.opportunityid = o.opportunityid
+JOIN chsql.crm.opportunity.OpportunityBrokerOrganizationGroups obog ON obog.OpportunityId = ilo.OpportunityId
+WHERE o.opportunityid IN (SELECT [Value] FROM @opportunityIds)              -- local TVP, cannot be remoted
+...
+LEFT JOIN dbo.[sales groups] sg ON opp.brokerOrganizationGroupId = sg.salesgroupid</pre>
+    <p>The local <code>@opportunityIds</code> TVP predicate cannot be pushed to the remote server, so the optimizer either drags a slice of the <b>80.8M-row</b> remote <code>Opportunities</code> table local or does per-ID remote round-trips — both blow 30s at nightly batch density. The EF call has no timeout override:</p>
+    <p class="ev">Igs.Crm.Core.Data/Ima/IndustrialEntities.cs:530-535 — FromSqlRaw, EF default 30s (EntitiesBase.cs:25-50 takes the non-CrmEntities branch, no SetCommandTimeout)</p>
+    <pre class="code">var results = await Set&lt;GetImaOpportunityCustomerSegmentsResult&gt;()
+    .FromSqlRaw("Rad.GetImaOpportunityCustomerSegments @opportunityIds = @opportunityIds", parameters)
+    .ToListAsync();</pre>
+    <p>Caller: <code>ImaOpportunityDataProvider.cs:863-870</code> <code>GetCustomerSegments()</code>, one of ~18 parallel awaits in <code>LoadAllInParallelAndApplicationSideJoin()</code>, run over <code>Chunk(2000)</code> with <code>NumberOfThreads=10</code> (<code>IndexService.cs:55,57</code>). The unhandled throw propagates → batch nacked. Stale fields: <code>ima-opportunities</code> <code>customerSegmentIds</code>/<code>Names</code> (<code>ImaOpportunityDocument.cs:61-62</code>), a live search filter (<code>CustomerSegmentFilter.cs</code>).</p>
+
+    <h4 class="sub2">Fix assessment — Severity High</h4>
+    <p>Highest-volume failure in the set, no agreed direction, and it fires in business hours too. Both segment-mapping tables are <b>local and tiny</b> (<code>Industrial.dbo.[sales groups]</code> = 600 rows, <code>SalesGroupTypes</code> = 4); the three CHSQL-forced tables are all <b>CRM-resident</b>, which is why the remote join is gratuitous.</p>
+    <p><b>Adjacent data nuance to pin in the regression test:</b> <code>CustomerSegment.GetAll()</code> (<code>Igs.Crm.Core/CustomerSegment.cs:41-42</code>) maps only segment IDs 1/2/3 (Organic / Non-organic / OrganicWithAffiliation). <code>SalesGroupTypes</code> Id 4 = "Inside Sales" returns null and is dropped at <code>IndustrialEntities.cs:544</code> (<code>.Where(seg =&gt; seg != null)</code>); a null broker defaults to ISNULL = 2 (Organic). The "broker-affiliated opps reflect non-organic" AC must say which IDs it asserts.</p>
+
+    <h4 class="sub2">Open decision — HTTP into CRM (A) vs. sync tables to Industrial (B) · recommend A</h4>
+    <ul>
+      <li><b>Option A (HTTP into CRM) — recommended.</b> Reuses an identical pattern already in the same method: <code>_imaOpportunityClient.GetOpportunityAgingTransferDate(opportunityIds)</code> (<code>ImaOpportunityDataProvider.cs:162</code>; client <code>ImaOpportunityClient.cs:80-90</code> → <code>OpportunityController.cs:61-67</code>). The CRM side already runs the exact local batched query at <code>OrganizationGroupLoaderByOpportunityId.cs:38-42</code>. Cost: a new segment route/controller/service (none exists today) and deciding where the 4-row type map lives (seed into CRM, or return the broker-org-group id for a now-local Industrial type lookup).</li>
+      <li><b>Option B (replicate CRM tables into Industrial).</b> The proc runs fully local — but <code>Opportunities</code> is 80.8M rows and high-churn; replicating it adds a large sync job and a new staleness vector. A CI-5152 comment frames B as the long-term intent ("until data is migrated"), but it is the heavier, riskier near-term lift.</li>
+      <li><b>Not a fix:</b> raising <code>CommandTimeout</code> (as <code>ConnectAppEntities.cs:146</code> does elsewhere) only reduces frequency for small batches — agrees with the ticket.</li>
+    </ul>
+
+    <h4 class="sub2">QE verification</h4>
+    <p>Verifiable via <b>App Insights</b> (the <code>Win32Exception 258</code> ProblemId count in the 03:00–05:00 window, <code>AI-CRM360</code>), <b><code>/elastic-drift</code></b> diffing <code>customerSegment*</code> on <code>ima-opportunities</code> vs SoR after a reindex (the directly-testable regression-AC form), and an INT proc EXEC timing (needs a <code>getIndustrialPool()</code> diag spec — the read-only MCP suppresses the temp-table batch). <b>No existing suite coverage</b> of segment indexing (the only broker-adjacent test, <code>opportunity.record.overview.e2e.spec.ts</code> @CI-T1207, exercises broker sales-activity, not segment). The QueueReceiveLog AC is prod-human-only.</p>
+  </div>
+
+  <!-- CI-7864 -->
+  <div class="tier warn" id="ci-7864">
+    <h3><span class="badge sev-high">HIGH</span> CI-7864 — Unbounded activity-history scan timeout <span class="lozenge gray">ima-parties</span> <span class="lozenge amber">mis-scoped + product-blocked</span></h3>
+    <p><b>Ticket:</b> Bug · priority Medium · "Nightly party index rebuild dead-letters party batches — <code>ActivitiesService</code> unbounded event history scan timeout." ≥34 dead-letters/30 days, 127-exception spike on 2026-06-14.</p>
+
+    <h4 class="sub2">Diagnosis — confirmed, but broader than the ticket states</h4>
+    <p><code>GetActivities()</code> runs <b>five sequential awaits</b> (<code>ActivitiesService.cs:34-38</code>), so only one timeout surfaces per request. The ticket names two unbounded queries; <b>all five</b> filter only by party-IN + a type/flag predicate, none has a date cutoff:</p>
+    <div class="tablecard">
+      <table>
+        <thead><tr><th>Query</th><th>file:line</th><th>Date filter?</th></tr></thead>
+        <tbody>
+          <tr><td>GetEventNotes</td><td>ActivitiesService.cs:203-221</td><td><b>NONE</b></td></tr>
+          <tr><td>GetEventEmails</td><td>:279-308</td><td><b>NONE</b></td></tr>
+          <tr><td>GetEventPhoneCalls</td><td>:317-345</td><td><b>NONE</b></td></tr>
+          <tr><td>GetOpportunityNotes</td><td>:354-380</td><td><b>NONE</b></td></tr>
+          <tr><td>GetEmailMetaData</td><td>:393-400</td><td><b>NONE</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <pre class="code">// GetEventNotes — ActivitiesService.cs:206-208  (no CreateDate/EventDate cutoff)
+.Where(x =&gt; partyIds.Contains(x.Event.PartyId))
+.Where(x =&gt; x.Event.EventType.Code == EventType.CommercialAndIndustrialSales   // "SALESCI"
+         || x.Event.EventType.Code == EventType.Collections)                  // "COLLECTIONS"</pre>
+    <p><b>The <code>ima-parties</code> write itself fails (confirmed), and across three indices.</b> <code>IndexService.Index()</code> hydrates before posting (<code>IndexService.cs:234</code> then <code>:249</code>); the party build hard-depends on the activity result (<code>ImaPartyDataProvider</code> <code>GetEvents</code> at <code>:100</code>/<code>:625-645</code>, awaited <code>:205</code>). The same <code>_activitiesClient.GetActivities</code> is consumed by the contract (<code>ImaContractDataProvider.cs:844</code>) and opportunity (<code>ImaOpportunityDataProvider.cs:1260</code>) providers, and all index handlers run under one <code>Task.WhenAll</code> (<code>DataChangeResponderService.cs:76-96</code>) — so one timeout can stale <code>ima-parties</code>, <code>ima-contracts</code> and <code>ima-opportunities</code> together. Timeout = EF default 30s; controller returns 500 (<code>ActivitiesController.cs:29-33</code>).</p>
+
+    <h4 class="sub2">Fix assessment — Severity High</h4>
+    <p>The core aggregate search document goes stale under load. <b>A two-query cutoff is insufficient</b> — it would pass a notes/calls repro (party 31409057) and still dead-letter on an email- or opportunity-note-heavy party. The cutoff must apply to all five (or at minimum the three that materialize full per-party history). <b>Unknown from source:</b> whether a usable index on <code>Event(PartyId, EventDate)</code> exists — without one, a date predicate narrows materialization but the scan persists. Confirm against the live DB before sign-off.</p>
+
+    <h4 class="sub2">Open decision — the lookback window (product) · recommend 24 months, configurable</h4>
+    <p>This is a product call, and it is <b>user-visible</b>: the same service backs the live activity feed (<code>PartyActivitiesLoader.cs:36</code> → <code>getPartyActivitiesById</code>), so the cutoff truncates the in-app feed, not just the index. <b>Too short</b> (6–12 mo) drops mid-cycle engagement on long industrial deals; <b>too long</b> (5 yr+) barely bounds the worst offenders. 24 months covers a sales cycle + renewal lead-time while cutting the tail. Ship as a <b>configurable constant</b>, uniform across types to start, per-query-overridable so a per-EventType split (e.g. Collections) is a one-line change later.</p>
+
+    <h4 class="sub2">QE verification</h4>
+    <p>INT repro: <code>POST /Activities/GetActivities</code> with ~500 high-activity party IDs (this is a CRM Core REST endpoint, not GraphQL — a new direct-REST check, or verify via the shared <code>getPartyActivitiesById</code> path). App Insights ProblemId in-window. The regression ACs (in-window present / out-of-window absent) are verifiable through the existing feed specs — <code>src/tests/summary.panel/summary.panel.activity.e2e.spec.ts</code> and <code>src/tests/parties/party.record.activity.e2e.spec.ts</code> — but <b>none asserts a date boundary today</b>; a new two-sided fixture (one activity each side of the cutoff) is the main test effort.</p>
+  </div>
+
+  <!-- CI-7868 -->
+  <div class="tier warn" id="ci-7868">
+    <h3><span class="badge sev-high">HIGH</span> CI-7868 — IsSeasonal false-negatives (row-cap truncation) <span class="lozenge gray">ima-accounts</span> <span class="lozenge green">confirmed correctness defect</span></h3>
+    <p><b>Ticket:</b> Bug · priority Medium · "<code>ima-accounts</code> IsSeasonal indexed with false-negatives — <code>RAD.GetImaAccountContractTerms</code> row-cap truncation; replace with existence query." The one genuine <em>silent data-correctness</em> defect in the set.</p>
+
+    <h4 class="sub2">Diagnosis — confirmed</h4>
+    <p>The seam passes <code>take = accountIds.Count</code> to a <b>term-grained</b> proc, then filters in memory:</p>
+    <p class="ev">Igs.Crm.Ima.Search/Index/DataProviders/ImaAccountDataProvider.cs:1198-1214 (real seam — see gap note)</p>
+    <pre class="code">var contractTerms = await ctx.GetImaAccountContractTerms(
+        contractIds: null, partyAccountIds: accountIds, contractTermIds: null,
+        skip: 0, take: accountIds.Count)          // line 1209 — the cap
+    .ToListAsync();
+return contractTerms.Where(ct =&gt; ct.IsSeasonal).Select(ct =&gt; ct.AccountId).ToList();</pre>
+    <p>The proc (live body <code>02442</code>) defaults <code>@take = 999999</code>, emits one row per <code>(association, contract-term)</code>, and orders <code>ORDER BY sl.PartyAccountId, ct.Id ... OFFSET @skip FETCH NEXT @take</code>. With a 2,000-account batch (<code>IndexService.cs:55 SqlBatchSize=2000</code>), once any renewal history pushes the row count past 2,000 the highest-<code>PartyAccountId</code> accounts are cut off entirely and the <code>.Where(ct =&gt; ct.IsSeasonal)</code> never sees them → indexed <code>IsSeasonal=false</code>. <b>Smoking gun:</b> the sibling contract path passes <code>take: null</code> and is <em>not</em> truncated:</p>
+    <pre class="code">// ImaContractDataProvider.cs:868-873 — the safe pattern already in the codebase
+.GetImaAccountContractTerms(contractIds: contractIds, partyAccountIds: null,
+    contractTermIds: null, skip: 0, take: null)   // null → default 999999, no truncation</pre>
+
+    <h4 class="sub2">Fix assessment — Severity High</h4>
+    <p>Silent, systematic (the tail of <em>every</em> renewal-bearing batch), and it degrades a user-facing search filter — but bounded to one boolean, direction <code>false→true</code> only, no corruption or crash, recomputed each reindex (hence High, not Critical). The proposed existence query is <b>correct</b>: its <code>INNER JOIN RateCodeSpecialProducts ... AND IsSeasonal=1</code> is semantically equivalent to the proc's <code>LEFT JOIN + COALESCE(IsSeasonal,0)</code> for the seasonal-account set, and <code>DISTINCT PartyAccountId</code> with no cap removes the truncation. Note a <b>minimal alternative</b> exists — just pass <code>take: null</code> (the proven contract-path pattern) — though the dev's purpose-built query also drops the ORDER BY + projection cost (the 9,097 ms → 958 ms claim).</p>
+
+    <h4 class="sub2">QE verification</h4>
+    <p>Strongest runnable check (no off-main harness needed): a <b>SQL set-diff</b> via <code>mssql-industrial-int</code> — run the existence query for an overflowing 2,000-id batch and diff its <code>PartyAccountId</code> set against the current proc-path result with <code>take=count</code>; the delta is exactly the truncated tail, all <code>false→true</code>. Also <b><code>/elastic-drift</code></b> on <code>ima-accounts</code> IsSeasonal, and App Insights for the latency AC. <b>No existing coverage</b> of the accounts-index seasonal path — the seasonal specs (<code>contracts.seasonal.api.spec.ts</code>, CI-T1981–1990) exercise the contract browser, i.e. the un-bugged <code>take:null</code> path.</p>
+  </div>
+
+  <!-- CI-7862 -->
+  <div class="tier info" id="ci-7862">
+    <h3><span class="badge sev-med">MEDIUM</span> CI-7862 — Aging-transfer query timeout <span class="lozenge gray">ima-opportunities</span> <span class="lozenge amber">fix targets the wrong line</span></h3>
+    <p><b>Ticket:</b> Bug · priority Low · "Nightly party index rebuild triggers recurring SQL timeout in <code>GetOpportunitiesAgingTransferDate</code>." ~1.7 messages fail/night, ~850 opportunity docs stale.</p>
+
+    <h4 class="sub2">Diagnosis — confirmed symptom, mislocated cause</h4>
+    <p>Real path: <code>Igs.Crm.Core.Services/Ima/Opportunity/OpportunityAgeService.cs</code>, class <code>SalesRepPartyOpportunties</code>. <b>The line-430 join the ticket targets is intentional</b> — it deliberately fans from each input opportunity out to its <em>sibling</em> opportunities (same party + sales-rep) so the furthest-out aging date can be propagated back:</p>
+    <pre class="code">// OpportunityAgeService.cs:430-444 — SalesRepPartyOpportunties.GetOpportunities (INTENTIONAL fan-out)
+from o in ....Where(o =&gt; _opportunityIds.Contains(o.OpportunityId))           // input scope
+from ilo in ....Where(ilo =&gt; ilo.Opportunity.PartyId == o.PartyId)            // ← siblings of same party (the feature)
+           .Where(ilo =&gt; ilo.SalesRepresentativeOrganizationAgentId.HasValue)</pre>
+    <p>Scoping <em>this</em> join to the input IDs (as the ticket says) would drop siblings outside the 2,000-id chunk and <b>change the aging-transfer date</b> — directly endangering the ticket's own regression AC. The genuinely unbounded cost center is a different method, <code>GetOpportunitiesTransferDates():279-308</code> — a 4-way self-join (LDC × party-siblings × transfers × later-transfers) invoked <b>up to 3× per batch</b> (lines 96, 192). Timeout = EF default 30s (<code>EntitiesBase.cs:35-49</code>, no override). The <b>batch-job manifestation is worse than a mirror:</b> in <code>OpportunityAgeTransferService</code> (<code>:60,:203</code>) a timeout silently <em>drops</em> opportunities from that night's transfer set (a real workflow miss), not just a stale doc.</p>
+
+    <h4 class="sub2">Fix assessment — Severity Medium</h4>
+    <p>Soft-fail on the index side (DB untouched, ≤24h stale, ~850 docs, self-heals) — but bumped to Medium because the same query fails the <code>OpportunityAgeTransfer</code> job (missed transfers) and stale aging-transfer dates surface wrong handoff timing that sales reps act on. <b>The fix as written is misdirected and carries correctness risk.</b> Re-point it at <code>GetOpportunitiesTransferDates</code> and bound it as a <em>performance</em> refactor (precompute per-party once; stop re-running the self-join 3×; consider a per-query <code>SetCommandTimeout</code> as a stopgap) — not a semantic narrowing to input IDs.</p>
+
+    <h4 class="sub2">QE verification</h4>
+    <p>INT repro: <code>POST .../IMA/Opportunities/GetOpportunitiesAgingTransferDate</code> with ~2,000 high-density opportunity IDs (REST, not GraphQL — needs a raw <code>APIRequestContext</code> check, not the <code>{ gql }</code> fixture); pre-fix timeout, post-fix 200. App Insights ProblemId; <code>/elastic-drift</code> on <code>ima-opportunities</code> aging fields. Existing <code>src/tests/opportunities/opportunity.aging.e2e.spec.ts</code> covers aging <em>business rules</em> (single-opportunity, @CI-T1176/1257) — useful to confirm the determination is unchanged after the fix, but it does <b>not</b> touch the batch/timeout path.</p>
+  </div>
+
+  <!-- CI-7869 -->
+  <div class="tier info" id="ci-7869">
+    <h3><span class="badge sev-med">MEDIUM</span> CI-7869 — Prospect CanDelete long pole <span class="lozenge gray">ima-accounts</span> <span class="lozenge blue">build-time perf</span></h3>
+    <p><b>Ticket:</b> Task · priority Medium · "<code>ima-accounts</code> index build: prospect CanDelete seam is the long pole (~5.2s/batch) — scope to prospects + async the dependency." Pure build-time performance; no correctness dimension.</p>
+
+    <h4 class="sub2">Diagnosis — confirmed</h4>
+    <p>A synchronous, blocking cross-service HTTP call wrapped in <code>Task.Run</code>, run for <b>every</b> account in every batch though the result is forced <code>false</code> for non-prospects:</p>
+    <pre class="code">// ImaAccountDataProvider.cs:536-544 (real seam); call site :89 is unconditional over the full batch
+var results = await System.Threading.Tasks.Task.Run(
+    () =&gt; _prospectClient.CanDeleteProspectAccounts(accountIds));   // sync .Post inside Task.Run</pre>
+    <p>Client is sync (<code>ProspectClient.cs:72-76</code> <code>.Post&lt;&gt;()</code>; the async sibling <code>RequestAndLogHistoricalUsage</code> at <code>:115-119</code> shows the <code>.PostAsync&lt;&gt;()</code> pattern to mirror). Server is fully synchronous: an EF query with the <code>LdcAccount.LdcAccountStatus</code> Include the dev calls convoluted (<code>ProspectService.cs:119-124</code>), the non-prospect forced-<code>false</code> branch (<code>:146-157</code>), and a synchronous Choice <code>RetrieveAccounts</code> for prospect survivors (<code>:184-186</code>). <b>A second, user-facing caller the ticket omits:</b> <code>CanDeletePartyAccountDataLoader.cs:28-31</code> uses the same blocking <code>Task.Run</code> on the live GraphQL path — it must move in lockstep if the interface changes async.</p>
+
+    <h4 class="sub2">Fix assessment — Severity Medium</h4>
+    <p>The three-step sequence is sound and correctly ordered. <b>Scoping is the real wall-clock lever</b> (non-prospects are forced <code>false</code> regardless, and the index already has account-status in hand at <code>ImaAccountDataProvider.cs:136</code>, so a prospect pre-filter can likely cost zero added round-trips). The <b>async + drop-<code>Task.Run</code></b> step is mechanically correct — the call is latency-bound (HTTP wait), not thread-starved, so <code>Task.Run</code> buys nothing — but the dev rightly notes it won't cut the 5.2s alone, and it touches the <code>IProspectClient</code> interface + both callers. No correctness dimension → Medium.</p>
+
+    <h4 class="sub2">Open decision — CanDeleteMessage parity for non-prospects · recommend the static string</h4>
+    <p>Today non-prospects get <code>CanDeleteMessage = "Account must be an LDC account in Prospect status."</code> (<code>ProspectService.cs:152-153</code>); the doc field defaults to <code>null</code> if not written (<code>ImaAccountDocument.cs:157</code>). <b>Recommendation:</b> default non-prospects to that exact static string with zero round-trip — byte-identical to today, clean snapshot-diff. (If product confirms no consumer reads the message on a non-prospect row, <code>null</code> is cheaper but accepts a known diff.) <b>"What counts as prospect"</b> = <code>LdcAccount.LdcAccountStatus.Name == "Prospect"</code> (<code>ProspectService.cs:146</code> + <code>AccountStatus.cs:5</code>); whatever IMA360 methodology replaces the Include <b>must be value-equivalent</b>, or a real prospect silently routes to the static-false default — that would be a correctness regression.</p>
+
+    <h4 class="sub2">QE verification</h4>
+    <p>Snapshot-diff of <code>canDelete</code>/<code>canDeleteMessage</code> over a 2,000-id sample (the query fragment exists at <code>src/data/account/account.queries.ts:68-69</code> but has <b>no test assertion</b> anywhere — effectively untested), split prospect vs non-prospect to assert each parity clause. Seam latency via App Insights on the <code>api/Prospect/CanDeleteProspectAccounts</code> route. "No <code>Task.Run</code> scheduled" is code-review-only. The message-parity AC is blocked on the open decision.</p>
+  </div>
+
+  <!-- ===================== CROSS-CUTTING ===================== -->
+  <h2 class="section">Cross-cutting findings</h2>
+
+  <div class="tier warn" id="fix-reality">
+    <h3><span class="badge sev-high">META</span> Three of five fixes don't line up with <code>main</code></h3>
+    <p>Each is fixable, but each needs reconciliation against the actual tree before a developer starts — otherwise the work targets code that isn't there or changes behavior the ticket didn't intend.</p>
+    <div class="tablecard">
+      <table>
+        <thead><tr><th>Ticket</th><th>Cites</th><th>Reality on <code>main</code> @ f561ffd3</th><th>Action before dev</th></tr></thead>
+        <tbody>
+          <tr><td>CI-7868</td><td><code>AccountReaders/IndustrialAccountReader.GetSeasonalAccountIdsAsync</code></td><td>Absent. Real seam: <code>ImaAccountDataProvider.GetSeasonalAccountIds:1198</code></td><td>Re-point to the actual method (or work the refactor branch)</td></tr>
+          <tr><td>CI-7869</td><td><code>AccountReaders/ProspectDeletionReader.GetCanDeleteProspectAccountsAsync</code></td><td>Absent. Real seam: <code>ImaAccountDataProvider.GetCanDeleteProspectAccounts:536</code></td><td>Re-point; include the GraphQL DataLoader caller</td></tr>
+          <tr><td>CI-7862</td><td><code>OpportunityAgeService</code> line 430</td><td>Line 430 = intentional sibling-propagation feature; real cost = <code>GetOpportunitiesTransferDates:279</code></td><td>Re-point + guard against changing aging results</td></tr>
+          <tr><td>CI-7863</td><td>"joins 3 tables across CHSQL"</td><td><b>Confirmed correct</b> (live 02316 body)</td><td>None — premise holds</td></tr>
+          <tr><td>CI-7864</td><td>2 unbounded queries</td><td><b>All 5</b> activity queries are unbounded</td><td>Extend the cutoff to all five</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Likely cause: the accounts tickets were authored against an in-flight <code>ImaAccountDataProvider</code> refactor (an <code>AccountReaders/</code> extraction) not yet merged. Worth confirming the source branch so reviewers diff the right tree.</p>
+  </div>
+
+  <div class="tier muted">
+    <h3>One root cause, five shapes — and a failure handler that amplifies it</h3>
+    <p>All five are the same class: <b>an unbounded or unscoped query under nightly-rebuild density</b>, in five flavors — row-cap truncation (CI-7868), a synchronous blocking long-pole (CI-7869), cross-join / self-join expansion (CI-7862), a distributed linked-server query (CI-7863), and a no-date-filter full-history scan (CI-7864). What turns each slow query into a <em>dropped batch across multiple indices</em> is the handler gap flagged in TDD-003 and re-confirmed here: <code>DataChangeResponderService</code> wraps its per-index work in a <code>Task.WhenAll</code> with <b>no try/catch</b> (<code>:58-96</code>), so one unhandled timeout faults the whole message → nack → DLX-retry-once → identical failure → dropped. Even after all five query fixes ship, that handler still converts any <em>future</em> slow query into the same multi-index staleness — worth a separate hardening ticket (isolate per-index failures; structured nack/backoff).</p>
+  </div>
+
+  <div class="tier muted">
+    <h3>Relationship to known indexer bugs (relate, don't repeat)</h3>
+    <ul>
+      <li><b>CI-7828 (LVT poison message, HIGH)</b> — same index (<code>ima-opportunities</code>) and same fault→nack→stale mode as CI-7862/7863; the resolver lacks an LVT branch → default <code>throw</code>. A sibling opportunity-indexing defect on this transport (confirmed in TDD-003).</li>
+      <li><b>CI-7829 (rep-rename not reindexed, MED)</b> — globalsearch, not in this set, but the same accretion-gap class (a table added to the data fetch but not the resolver/<code>AppliesTo</code>). Watch for it when adding the new segment lookup (CI-7863) or the activity cutoff (CI-7864).</li>
+      <li><b>CI-7764 (RAD consumer deadlock, High)</b> — distinct but adjacent: a write-side <code>MERGE … HOLDLOCK</code> deadlock on the Industrial UPSERT end of the same RAD/RabbitMQ backbone. Same transport, different layer; not overlapping with these read/hydration timeouts.</li>
+      <li><b>TDD-003 (2026-06-16)</b> — the prior indexer review: 2 confirmed (CI-7828, CI-7829), 3 refuted, review-only. TDD-008 extends that baseline; it does not re-litigate the refuted three.</li>
+    </ul>
+  </div>
+
+  <div class="tier muted" id="not-fixed">
+    <h3>What these fixes do NOT address</h3>
+    <p><b>BPL flooding / queue saturation (out of scope, by design).</b> A bulk party-load operation fires the <code>Rad_TR_*</code> triggers and turns one logical change into a flood of per-id RAD messages, which the consumer then processes at ~5,000-way concurrency (100 receivers × prefetch 50) — a throughput/concurrency problem. These five are per-message query fixes: they lower the per-message failure rate but change neither the message <em>volume</em> a bulk op generates, the consumer concurrency, nor the DLX-retry-once behavior. That belongs to the CI-7764 fix family and the trigger/Control-M batching design.</p>
+    <p><b>"Debt letters" — hypothesis, not a finding.</b> No ticket and no source node references debt letters. The most plausible bridge worth a product conversation: stale <code>ima-opportunities</code> aging-transfer or customer-segment driving wrong sales-rep-handoff timing or segment-routed correspondence (a weaker bridge runs through seasonal mis-flagging, which lives on contracts, not these three indices). <b>Recommend confirming with the product owner before treating any debt-letter reduction as an outcome of this work.</b></p>
+  </div>
+
+  <div class="tier info">
+    <h3>QE coverage roll-up — where verification actually lives</h3>
+    <p><b>This Playwright suite cannot assert Elasticsearch document contents.</b> There is no ES client and no <code>@elastic/elasticsearch</code> dependency anywhere in <code>src/</code>; every "elastic" reference is a comment, the spandex reporter writing its own results, or in-app navigation to the admin page. The CI-7855 caveat already documented in <code>accounts.duplicate-validation.api.spec.ts:380-395</code> proves the limitation: those tests pass via the pre-existing ES search path, so the suite cannot distinguish "the index was rebuilt correctly" from "ES already happened to carry the doc."</p>
+    <div class="tablecard">
+      <table>
+        <thead><tr><th>Fix</th><th>Primary verification (today)</th><th>Existing suite coverage</th></tr></thead>
+        <tbody>
+          <tr><td>CI-7868</td><td>SQL set-diff (existence query vs proc-path) · <code>/elastic-drift</code> IsSeasonal</td><td>None for the accounts seasonal path</td></tr>
+          <tr><td>CI-7869</td><td>Snapshot-diff canDelete/Message · App Insights latency</td><td>None (fragment exists, no assertion)</td></tr>
+          <tr><td>CI-7862</td><td>INT REST repro · App Insights · <code>/elastic-drift</code> aging fields</td><td>opportunity.aging.e2e (rules only, not timeout path)</td></tr>
+          <tr><td>CI-7863</td><td>App Insights ProblemId · <code>/elastic-drift</code> segment · INT proc EXEC timing</td><td>None for segment indexing</td></tr>
+          <tr><td>CI-7864</td><td>INT REST repro · feed E2E for the cutoff boundary</td><td>summary.panel.activity / party.record.activity (no date boundary)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Bottom line: doc-level verification of all five belongs to <b><code>/elastic-drift</code> (ES-vs-SQL) + raw SQL counts via the mssql MCPs + App Insights RAD-consumer telemetry</b> — not this test suite. The suite's value here is confirming the <em>user-facing behavior</em> the index feeds (dup detection, search surfacing, the activity feed cutoff), which is a valid acceptance signal but not an index-integrity one.</p>
+  </div>
+
+  <footer class="rep">TDD-008 · /technical-due-diligence × /three-amigos · IMA 360 QE · 2026-06-23 · evidence-first, read-only · CRM @ f561ffd3, DB-Industrial, INT-confirmed where noted</footer>
+
+</div>
+</body>
+</html>

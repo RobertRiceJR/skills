@@ -1,0 +1,567 @@
+{
+"date": "2026-06-24",
+"by": "Robert",
+"method": "deep-read fan-out (7 batches, shared rubric)",
+"skills": [
+{
+"name": "three-amigos",
+"type": "O",
+"vi": 5,
+"si": 3,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Pre-sprint TC design \u2014 intake \u2192 risk \u2192 reviewed TC plan"
+},
+{
+"name": "ready-for-testing",
+"type": "O",
+"vi": 5,
+"si": 2,
+"mi": 1,
+"mat": 4,
+"ci": 4,
+"purpose": "Post-merge: derive TCs from PR diff, gap-analyze, create Draft Zephyr TCs"
+},
+{
+"name": "ready-for-qa",
+"type": "O",
+"vi": 4,
+"si": 3,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Lifecycle close-out \u2014 Zephyr cycle, executions, Jira report, exec summary"
+},
+{
+"name": "ready-for-playwright",
+"type": "O",
+"vi": 5,
+"si": 1,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Owns the Playwright stage \u2014 shells, implement, run, fix, record"
+},
+{
+"name": "playwright-workflow",
+"type": "O",
+"vi": 5,
+"si": 2,
+"mi": 2,
+"mat": 4,
+"ci": 5,
+"purpose": "E2E implementation engine \u2014 locators, POMs, test bodies, run, record"
+},
+{
+"name": "api-test-workflow",
+"type": "O",
+"vi": 4,
+"si": 3,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Schema-first GraphQL/REST API test authoring + recording"
+},
+{
+"name": "prod-support",
+"type": "O",
+"vi": 5,
+"si": 2,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Production incident flow \u2014 pull exception, trace RCA, file CI ticket"
+},
+{
+"name": "prod-support-poller",
+"type": "O",
+"vi": 5,
+"si": 2,
+"mi": 3,
+"mat": 4,
+"ci": 4,
+"purpose": "Unattended CISD poller \u2014 runs prod-support per new ticket, drafts RCA+bug"
+},
+{
+"name": "sync",
+"type": "O",
+"vi": 4,
+"si": 4,
+"mi": 3,
+"mat": 4,
+"ci": 4,
+"purpose": "Umbrella drift-audit conductor \u2014 runs every specialist, aggregates dashboard"
+},
+{
+"name": "confluence-test-plan",
+"type": "O",
+"vi": 4,
+"si": 2,
+"mi": 1,
+"mat": 4,
+"ci": 4,
+"purpose": "Cross-team initiative test-plan dashboard in Confluence (build + refresh)"
+},
+{
+"name": "technical-due-diligence",
+"type": "O",
+"vi": 4,
+"si": 5,
+"mi": 3,
+"mat": 3,
+"ci": 5,
+"purpose": "Adversarial 7-dimension repo/subsystem risk audit \u2192 ranked HTML"
+},
+{
+"name": "skill-evolve",
+"type": "O",
+"vi": 4,
+"si": 4,
+"mi": 4,
+"mat": 3,
+"ci": 4,
+"purpose": "Blast-radius-aware safe skill-change orchestrator"
+},
+{
+"name": "fix-loop",
+"type": "O",
+"vi": 5,
+"si": 2,
+"mi": 1,
+"mat": 4,
+"ci": 5,
+"purpose": "Autonomous local Playwright failure triage + differential-retry loop"
+},
+{
+"name": "zephyr-reporter",
+"type": "T",
+"vi": 5,
+"si": 3,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Records Zephyr evidence \u2014 TCs, steps, cycles, executions, Jira links"
+},
+{
+"name": "zephyr-approve",
+"type": "T",
+"vi": 3,
+"si": 3,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Promotes Draft Zephyr TCs to Approved after verification"
+},
+{
+"name": "jira-reporter",
+"type": "T",
+"vi": 4,
+"si": 4,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Posts structured test-execution report comment to a CI Jira ticket"
+},
+{
+"name": "ticket-intake",
+"type": "T",
+"vi": 5,
+"si": 3,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Fetch Jira/Confluence, extract numbered ACs, map domains, emit test matrix"
+},
+{
+"name": "ticket-finalize",
+"type": "T",
+"vi": 3,
+"si": 5,
+"mi": 4,
+"mat": 3,
+"ci": 3,
+"purpose": "Compute planned-vs-actual delta, append Finalization Notes to ticket.md"
+},
+{
+"name": "ticket-close",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 3,
+"mat": 3,
+"ci": 3,
+"purpose": "Log hours, transition Jira, commit tests, open linked ADO PR"
+},
+{
+"name": "ac-quality",
+"type": "T",
+"vi": 4,
+"si": 4,
+"mi": 3,
+"mat": 4,
+"ci": 3,
+"purpose": "Validate ACs against 8 quality dimensions; PASS/WARN/FAIL + write-back"
+},
+{
+"name": "tc-review",
+"type": "T",
+"vi": 3,
+"si": 5,
+"mi": 3,
+"mat": 4,
+"ci": 2,
+"purpose": "In-session keep/defer/cut TC triage dashboard from ticket.md"
+},
+{
+"name": "context-load",
+"type": "T",
+"vi": 5,
+"si": 5,
+"mi": 4,
+"mat": 4,
+"ci": 4,
+"purpose": "Load phase-sliced knowledge-tree context bundle for a ticket"
+},
+{
+"name": "resume",
+"type": "T",
+"vi": 4,
+"si": 4,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Recover interrupted orchestrator state from on-disk ticket.md"
+},
+{
+"name": "code-intelligence",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Turn PR diffs into a code-driven test matrix + cross-repo impact"
+},
+{
+"name": "gap-analysis",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Map epic stories \u2192 Zephyr TCs; publish versioned coverage gap report"
+},
+{
+"name": "bug-gap-analysis",
+"type": "T",
+"vi": 5,
+"si": 2,
+"mi": 1,
+"mat": 4,
+"ci": 5,
+"purpose": "Sweep closed bugs for missing regression TCs; create TCs + shells"
+},
+{
+"name": "coverage-gap-scan",
+"type": "T",
+"vi": 4,
+"si": 2,
+"mi": 1,
+"mat": 4,
+"ci": 4,
+"purpose": "Diff GraphQL SDL surface vs covered ops; risk-rank uncovered behaviors"
+},
+{
+"name": "spec-review",
+"type": "T",
+"vi": 4,
+"si": 4,
+"mi": 3,
+"mat": 4,
+"ci": 3,
+"purpose": "Audit one spec \u2014 7 grep/lint checks + 6-dimension LLM-judge"
+},
+{
+"name": "devils-advocate",
+"type": "T",
+"vi": 3,
+"si": 5,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Adversarial review of a populated ticket.md \u2014 lens-based challenges"
+},
+{
+"name": "sql-data",
+"type": "T",
+"vi": 5,
+"si": 3,
+"mi": 3,
+"mat": 4,
+"ci": 4,
+"purpose": "NL intent \u2192 reusable SQL finder/query, execute, escalate on zero rows"
+},
+{
+"name": "sql-schema-sync",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Multi-layer SQL schema drift detector + reconciler"
+},
+{
+"name": "sync-knowledge",
+"type": "T",
+"vi": 4,
+"si": 5,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Report-only health auditor for the knowledge tree (8 checks)"
+},
+{
+"name": "confluence-ingest",
+"type": "T",
+"vi": 4,
+"si": 2,
+"mi": 2,
+"mat": 4,
+"ci": 4,
+"purpose": "Search Confluence \u2192 extract domain knowledge into the local tree"
+},
+{
+"name": "pict-scenarios",
+"type": "T",
+"vi": 3,
+"si": 4,
+"mi": 3,
+"mat": 3,
+"ci": 3,
+"purpose": "Pairwise scenario reduction for parameter-rich ACs"
+},
+{
+"name": "health-check",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "MCP pre-flight \u2014 ping Atlassian/Zephyr/ADO/MSSQL before orchestrators"
+},
+{
+"name": "kibana",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Copy-paste Kibana queries to check PROD search-index presence"
+},
+{
+"name": "elastic-drift",
+"type": "T",
+"vi": 5,
+"si": 2,
+"mi": 2,
+"mat": 4,
+"ci": 5,
+"purpose": "Live ES\u2194SQL drift detection + gated orphan purge, dashboards"
+},
+{
+"name": "app-insights-diagnose",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 3,
+"mat": 4,
+"ci": 4,
+"purpose": "Diagnose an App Insights issue; match patterns, hypothesize RCA"
+},
+{
+"name": "app-insights-drift",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 4,
+"mat": 3,
+"ci": 4,
+"purpose": "Map live App Insights GraphQL failures to suite coverage gaps"
+},
+{
+"name": "locator-drift-scan",
+"type": "T",
+"vi": 3,
+"si": 3,
+"mi": 2,
+"mat": 4,
+"ci": 3,
+"purpose": "Detect/reconcile page-inventory route + selector drift"
+},
+{
+"name": "trace-call-path",
+"type": "T",
+"vi": 5,
+"si": 4,
+"mi": 4,
+"mat": 4,
+"ci": 5,
+"purpose": "Walk a symptom to its full C# call chain; flag config-shadowing"
+},
+{
+"name": "triage-failures",
+"type": "T",
+"vi": 4,
+"si": 4,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Classify surviving local failures as Timing/Data/Bug with history"
+},
+{
+"name": "fix-me",
+"type": "T",
+"vi": 3,
+"si": 2,
+"mi": 4,
+"mat": 3,
+"ci": 3,
+"purpose": "Implement test.fixme stubs in a spec \u2014 triage, resolve, or skip"
+},
+{
+"name": "prune-duplicates",
+"type": "T",
+"vi": 3,
+"si": 4,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Classify + remove duplicate tests in a spec after approval"
+},
+{
+"name": "playwright-cli",
+"type": "T",
+"vi": 5,
+"si": 3,
+"mi": 3,
+"mat": 4,
+"ci": 3,
+"purpose": "SSOT usage guide for the playwright-cli browser-automation tool"
+},
+{
+"name": "playwright",
+"type": "T",
+"vi": 3,
+"si": 2,
+"mi": 4,
+"mat": 3,
+"ci": 3,
+"purpose": "Lightweight one-pass Playwright stub implementation (no lifecycle)"
+},
+{
+"name": "bug-report",
+"type": "T",
+"vi": 4,
+"si": 3,
+"mi": 3,
+"mat": 4,
+"ci": 4,
+"purpose": "Convert a failure into a structured Jira bug with RCA hypotheses"
+},
+{
+"name": "attach-screenshots",
+"type": "T",
+"vi": 3,
+"si": 2,
+"mi": 4,
+"mat": 3,
+"ci": 3,
+"purpose": "Upload screenshots into ADO PRs and Jira comments"
+},
+{
+"name": "dsu",
+"type": "T",
+"vi": 4,
+"si": 2,
+"mi": 1,
+"mat": 4,
+"ci": 4,
+"purpose": "Synthesize git/session/ticket signals into a standup; cadence + MCP check"
+},
+{
+"name": "three-amigos-questions",
+"type": "T",
+"vi": 3,
+"si": 5,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Generate dev/BA/QA pre-sprint question set; self-answer"
+},
+{
+"name": "regression-reporter",
+"type": "T",
+"vi": 5,
+"si": 3,
+"mi": 4,
+"mat": 4,
+"ci": 4,
+"purpose": "Trigger ADO Playwright pipeline, monitor build, read Zephyr pass/fail"
+},
+{
+"name": "auth0-regression",
+"type": "X",
+"vi": 3,
+"si": 2,
+"mi": 4,
+"mat": 4,
+"ci": 2,
+"purpose": "One-bug-per-run logger for the Auth0 upgrade regression pass"
+},
+{
+"name": "deal-sheet-debug",
+"type": "X",
+"vi": 4,
+"si": 3,
+"mi": 2,
+"mat": 4,
+"ci": 5,
+"purpose": "RCA for IGS deal-sheet .xlsm formula/VBA bugs"
+},
+{
+"name": "manual-migration",
+"type": "X",
+"vi": 4,
+"si": 2,
+"mi": 3,
+"mat": 3,
+"ci": 4,
+"purpose": "Implement Playwright test from a manual Zephyr TC; discover locators"
+},
+{
+"name": "comms-coach",
+"type": "X",
+"vi": 2,
+"si": 3,
+"mi": 3,
+"mat": 4,
+"ci": 3,
+"purpose": "Self-coaching report on Robert's Claude Code communication style"
+},
+{
+"name": "roast-me",
+"type": "X",
+"vi": 4,
+"si": 4,
+"mi": 4,
+"mat": 4,
+"ci": 3,
+"purpose": "Roast test-suite health \u2014 hard waits, .only, god files, churn"
+}
+]
+}

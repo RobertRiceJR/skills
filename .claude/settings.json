@@ -1,0 +1,9 @@
+{
+  "$comment": "Committed, portable config. Enables the four robert-skills plugins for anyone who has registered the marketplace. The machine-specific marketplace path lives in settings.local.json (gitignored).",
+  "enabledPlugins": {
+    "universal-core@robert-skills": true,
+    "qe-toolkit@robert-skills": true,
+    "skill-ops@robert-skills": true,
+    "eval-judge@robert-skills": true
+  }
+}

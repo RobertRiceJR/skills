@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coverage Gap Scan — Party — 2026-06-15</title>
+<style>
+  :root {
+    --bg:#0f1117; --panel:#171a22; --panel2:#1d212b; --ink:#e6e9ef; --muted:#9aa3b2;
+    --accent:#4f9cff; --accent2:#7dd3a0; --warn:#f0b35b; --danger:#f07b7b; --line:#2a2f3a;
+    --hi:#7dd3a0; --med:#f0b35b; --low:#f07b7b;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:1040px; margin:0 auto; padding:40px 28px 80px; }
+  header.title { border-bottom:2px solid var(--accent); padding-bottom:20px; margin-bottom:8px; }
+  h1 { font-size:30px; margin:0 0 6px; letter-spacing:-.4px; }
+  .sub { color:var(--muted); font-size:15px; }
+  .meta { color:var(--muted); font-size:12.5px; margin-top:12px; }
+  h2 { font-size:21px; margin:42px 0 14px; padding-bottom:6px; border-bottom:1px solid var(--line); }
+  h3 { font-size:16.5px; margin:26px 0 8px; color:var(--accent); }
+  p { margin:10px 0; }
+  .lead { background:var(--panel); border-left:4px solid var(--accent); padding:18px 20px;
+    border-radius:0 8px 8px 0; margin:18px 0; font-size:15.5px; }
+  .grid { display:grid; gap:14px; }
+  .cards { grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; }
+  .card .k { font-size:26px; font-weight:700; color:var(--accent); }
+  .card .l { color:var(--muted); font-size:13px; margin-top:2px; }
+  .card.danger .k { color:var(--danger); }
+  .card.med .k { color:var(--med); }
+  .finding { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:16px 20px; margin:14px 0; }
+  .finding h3 { margin-top:0; color:var(--ink); }
+  .badge { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:.5px; vertical-align:middle; margin-left:8px; }
+  .b-hi { background:rgba(240,123,123,.16); color:var(--low); border:1px solid var(--low); }
+  .b-med{ background:rgba(240,179,91,.16); color:var(--med); border:1px solid var(--med); }
+  .b-low{ background:rgba(125,211,160,.16); color:var(--hi); border:1px solid var(--hi); }
+  ul { margin:8px 0 8px 0; padding-left:22px; }
+  li { margin:5px 0; }
+  code { background:#11141b; border:1px solid var(--line); border-radius:5px; padding:1px 6px;
+    font:13px/1.5 "SF Mono",Consolas,Menlo,monospace; color:#cfe3ff; }
+  table { width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px; }
+  th,td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--accent); font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+  tr:hover td { background:var(--panel2); }
+  .pill { font-size:11px; padding:1px 8px; border-radius:12px; background:var(--panel2);
+    border:1px solid var(--line); color:var(--muted); }
+  .rec { counter-reset:rec; padding-left:20px; }
+  .rec .step { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--accent2);
+    border-radius:0 8px 8px 0; padding:14px 18px; margin:12px 0; position:relative; }
+  .rec .step::before { counter-increment:rec; content:counter(rec);
+    position:absolute; left:-16px; top:14px; width:28px; height:28px; background:var(--accent2);
+    color:#06210f; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:14px; }
+  .caveat { background:rgba(240,179,91,.08); border:1px solid var(--med); border-radius:10px;
+    padding:14px 18px; margin:14px 0; }
+  .foot { margin-top:50px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="title">
+  <h1>Coverage Gap Scan — Party</h1>
+  <div class="sub">Source-behavior ↔ test-coverage diff · GraphQL operation-name join</div>
+  <div class="meta">
+    2026-06-15 · branch <code>dev/robert_6152026</code> ·
+    <code>CRM/Igs.Crm.Query.Web/queryWeb.graphql</code> MutationRoot(L2044)+QueryRoot(L3350) @ <code>f561ffd3d7</code>
+    vs <code>src/tests/{e2e,api}/party</code> (21 specs) + <code>src/data</code>
+  </div>
+</header>
+
+<div class="lead">
+  <strong>Bottom line:</strong> The party CRUD/merge/legal-entity write paths are well covered at the API layer.
+  The gaps cluster in the <strong>merge-preview / duplicate-detection read flow</strong> and a handful of
+  contact/relationship/certification <strong>secondary mutations</strong>. The single highest-leverage fix is an
+  API test for <code>mergePartiesPreview</code> on a large party — a <em>documented</em> production-failure
+  surface (CI-7633) the merge UI runs before every merge, yet no layer of this suite guards its failure mode.
+</div>
+
+<h2>Severity counts</h2>
+<div class="grid cards">
+  <div class="card"><div class="k">0</div><div class="l">CRITICAL</div></div>
+  <div class="card danger"><div class="k">4</div><div class="l">HIGH</div></div>
+  <div class="card med"><div class="k">7</div><div class="l">MEDIUM</div></div>
+  <div class="card"><div class="k">3</div><div class="l">LOW</div></div>
+  <div class="card"><div class="k">0</div><div class="l">FLAGGED unit</div></div>
+  <div class="card"><div class="k">1</div><div class="l">PARTIAL</div></div>
+  <div class="card"><div class="k">49</div><div class="l">ops scanned</div></div>
+  <div class="card"><div class="k">0</div><div class="l">@deprecated (root)</div></div>
+</div>
+
+<div class="caveat">
+  <strong>Honesty header.</strong> The strong axis is the <strong>GraphQL op-name join</strong> (case-insensitive,
+  confirmed reachable from ≥1 party spec). The <strong>C# XUnit layer is a heuristic only</strong> — this scan never
+  asserts a TS→C# mapping; candidate unit files are named, never claimed as coverage. State mutations and
+  <code>@authorize</code> ops are never demoted. No op was demoted to FLAGGED this run.
+</div>
+
+<h2>HIGH gaps</h2>
+
+<div class="finding">
+  <h3>mergePartiesPreview <span class="badge b-hi">High</span> <span class="pill">read · returns-field</span></h3>
+  <p><code>mergePartiesPreview(input: MergePartiesInput!): PartyMergePreviewModel! @cost</code> — queryWeb.graphql:3429</p>
+  <p>Zero references suite-wide. The API merge tests (<code>companies.merge.spec.ts</code>, <code>parties.merge.spec.ts</code>)
+  call <code>mergeParties</code> directly and skip the preview the UI runs first. This is the documented
+  <strong>fragile</strong> endpoint that times out at ~30+ opps / ~40+ accounts (CI-7633 OPEN; <code>fragile-endpoints.md:32</code>).</p>
+  <p><span class="pill">MEDIUM +1 fragile-endpoint = HIGH</span> &nbsp; <span class="pill">Evidence 9 · Severity 8 · Actionability 9</span></p>
+  <p class="sub">Service happy-path logic plausibly unit-covered (<code>PotentialMergeTest.cs</code>), but the no-pagination/timeout failure mode is integration-only — not demoted.</p>
+</div>
+
+<div class="finding">
+  <h3>deletePartyContact <span class="badge b-hi">High</span> <span class="pill">delete · persisted</span></h3>
+  <p><code>deletePartyContact(input: DeletePartyContactInput): DeletePartyContactPayload! @cost</code> — queryWeb.graphql:2105</p>
+  <p>Zero references suite-wide. Deletes an org contact and its party links (data-loss class). No XUnit corroboration —
+  <code>ContactMergeStrategyTest.cs</code> exercises merge dedup, not delete.</p>
+  <p><span class="pill">HIGH (delete)</span> &nbsp; <span class="pill">Evidence 9 · Severity 8 · Actionability 8</span></p>
+</div>
+
+<div class="finding">
+  <h3>checkForDuplicateParties <span class="badge b-hi">High</span> <span class="pill">read · dedup-detect</span></h3>
+  <p><code>checkForDuplicateParties(request: DuplicateIdentificationInput): [DuplicateIdentificationRowModel!]! @cost</code> — queryWeb.graphql:3445</p>
+  <p>Zero references; the Duplicate-Check E2E (<code>@CI-T2333</code>) is a <code>test.fixme</code> shell. The checker has
+  <strong>documented behavioral misses</strong> — DBA-change miss (→ CI-7707) and same-address/different-name miss
+  (parties.md › Duplicate Checker field research).</p>
+  <p><span class="pill">MEDIUM +1 documented-defect-history = HIGH</span> &nbsp; <span class="pill">Evidence 9 · Severity 7 · Actionability 8</span></p>
+</div>
+
+<div class="finding">
+  <h3>updatePrimaryPartyContact <span class="badge b-hi">High</span> <span class="pill">update · persisted</span></h3>
+  <p><code>updatePrimaryPartyContact(input: UpdatePrimaryPartyContactInput!): UpdatePrimaryPartyContactPayload! @cost</code> — queryWeb.graphql:2103</p>
+  <p>Zero references suite-wide. <code>party.record.contacts.spec.ts</code> covers email-format validation + a fixme
+  display test, never the set-primary mutation. No XUnit corroboration found.</p>
+  <p><span class="pill">HIGH (state mutation)</span> &nbsp; <span class="pill">Evidence 9 · Severity 7 · Actionability 8</span></p>
+</div>
+
+<h2>MEDIUM gaps</h2>
+<table>
+  <tr><th>Op (raw SDL line)</th><th>E·A·O</th><th>Why uncovered</th><th>E/S/A</th></tr>
+  <tr><td><code>partyMergeSearch</code> :3443</td><td>read · merge-search</td><td>Merge-flow search step unguarded — merge tests bypass it with known IDs.</td><td>8/6/7</td></tr>
+  <tr><td><code>advancedSearch</code> :3433</td><td>read · advanced+mass-market</td><td>Only basic <code>search</code>+<code>parties</code> covered; Advanced Search (incl. Mass-Market) untested.</td><td>8/6/7</td></tr>
+  <tr><td><code>updateRelatedParty</code> :2072</td><td>update · relationship</td><td>add/remove covered; only the <strong>update</strong> verb uncovered (CI-T1292 E2E is a fixme). State mutation, demoted to MEDIUM (siblings covered).</td><td>9/6/8</td></tr>
+  <tr><td><code>dismissPotentialLegalEntityMergeSuggestion</code> :2134</td><td>dismiss · LEEN</td><td>Zero references; LEEN area with recent hotfix churn. Reversible/low-blast.</td><td>9/6/7</td></tr>
+  <tr><td><code>undoVerifyUnique</code> :2100</td><td>retain · undo-certify</td><td><strong>PARTIAL</strong> — forward <code>verifyUnique</code> covered (@CI-T954); undo path uncovered.</td><td>9/6/8</td></tr>
+  <tr><td><code>partyBillings</code> :3522</td><td>read · billing</td><td>Read-only billing display; billing multiplier noted but clamped (read). Least-certain severity.</td><td>8/5/6</td></tr>
+  <tr><td><code>partyInvoices</code> :3523</td><td>read · invoices</td><td>Paged invoice read, no test. Same class as partyBillings.</td><td>8/5/6</td></tr>
+</table>
+
+<h2>LOW gaps</h2>
+<table>
+  <tr><th>Op (raw SDL line)</th><th>Why uncovered</th><th>E/S/A</th></tr>
+  <tr><td><code>partyByPartyNumber</code> :3371</td><td><code>party(partyId)</code> covered; by-number lookup variant not. Simple read.</td><td>8/4/6</td></tr>
+  <tr><td><code>profilePartyForEmailAddress</code> :3536</td><td>MyAccount profile-by-email read; uncovered (MyAccount E2E drives via UI only).</td><td>8/4/5</td></tr>
+  <tr><td><code>profilePartyForId</code> :3537</td><td>MyAccount profile-by-id read; uncovered.</td><td>8/4/5</td></tr>
+</table>
+
+<h2>Caveats</h2>
+<div class="caveat">
+<ul>
+  <li><strong>@deprecated dropped from root blocks: 0</strong> (6 field-level markers elsewhere are out of scope).</li>
+  <li><strong><code>mergeParties</code> is api-only now</strong> — all E2E merge tests are <code>test.fixme</code> (CI-7760: resolver returns <em>Unexpected Execution Error</em> on INT). API merge coverage is solid; E2E-depth is blocked, not omitted.</li>
+  <li><strong>Integration-only paths not enumerated</strong> — Batch Party Load, matchIT dedup, RabbitMQ AA/ML auto-merge have no GraphQL surface (standing caveat, not "covered").</li>
+  <li><strong>Account↔party boundary</strong> — <code>moveAccountsToExistingParty</code> is covered by <code>accounts.spec.ts</code> (accounts area); <code>upsertPartyAccounts</code> covered via the party accounts tab. Not counted as party gaps.</li>
+  <li><strong>Normalization is heuristic</strong> — every gap prints its raw SDL line so a human verifies. Billing-read severity (S=5) is the least certain call.</li>
+</ul>
+</div>
+
+<h2>Highest-leverage fix</h2>
+<div class="rec">
+  <div class="step">
+    Add one API test for <code>mergePartiesPreview</code> against a large party (30+ opps / 40+ accounts — see
+    <code>sql-data-cache.md</code> party 1JMVD3G / MERGE-06) asserting it returns within a bounded time and does not
+    error. It is the only uncovered op that is <em>both</em> a documented production-failure surface (CI-7633)
+    <em>and</em> the step the merge UI runs before every merge — and no layer of this suite guards its failure mode.
+    Close it with <code>/api-test-workflow</code> or <code>/ready-for-testing</code>.
+  </div>
+</div>
+
+<div class="foot">
+  Read-only scan — no edits, no Zephyr/Jira writes, no test runs. Companion report:
+  <code>.claude/skills/_shared/tickets/coverage-gap-scan-party-2026-06-15.md</code>.
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{
+  "_comment": "SSOT for the SKILL-QUALITY judge criteria. The judge grades a Claude Code skill (its SKILL.md, and optionally its supporting files) one dimension at a time. Prose score-anchors live in skill-quality-rubric.md (do NOT duplicate criteria text there). The shared grader frame (skeptical, score-only, NO fixes, default-low, full-scale) lives once in promptfooconfig.yaml rubricPrompt. votes: independent grader calls (D1 VOTED x3, collapsed to mean). weight: relative weight in the per-skill confidence mean (D1 highest). D1 is measured live by skill-creator/scripts/run_eval.py when the skill has evals/trigger_evals.json; otherwise it is judged statically from the description.",
+  "target": "skill",
+  "dimensions": [
+    {
+      "id": "D1",
+      "appliesTo": "all",
+      "name": "Trigger accuracy",
+      "weight": 3,
+      "threshold": 0.8,
+      "votes": 3,
+      "liveHarness": "skill-creator/scripts/run_eval.py against evals/trigger_evals.json",
+      "criteria": "Does the `description:` cause the model to fire THIS skill for the requests it should own, and stay quiet for adjacent requests that belong to a sibling? When a live eval set (evals/trigger_evals.json) exists, the score is the measured pass rate from run_eval.py. Without one, judge statically: score HIGH only if the description enumerates concrete natural-language trigger phrases AND explicit boundaries (a 'do NOT use for X / that's <sibling>' clause). Score LOW if the description is generic enough to fire on unrelated requests, omits trigger phrasings, has no boundary against siblings, or is so long its trigger list is truncated (~1024-char cap silently drops the tail)."
+    },
+    {
+      "id": "D2",
+      "appliesTo": "all",
+      "name": "Description clarity & anti-shadowing",
+      "weight": 2,
+      "threshold": 0.75,
+      "votes": 1,
+      "criteria": "Is the description specific, correctly scoped, and non-overlapping with sibling skills? Score HIGH for a description that states in one read what the skill does, what it produces, and where its lane ends. Score LOW for: vague verbs ('helps with', 'handles'), scope that overlaps a sibling's trigger space (shadowing), a description that undersells or oversells the body, or one that buries the job under preamble. A description that would steal another skill's activations is a shadowing failure even if it reads well."
+    },
+    {
+      "id": "D3",
+      "appliesTo": "all",
+      "name": "Body coherence & altitude",
+      "weight": 2,
+      "threshold": 0.75,
+      "votes": 1,
+      "criteria": "Is the SKILL.md body coherent, correctly ordered, and at the right altitude — instructive without over-specifying, with a clear workflow, gates, and output contract? Score HIGH for a body whose phases match what the description promises, with explicit stop/approval gates where it claims them and a concrete output format. Score LOW for: contradictory or out-of-order phases, a promised gate that the body never enforces, an unstructured wall of prose, hardcoded example data presented as law, or altitude errors (dictating exact keystrokes where judgment is needed, or hand-waving where a concrete step is needed)."
+    },
+    {
+      "id": "D4",
+      "appliesTo": "all",
+      "name": "Portability",
+      "weight": 2,
+      "threshold": 0.8,
+      "votes": 1,
+      "criteria": "Does the skill resolve paths and commands from the CURRENT project (cwd / the skill's own folder) and degrade gracefully when a project-specific anchor is absent — rather than hard-stopping? Score HIGH for: relative/self-resolved paths, explicit 'if the project provides X, use it; else skip/degrade' framing on every project-specific dependency, and no assumption that a particular repo layout exists. Score LOW for: hardcoded absolute paths (C:\\Users\\<name>\\...), a mandatory Read of a file that may not exist, an `npm run X` (or external script) invoked as a required step with no fallback, or a fixed source-tree layout (src/tests/...) assumed without a guard."
+    },
+    {
+      "id": "D5",
+      "appliesTo": "all",
+      "name": "Reference integrity",
+      "weight": 2,
+      "threshold": 0.8,
+      "votes": 1,
+      "criteria": "Are the skill's references live, and dead-reference-free? Score HIGH when every `/sibling-skill` the body depends on either exists (in the same marketplace/project) or is clearly marked optional, every cited file path resolves, and there are no external `../../../` escapes pointing outside the skill/project. Score LOW for: a `/sibling` presented as a required handoff that does not exist here, a dead file path treated as present, a `../../../../` path that leaves the repo, or a citation to an uncopied old-project resource presented as current (historical-provenance notes, clearly labeled as such, are exempt)."
+    },
+    {
+      "id": "D6",
+      "appliesTo": "all",
+      "name": "Self-containment",
+      "weight": 1,
+      "threshold": 0.75,
+      "votes": 1,
+      "criteria": "Can the skill run from its own folder plus the project it is pointed at, without depending on external scripts/assets that are not copied or discoverable? Score HIGH for a skill that bundles (or degrades without) everything it needs. Score LOW for reliance on tooling that lives only in an uninstalled plugin or an old repo, generated data files it reads but never creates, or supporting scripts referenced by a path that isn't shipped alongside the skill."
+    }
+  ],
+  "_flag_note": "The flag is a TRIAGE filter (which skills to fix first), NOT the quality verdict (that is the honest per-dimension score). A skill is flagged when its apex trigger score OR its overall confidence falls below the floor. Floors are provisional until the golden set is calibrated on this rubric version.",
+  "flag": {
+    "triggerFloor": 0.6,
+    "confidenceFloor": 0.6
+  }
+}

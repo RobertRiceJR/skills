@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<!-- design-brief
+title: Per-skill usage log + DSU cadence package
+date: 2026-06-24
+scope: skills-ecosystem logging
+status: PROPOSED (pilot live on /technical-due-diligence; cadence wired into /dsu)
+decisions: replace-ledger+rollup ; per-contributor merge-safe ; +model +duration ; roll-up surfaced via /dsu weekly cadence ; keep regression-reporter
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Per-Skill Usage Log + DSU Cadence — Design Brief</title>
+<style>
+/* ============================================================================
+   IMA 360 QE — shared report stylesheet
+   Canonical source of styling for HTML reports/dashboards emitted by skills
+   (dsu, gap-analysis, confluence-test-plan, exec reports, tc-review).
+
+   Every color derives from _shared/output-kit/igs-brand.json. The :root tokens
+   below MIRROR that file — if you change a brand value, change it there first,
+   then update the matching --token here.
+
+   PORTABILITY: for artifacts that must travel (e.g. /dsu paste into Teams,
+   a file emailed to leadership), the emitting skill should INLINE this file
+   into a <style> block rather than <link>-ing it, so the single file renders
+   standalone with no external dependency.
+   ============================================================================ */
+
+:root {
+  /* brand tokens — DERIVED from igs-brand.json, the single source of truth for brand colors (bug-patterns #19).
+     Do NOT pick new brand values here. Edit igs-brand.json, then mirror the 7 colors below into these --tokens. */
+  --ink:        #1b1f1d;  /* colors.dark */
+  --bg:         #f7f9f7;  /* colors.light */
+  --muted:      #5b6472;  /* colors.midGray */
+  --line:       #e4e9e5;  /* colors.lightGray */
+  --accent:     #4f9d3a;  /* colors.primary  (IGS green) */
+  --accent-2:   #2c6e9b;  /* colors.secondary (blue) */
+  --accent-3:   #e08a3e;  /* colors.tertiary  (amber) */
+  --accent-soft:#eef5ea;  /* tint of primary for callout backgrounds */
+  --card:       #ffffff;
+
+  /* score heatmap (1-10) — OWNED HERE: a rendering concern, NOT a brand token, intentionally not in igs-brand.json */
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+
+  --font-head: "Inter", "Segoe UI", Arial, sans-serif;   /* typography.headings */
+  --font-body: "Inter", "Segoe UI", Arial, sans-serif;   /* typography.body */
+}
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 var(--font-body);
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 40px 28px 80px; }
+
+/* ---- report header ---- */
+header.report {
+  background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 100%);
+  color: #fff; border-radius: 16px; padding: 34px 36px; margin-bottom: 28px;
+  box-shadow: 0 8px 28px rgba(27,31,29,.18);
+}
+header.report .eyebrow {
+  text-transform: uppercase; letter-spacing: .14em; font-size: 11.5px;
+  font-weight: 700; opacity: .85; margin: 0 0 10px;
+}
+header.report h1 { margin: 0 0 8px; font-size: 29px; line-height: 1.15; font-weight: 750; font-family: var(--font-head); }
+header.report p.sub { margin: 0; font-size: 15px; opacity: .93; max-width: 760px; }
+header.report .meta {
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.25);
+  display: flex; flex-wrap: wrap; gap: 22px; font-size: 12.5px; opacity: .93;
+}
+
+/* ---- section headings ---- */
+h2.section {
+  font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
+  font-weight: 750; margin: 34px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--line);
+  font-family: var(--font-head);
+}
+
+/* ---- legend / info cards grid ---- */
+.legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 26px; }
+.legend .item { background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 14px 16px; }
+.legend .item .k { font-weight: 750; font-size: 13px; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+.legend .item .k .dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend .item .d { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+/* ---- tables ---- */
+.tablecard { background: var(--card); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; box-shadow: 0 2px 10px rgba(20,25,40,.04); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead th {
+  background: #eef1ee; text-align: left; padding: 13px 14px; font-size: 11.5px;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 750;
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+thead th.num { text-align: center; }
+tbody td { padding: 12px 14px; border-bottom: 1px solid #eef0ee; vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f6faf4; }
+td.num { text-align: center; }
+
+/* ---- score pills (1-10 heatmap) ---- */
+.score { display: inline-block; min-width: 30px; padding: 4px 0; border-radius: 7px; font-weight: 750; font-size: 13px; color: #fff; text-align: center; }
+.s1{background:var(--s1);} .s2{background:var(--s2);} .s3{background:var(--s3);}
+.s4{background:var(--s4);} .s5{background:var(--s5); color:#3a2e00;}
+.s6{background:var(--s6); color:#2c2900;} .s7{background:var(--s7);}
+.s8{background:var(--s8);} .s9{background:var(--s9);} .s10{background:var(--s10);}
+
+/* ---- tier / status cards ---- */
+.tier { border-left: 5px solid var(--accent); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px;
+  background: var(--card); border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.tier h3 { margin: 0 0 8px; font-size: 15px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-family: var(--font-head); }
+.tier h3 .badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; color: #fff; background: var(--accent); }
+.tier p { margin: 0 0 8px; font-size: 13.5px; color: var(--ink); }
+.tier ul { margin: 6px 0 0; padding-left: 18px; }
+.tier li { margin: 6px 0; font-size: 13.5px; }
+.tier.ok    { border-left-color: var(--accent);   } .tier.ok    .badge { background: var(--accent);   }
+.tier.warn  { border-left-color: var(--accent-3); } .tier.warn  .badge { background: var(--accent-3); }
+.tier.info  { border-left-color: var(--accent-2); } .tier.info  .badge { background: var(--accent-2); }
+.tier.muted { border-left-color: var(--muted);    } .tier.muted .badge { background: var(--muted);    }
+
+/* ---- callout ---- */
+.callout { background: var(--accent-soft); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: 12px; padding: 18px 22px; margin: 6px 0 30px; }
+.callout .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 750; color: var(--accent); margin-bottom: 6px; }
+.callout p { margin: 0; font-size: 14.5px; line-height: 1.55; }
+.callout p + p { margin-top: 9px; }
+
+/* ---- misc ---- */
+.note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+code { background: #eef1ee; padding: 1px 6px; border-radius: 5px; font-size: .88em; font-family: "SF Mono", Consolas, monospace; }
+footer.rep { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
+
+/* ---- status lozenges (Confluence-style, for inline doc statuses) ---- */
+.lozenge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.lozenge.green  { background: #e3f1dc; color: #2f6e1f; }
+.lozenge.blue   { background: #dbe9f3; color: #1f5781; }
+.lozenge.amber  { background: #f7ebd9; color: #8a5a14; }
+.lozenge.gray   { background: var(--line); color: var(--muted); }
+
+@media print { body { background: #fff; } .wrap { padding: 0; } .tablecard, .tier, .legend .item { box-shadow: none; } header.report { box-shadow: none; } }
+@media (max-width: 720px) { .legend { grid-template-columns: 1fr; } }
+
+.kpis { display:grid; grid-template-columns: repeat(4,1fr); gap:14px; margin: 4px 0 24px; }
+.kpi { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:16px; text-align:center; }
+.kpi .n { font-size:27px; font-weight:800; color:var(--accent); font-family:var(--font-head); line-height:1; }
+.kpi .l { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:7px; }
+table.tight td, table.tight th { padding: 8px 11px; font-size: 12.5px; }
+pre.code { background:#1b1f1d; color:#e7f0e3; padding:13px 15px; border-radius:9px; overflow-x:auto; font-size:12px; font-family:"SF Mono",Consolas,monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Skills Ecosystem · Design Brief · QE</p>
+    <h1>Per-Skill Usage Log + DSU Cadence Package</h1>
+    <p class="sub">A concise, per-skill, per-contributor run record that replaces the 277-line central ledger — granular, queryable, merge-safe — surfaced through a generated roll-up that /dsu fires on a weekly cadence.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice</span>
+      <span><b>Date:</b> 2026-06-24</span>
+      <span><b>Status:</b> PROPOSED — pilot live; cadence wired into /dsu</span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="n">277</div><div class="l">Lines in skill-ledger-robert.md today</div></div>
+    <div class="kpi"><div class="n">14</div><div class="l">Skills writing the central ledger</div></div>
+    <div class="kpi"><div class="n">9</div><div class="l">Fields per JSONL record</div></div>
+    <div class="kpi"><div class="n">0</div><div class="l">Cross-user merge surfaces (by design)</div></div>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">Recommendation</div>
+    <p><b>Adopt a per-skill, per-contributor JSON-Lines usage log</b> — <code>.claude/skills/&lt;skill&gt;/runs.&lt;name&gt;.jsonl</code>, one line per run, schema <code>{date, by, ticket, quality, well≤15w, poorly≤15w, improve≤30w, model, duration, run?}</code> — as the run-history source of truth, and <b>generate the cross-skill view</b> with <code>_shared/scripts/skill-runs-rollup.mjs</code>. The per-contributor filename is the load-bearing detail: it is exactly how the central ledger avoided merge conflicts after its 2026-06-18 split, and it is your hard constraint here.</p>
+    <p>Surfacing: the roll-up is the first item in a <b>weekly/monthly cadence package carried by /dsu</b> (a reference, not a new skill) — it fires when DSU runs on a new week, and the framework grows to monthly knowledge-sync / skills-drift later. Strong in-repo precedent: <code>/comms-coach</code> and <code>/coverage-gap-scan</code> already keep a per-skill <code>runs.jsonl</code>.</p>
+  </div>
+
+  <h2 class="section">Where "this skill ran" is recorded today</h2>
+  <div class="tablecard"><table class="tight">
+    <thead><tr><th>Layer</th><th>Location</th><th>Shape</th><th>Issue for granular feedback</th></tr></thead>
+    <tbody>
+      <tr><td>Central skill ledger</td><td><code>_shared/skill-ledger-{robert,jess}.md</code></td><td>Append-only markdown table (8 cols)</td><td>277/110 lines, prose-heavy, not queryable; one file = merge contention (already split per-user once)</td></tr>
+      <tr><td>session-review</td><td>writes a ledger row (Phase 5)</td><td>same table</td><td>reviews a whole <em>session</em>, not one skill — maps to no skill folder</td></tr>
+      <tr><td>Per-skill metrics</td><td><code>comms-coach/runs.jsonl</code>, <code>coverage-gap-scan/runs.jsonl</code></td><td>JSONL, skill-specific fields</td><td>the precedent — but bespoke per skill, no shared schema</td></tr>
+      <tr><td>TDD registry</td><td><code>technical-due-diligence/reference/index.md</code> + <code>runs/*.html</code></td><td>markdown index + HTML</td><td>per-skill, but audit-specific</td></tr>
+      <tr><td>Orchestrator scratch</td><td><code>.claude/run-log/</code> (staged/, triage-history.jsonl)</td><td>JSON/JSONL</td><td>multi-round run state, not a usage record</td></tr>
+      <tr><td>Session cost/tokens</td><td><code>~/.claude/session-stats/</code></td><td>md frontmatter (incl. duration, model)</td><td>orthogonal — but the source for the log's <code>duration</code>/<code>model</code> fields</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">The central ledger is the one that hurts: verbose to write, hard to query "how did <code>/three-amigos</code> runs go," and a shared-file merge surface. The new log targets exactly that — and pulls <code>duration</code>/<code>model</code> from the session-stats layer it sits beside.</p>
+
+  <h2 class="section">The design</h2>
+  <div class="tier info">
+    <h3><span class="badge">file + schema</span> per-skill, per-contributor JSONL — 9 fields</h3>
+    <ul>
+      <li><b>File:</b> <code>.claude/skills/&lt;skill&gt;/runs.&lt;name&gt;.jsonl</code> — append-only, one JSON object per line, skill implied by the folder. <code>&lt;name&gt;</code> = lowercase first word of <code>git config user.name</code>.</li>
+      <li><b>Schema:</b> <code>date · by · ticket · quality (✅/⚠️/❌) · well (≤15w) · poorly (≤15w) · improve (≤30w) · model · duration · run?</code> — your four prompts, plus the ledger's ticket+quality, plus <code>model</code> (the session model) and <code>duration</code> (best-effort from session-stats <code>duration_minutes</code>).</li>
+    </ul>
+    <pre class="code">{"date":"2026-06-24","by":"Robert","ticket":"TDD-011","quality":"✅",
+ "well":"Collision-safe census surfaced zero ghost skills and the true 62-skill count.",
+ "poorly":"Glob and find undercounted by 3 (uppercase SKILL.md) until Node readdir caught it.",
+ "improve":"Wire the census into /sync-skills as a standing drift gate; also flag SKILL.md casing.",
+ "model":"claude-opus-4-8","duration":"~15m","run":"reference/runs/2026-06-24-skills-ecosystem-references.html"}</pre>
+  </div>
+  <div class="tier info">
+    <h3><span class="badge">merge-safe</span> why per-contributor files (your constraint)</h3>
+    <ul>
+      <li>Different users → <b>different files</b> → cross-user edits can never conflict on the same line. This is the exact fix the central ledger got on 2026-06-18 (split into <code>-robert</code>/<code>-jess</code>).</li>
+      <li>Append-only JSONL is the least-conflict-prone shape even for the rarer same-user concurrent case (new lines, not rewrites).</li>
+      <li><b>Demonstrated:</b> a second contributor file (<code>runs.jess.jsonl</code>) aggregates alongside <code>runs.robert.jsonl</code> with zero overlap.</li>
+    </ul>
+  </div>
+  <div class="tier ok">
+    <h3><span class="badge">roll-up</span> the cross-skill view is generated, not maintained</h3>
+    <p><code>_shared/scripts/skill-runs-rollup.mjs</code> walks every <code>runs.*.jsonl</code>, infers the skill from the folder, sorts newest-first, and prints the chronological table the ledger gave by hand (<code>--json</code> for machine output; <code>--skill X</code> to filter). Generated output → no merge surface. <b>Pilot output (live):</b></p>
+    <pre class="code">| Date       | Skill                    | By     | Ticket  | Q | Model          | Dur  | What went well ...
+| 2026-06-24 | /technical-due-diligence | Robert | TDD-011 | ✅ | claude-opus-4-8 | ~15m | Collision-safe census ...</pre>
+  </div>
+  <div class="tier ok">
+    <h3><span class="badge">cadence — wired</span> surfaced by /dsu, not a new skill</h3>
+    <ul>
+      <li>The roll-up is the first <b>active</b> item in a weekly/monthly cadence package: <code>dsu/reference/cadence.md</code> (a <b>reference</b>, per your call — never a skill). <code>/dsu</code> Phase 4.5 reads it, and on the <b>first DSU run of a new ISO week</b> runs the roll-up and appends a "This week — skill activity" section to the standup post.</li>
+      <li>Fire guard: <code>dsu/reference/cadence-state.json</code> (gitignored) holds last-fire dates so a missed Monday still fires Tuesday and nothing double-fires (weekly = new <code>%G-%V</code>; monthly = new <code>%Y-%m</code>).</li>
+      <li>Designed to grow: <code>planned</code> rows already stub monthly <b>knowledge-sync</b> (<code>/sync-knowledge</code>), <b>skills-drift</b> (<code>/sync-skills</code>), and weekly repo-freshness. Add a row + flip to <code>active</code>.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">Pilot, rollout & risks</h2>
+  <div class="tier ok">
+    <h3><span class="badge">pilot — done</span> /technical-due-diligence</h3>
+    <ul>
+      <li>Final-step section rewritten to append <code>runs.&lt;name&gt;.jsonl</code> (9-field schema) instead of the central ledger.</li>
+      <li>Seeded with the real TDD-011 record; roll-up reproduces a ledger-style row and ignores the metric-style <code>runs.jsonl</code> files.</li>
+    </ul>
+  </div>
+  <div class="tier warn">
+    <h3><span class="badge">risk</span> the real risk is write-discipline, not the format</h3>
+    <ul>
+      <li><b>Will the step run every time?</b> The central ledger has the same dependency and mostly works because 14 skills carry an explicit final-step block. Mitigation: keep the block terse + identical (point to <code>_shared/skill-run-log.md</code>); a <code>/sync-skills</code> check can flag skills missing it.</li>
+      <li><b>duration capture</b> is best-effort — there is no per-skill wall-clock today; pull from session-stats <code>duration_minutes</code> when a run ≈ a session, else omit. Don't block the log on it.</li>
+      <li><b>Transition split-brain</b> — piloted skills log JSONL while others still log the ledger; the old ledgers stay frozen and the roll-up can ingest them once for a continuous history.</li>
+    </ul>
+  </div>
+  <div class="tier muted">
+    <h3><span class="badge">open — for the brainstorm</span> decisions left</h3>
+    <ul>
+      <li><b>session-review:</b> spans a session, not one skill — give it a session-level <code>_shared/reviews/&lt;date&gt;.&lt;name&gt;.jsonl</code>, or keep it on a slimmed central ledger?</li>
+      <li><b>Rollout breadth/order:</b> pilot → the 13 other logging skills → all 59? Or orchestrators first?</li>
+      <li><b>Next cadence items to activate:</b> monthly <code>/sync-knowledge</code> and <code>/sync-skills</code> are stubbed <code>planned</code> — turn either on now, or wait?</li>
+      <li><b>Roll-up reach:</b> DSU weekly is wired; also expose on-demand in a revived <code>/qe-dashboard</code> view, or DSU-only for now?</li>
+    </ul>
+  </div>
+
+  <footer class="rep">Design brief · per-skill usage log + DSU cadence · 2026-06-24 · pilot live on /technical-due-diligence · roll-up + cadence verified</footer>
+
+</div>
+</body>
+</html>

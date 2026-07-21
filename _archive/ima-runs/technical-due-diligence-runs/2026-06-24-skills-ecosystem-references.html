@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-011
+date: 2026-06-24
+scope: .claude/skills/ (+ _shared) — 62 project skills ; excluded: _shared/tickets, _shared/_archive, skill-ledger*.md
+dimensions: coupling/reference-census (single-dimension focused run, per user narrowing)
+jira: [—]
+findings: { critical: 0, high: 0, medium: 0, low: 2, informational: census }
+status: complete
+note: "How many references does each skill have" — reference-coupling census, NOT a 7-dimension defect audit. Registered as TDD-011 (index row + ledger) at user request after an initially-lightweight run.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills Ecosystem — Reference-Count Census</title>
+<style>
+/* ============================================================================
+   IMA 360 QE — shared report stylesheet
+   Canonical source of styling for HTML reports/dashboards emitted by skills
+   (dsu, gap-analysis, confluence-test-plan, exec reports, tc-review).
+
+   Every color derives from _shared/output-kit/igs-brand.json. The :root tokens
+   below MIRROR that file — if you change a brand value, change it there first,
+   then update the matching --token here.
+
+   PORTABILITY: for artifacts that must travel (e.g. /dsu paste into Teams,
+   a file emailed to leadership), the emitting skill should INLINE this file
+   into a <style> block rather than <link>-ing it, so the single file renders
+   standalone with no external dependency.
+   ============================================================================ */
+
+:root {
+  /* brand tokens — DERIVED from igs-brand.json, the single source of truth for brand colors (bug-patterns #19).
+     Do NOT pick new brand values here. Edit igs-brand.json, then mirror the 7 colors below into these --tokens. */
+  --ink:        #1b1f1d;  /* colors.dark */
+  --bg:         #f7f9f7;  /* colors.light */
+  --muted:      #5b6472;  /* colors.midGray */
+  --line:       #e4e9e5;  /* colors.lightGray */
+  --accent:     #4f9d3a;  /* colors.primary  (IGS green) */
+  --accent-2:   #2c6e9b;  /* colors.secondary (blue) */
+  --accent-3:   #e08a3e;  /* colors.tertiary  (amber) */
+  --accent-soft:#eef5ea;  /* tint of primary for callout backgrounds */
+  --card:       #ffffff;
+
+  /* score heatmap (1-10) — OWNED HERE: a rendering concern, NOT a brand token, intentionally not in igs-brand.json */
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+
+  --font-head: "Inter", "Segoe UI", Arial, sans-serif;   /* typography.headings */
+  --font-body: "Inter", "Segoe UI", Arial, sans-serif;   /* typography.body */
+}
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 var(--font-body);
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 40px 28px 80px; }
+
+/* ---- report header ---- */
+header.report {
+  background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 100%);
+  color: #fff; border-radius: 16px; padding: 34px 36px; margin-bottom: 28px;
+  box-shadow: 0 8px 28px rgba(27,31,29,.18);
+}
+header.report .eyebrow {
+  text-transform: uppercase; letter-spacing: .14em; font-size: 11.5px;
+  font-weight: 700; opacity: .85; margin: 0 0 10px;
+}
+header.report h1 { margin: 0 0 8px; font-size: 29px; line-height: 1.15; font-weight: 750; font-family: var(--font-head); }
+header.report p.sub { margin: 0; font-size: 15px; opacity: .93; max-width: 760px; }
+header.report .meta {
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.25);
+  display: flex; flex-wrap: wrap; gap: 22px; font-size: 12.5px; opacity: .93;
+}
+
+/* ---- section headings ---- */
+h2.section {
+  font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
+  font-weight: 750; margin: 34px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--line);
+  font-family: var(--font-head);
+}
+
+/* ---- legend / info cards grid ---- */
+.legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 26px; }
+.legend .item { background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 14px 16px; }
+.legend .item .k { font-weight: 750; font-size: 13px; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+.legend .item .k .dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend .item .d { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+/* ---- tables ---- */
+.tablecard { background: var(--card); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; box-shadow: 0 2px 10px rgba(20,25,40,.04); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead th {
+  background: #eef1ee; text-align: left; padding: 13px 14px; font-size: 11.5px;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 750;
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+thead th.num { text-align: center; }
+tbody td { padding: 12px 14px; border-bottom: 1px solid #eef0ee; vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f6faf4; }
+td.num { text-align: center; }
+
+/* ---- score pills (1-10 heatmap) ---- */
+.score { display: inline-block; min-width: 30px; padding: 4px 0; border-radius: 7px; font-weight: 750; font-size: 13px; color: #fff; text-align: center; }
+.s1{background:var(--s1);} .s2{background:var(--s2);} .s3{background:var(--s3);}
+.s4{background:var(--s4);} .s5{background:var(--s5); color:#3a2e00;}
+.s6{background:var(--s6); color:#2c2900;} .s7{background:var(--s7);}
+.s8{background:var(--s8);} .s9{background:var(--s9);} .s10{background:var(--s10);}
+
+/* ---- tier / status cards ---- */
+.tier { border-left: 5px solid var(--accent); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px;
+  background: var(--card); border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.tier h3 { margin: 0 0 8px; font-size: 15px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-family: var(--font-head); }
+.tier h3 .badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; color: #fff; background: var(--accent); }
+.tier p { margin: 0 0 8px; font-size: 13.5px; color: var(--ink); }
+.tier ul { margin: 6px 0 0; padding-left: 18px; }
+.tier li { margin: 6px 0; font-size: 13.5px; }
+.tier.ok    { border-left-color: var(--accent);   } .tier.ok    .badge { background: var(--accent);   }
+.tier.warn  { border-left-color: var(--accent-3); } .tier.warn  .badge { background: var(--accent-3); }
+.tier.info  { border-left-color: var(--accent-2); } .tier.info  .badge { background: var(--accent-2); }
+.tier.muted { border-left-color: var(--muted);    } .tier.muted .badge { background: var(--muted);    }
+
+/* ---- callout ---- */
+.callout { background: var(--accent-soft); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: 12px; padding: 18px 22px; margin: 6px 0 30px; }
+.callout .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 750; color: var(--accent); margin-bottom: 6px; }
+.callout p { margin: 0; font-size: 14.5px; line-height: 1.55; }
+.callout p + p { margin-top: 9px; }
+
+/* ---- misc ---- */
+.note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+code { background: #eef1ee; padding: 1px 6px; border-radius: 5px; font-size: .88em; font-family: "SF Mono", Consolas, monospace; }
+footer.rep { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
+
+/* ---- status lozenges (Confluence-style, for inline doc statuses) ---- */
+.lozenge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.lozenge.green  { background: #e3f1dc; color: #2f6e1f; }
+.lozenge.blue   { background: #dbe9f3; color: #1f5781; }
+.lozenge.amber  { background: #f7ebd9; color: #8a5a14; }
+.lozenge.gray   { background: var(--line); color: var(--muted); }
+
+@media print { body { background: #fff; } .wrap { padding: 0; } .tablecard, .tier, .legend .item { box-shadow: none; } header.report { box-shadow: none; } }
+@media (max-width: 720px) { .legend { grid-template-columns: 1fr; } }
+
+.tablecard.scroll { max-height: none; }
+table.tight td, table.tight th { padding: 8px 11px; font-size: 12.5px; }
+sup { color: var(--accent-2); font-weight: 700; }
+.kpis { display:grid; grid-template-columns: repeat(4,1fr); gap:14px; margin: 4px 0 24px; }
+.kpi { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:16px; text-align:center; }
+.kpi .n { font-size:30px; font-weight:800; color:var(--accent); font-family:var(--font-head); line-height:1; }
+.kpi .l { font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-top:7px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>Skills Ecosystem — Reference-Count Census</h1>
+    <p class="sub">How many references does each skill have? Incoming (blast radius) and outgoing (dependency) reference counts across the 62 project skills, collision-safe and ledger-excluded.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice (acquirer lens)</span>
+      <span><b>Date:</b> 2026-06-24</span>
+      <span><b>Scope:</b> .claude/skills/ + _shared (tickets excluded)</span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="n">62</div><div class="l">Project skills</div></div>
+    <div class="kpi"><div class="n">253</div><div class="l">Files scanned</div></div>
+    <div class="kpi"><div class="n">0</div><div class="l">Ghost skills (0 incoming)</div></div>
+    <div class="kpi"><div class="n">8</div><div class="l">Pure sinks (0 outgoing)</div></div>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">Verdict — what an acquirer should note</div>
+    <p><b>1 · No dead code.</b> All 62 skills have at least one incoming reference — there are <b>zero true ghost skills</b>. 5 sit at the floor of a single referencer (<code>/manual-migration</code>, <code>/sync-vault</code>, <code>/prod-support-poller</code>, <code>/qe-dashboard</code>, <code>/regression-reporter</code>); all are legitimate low-coupling roles (a migration helper, a deprecated redirect, a cron poller, a standalone dashboard, an end-of-run reporter), not orphans — though a single edge means one doc edit can silently strand them.</p>
+    <p><b>2 · Concentrated blast radius.</b> Eight skills carry the ecosystem's coupling: <code>/ready-for-testing</code> (40 files), <code>/three-amigos</code> (34), <code>/code-intelligence</code> (28), <code>/zephyr-reporter</code> (25), <code>/playwright-workflow</code> (23). Renaming or changing the contract of any of these ripples across 20–40 files — these are the change-carefully nodes.</p>
+    <p><b>3 · Orchestrator/worker split is clean.</b> 8 skills are pure sinks (referenced, reference nothing) — stable leaf workers/reporters. The conductors (<code>/three-amigos</code> out=13, <code>/sync</code> out=11, <code>/ready-for-testing</code> out=11) fan out to many. This is healthy layering, not tangle.</p>
+  </div>
+
+  <h2 class="section">Method &amp; Scope</h2>
+  <div class="tier info">
+    <h3><span class="badge">how counted</span> The reference contract</h3>
+    <ul>
+      <li><b>Unit:</b> a slash-form mention <code>/skill-name</code> (≈95% of refs; also captures path form <code>.claude/skills/skill-name/</code>). Bare names without a slash are excluded (too noisy — <code>sync</code>, <code>playwright</code>, <code>resume</code> are common words).</li>
+      <li><b>Collision-safe:</b> exact-name match with a trailing <code>(?![\w-])</code> boundary. Proven necessary — naive <code>/sync</code> counts <b>105</b> mentions; the correct count is <b>43</b> (a 2.4× over-count avoided by excluding <code>/sync-knowledge · /sync-repos · /sync-vault · /sql-schema-sync</code>). <code>/three-amigos</code> 80 vs naive 88 (excludes <code>/three-amigos-questions</code>).</li>
+      <li><b>Incoming(X):</b> references to X anywhere in scope <em>except inside X's own folder</em> (self-docs aren't coupling). <b>Outgoing(X):</b> references from inside X's folder to other skills.</li>
+      <li><b>Excluded (no silent caps):</b> <code>_shared/tickets/</code> (per request), <code>_shared/_archive/</code> (deprecated defs), and the append-only <code>skill-ledger*.md</code> run logs (counted separately as run-counts below, not folded into reference totals). 253 files scanned (.md/.yml/.yaml/.txt/.ts.example).</li>
+      <li><b>Count discrepancy resolved:</b> 62 skills, not 59 — Glob/<code>find</code> (case-sensitive) miss the 3 skills whose file is uppercase <code>SKILL.md</code> (<code>comms-coach</code>, <code>playwright-cli</code>, <code>trace-call-path</code>); they are confirmed registered skills.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">Per-skill reference counts (sorted by incoming blast radius)</h2>
+  <div class="tablecard">
+    <table class="tight">
+      <thead><tr>
+        <th>Skill</th>
+        <th class="num">In · files</th><th class="num">In · mentions</th>
+        <th class="num">Out · skills</th><th class="num">Out · mentions</th>
+        <th class="num">Ledger runs</th>
+      </tr></thead>
+      <tbody>
+<tr><td><code>/ready-for-testing</code> <span class="lozenge amber">high blast radius</span> <span class="lozenge blue">hub</span></td>
+      <td class="num">40</td><td class="num">103</td>
+      <td class="num">11</td><td class="num">53</td>
+      <td class="num">46</td></tr>
+<tr><td><code>/three-amigos</code> <span class="lozenge amber">high blast radius</span> <span class="lozenge blue">hub</span></td>
+      <td class="num">34</td><td class="num">80</td>
+      <td class="num">13</td><td class="num">44</td>
+      <td class="num">44</td></tr>
+<tr><td><code>/code-intelligence</code> <span class="lozenge amber">high blast radius</span> <span class="lozenge gray">sink</span></td>
+      <td class="num">28</td><td class="num">57</td>
+      <td class="num">0</td><td class="num">0</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/zephyr-reporter</code> <span class="lozenge amber">high blast radius</span></td>
+      <td class="num">25</td><td class="num">58</td>
+      <td class="num">5</td><td class="num">9</td>
+      <td class="num">31</td></tr>
+<tr><td><code>/playwright-workflow</code> <span class="lozenge amber">high blast radius</span> <span class="lozenge blue">hub</span></td>
+      <td class="num">23</td><td class="num">56</td>
+      <td class="num">9</td><td class="num">16</td>
+      <td class="num">16</td></tr>
+<tr><td><code>/prod-support</code> <span class="lozenge amber">high blast radius</span> <span class="lozenge blue">hub</span></td>
+      <td class="num">21</td><td class="num">40</td>
+      <td class="num">10</td><td class="num">27</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/sql-data</code> <span class="lozenge amber">high blast radius</span></td>
+      <td class="num">20</td><td class="num">43</td>
+      <td class="num">1</td><td class="num">1</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/ready-for-playwright</code> <span class="lozenge blue">hub</span></td>
+      <td class="num">17</td><td class="num">70</td>
+      <td class="num">9</td><td class="num">47</td>
+      <td class="num">25</td></tr>
+<tr><td><code>/sync</code> <span class="lozenge blue">hub</span></td>
+      <td class="num">14</td><td class="num">43</td>
+      <td class="num">11</td><td class="num">51</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/bug-report</code> <span class="lozenge gray">sink</span></td>
+      <td class="num">13</td><td class="num">17</td>
+      <td class="num">0</td><td class="num">0</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/bug-gap-analysis</code></td>
+      <td class="num">11</td><td class="num">29</td>
+      <td class="num">2</td><td class="num">2</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/gap-analysis</code> <span class="lozenge gray">sink</span></td>
+      <td class="num">11</td><td class="num">29</td>
+      <td class="num">0</td><td class="num">0</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/elastic-drift</code></td>
+      <td class="num">11</td><td class="num">22</td>
+      <td class="num">3</td><td class="num">6</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/health-check</code></td>
+      <td class="num">10</td><td class="num">25</td>
+      <td class="num">3</td><td class="num">7</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/context-load</code></td>
+      <td class="num">9</td><td class="num">36</td>
+      <td class="num">4</td><td class="num">4</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/ready-for-qa</code></td>
+      <td class="num">8</td><td class="num">29</td>
+      <td class="num">6</td><td class="num">38</td>
+      <td class="num">26</td></tr>
+<tr><td><code>/ticket-intake</code></td>
+      <td class="num">8</td><td class="num">24</td>
+      <td class="num">6</td><td class="num">11</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/fix-loop</code></td>
+      <td class="num">8</td><td class="num">21</td>
+      <td class="num">1</td><td class="num">2</td>
+      <td class="num">26</td></tr>
+<tr><td><code>/api-test-workflow</code></td>
+      <td class="num">7</td><td class="num">24</td>
+      <td class="num">4</td><td class="num">13</td>
+      <td class="num">7</td></tr>
+<tr><td><code>/kibana</code> <span class="lozenge gray">sink</span></td>
+      <td class="num">7</td><td class="num">23</td>
+      <td class="num">0</td><td class="num">0</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/confluence-ingest</code></td>
+      <td class="num">7</td><td class="num">20</td>
+      <td class="num">2</td><td class="num">2</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/sql-schema-sync</code></td>
+      <td class="num">7</td><td class="num">19</td>
+      <td class="num">1</td><td class="num">3</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/sync-knowledge</code></td>
+      <td class="num">7</td><td class="num">17</td>
+      <td class="num">4</td><td class="num">11</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/locator-drift-scan</code></td>
+      <td class="num">7</td><td class="num">12</td>
+      <td class="num">7</td><td class="num">13</td>
+      <td class="num">2</td></tr>
+<tr><td><code>/confluence-test-plan</code></td>
+      <td class="num">7</td><td class="num">8</td>
+      <td class="num">7</td><td class="num">33</td>
+      <td class="num">1</td></tr>
+<tr><td><code>/dsu</code></td>
+      <td class="num">6</td><td class="num">13</td>
+      <td class="num">5</td><td class="num">8</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/spec-review</code></td>
+      <td class="num">6</td><td class="num">13</td>
+      <td class="num">2</td><td class="num">6</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/playwright-cli</code></td>
+      <td class="num">6</td><td class="num">9</td>
+      <td class="num">5</td><td class="num">7</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/sync-repos</code></td>
+      <td class="num">6</td><td class="num">9</td>
+      <td class="num">4</td><td class="num">4</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/zephyr-approve</code></td>
+      <td class="num">6</td><td class="num">9</td>
+      <td class="num">3</td><td class="num">6</td>
+      <td class="num">12</td></tr>
+<tr><td><code>/technical-due-diligence</code></td>
+      <td class="num">6</td><td class="num">8</td>
+      <td class="num">8</td><td class="num">12</td>
+      <td class="num">9</td></tr>
+<tr><td><code>/jira-reporter</code> <span class="lozenge gray">sink</span></td>
+      <td class="num">5</td><td class="num">15</td>
+      <td class="num">0</td><td class="num">0</td>
+      <td class="num">2</td></tr>
+<tr><td><code>/coverage-gap-scan</code> <span class="lozenge blue">hub</span></td>
+      <td class="num">5</td><td class="num">14</td>
+      <td class="num">9</td><td class="num">19</td>
+      <td class="num">2</td></tr>
+<tr><td><code>/app-insights-diagnose</code></td>
+      <td class="num">5</td><td class="num">10</td>
+      <td class="num">4</td><td class="num">9</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/ticket-close</code> <span class="lozenge gray">sink</span></td>
+      <td class="num">5</td><td class="num">8</td>
+      <td class="num">0</td><td class="num">0</td>
+      <td class="num">6</td></tr>
+<tr><td><code>/prune-duplicates</code></td>
+      <td class="num">4</td><td class="num">15</td>
+      <td class="num">3</td><td class="num">5</td>
+      <td class="num">1</td></tr>
+<tr><td><code>/pict-scenarios</code></td>
+      <td class="num">4</td><td class="num">11</td>
+      <td class="num">6</td><td class="num">18</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/run-and-fix</code></td>
+      <td class="num">4</td><td class="num">9</td>
+      <td class="num">6</td><td class="num">16</td>
+      <td class="num">14</td></tr>
+<tr><td><code>/fix-me</code></td>
+      <td class="num">4</td><td class="num">6</td>
+      <td class="num">2</td><td class="num">3</td>
+      <td class="num">3</td></tr>
+<tr><td><code>/app-insights-drift</code></td>
+      <td class="num">4</td><td class="num">5</td>
+      <td class="num">4</td><td class="num">6</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/tc-review</code></td>
+      <td class="num">3</td><td class="num">13</td>
+      <td class="num">1</td><td class="num">1</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/ac-quality</code></td>
+      <td class="num">3</td><td class="num">12</td>
+      <td class="num">1</td><td class="num">4</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/three-amigos-questions</code></td>
+      <td class="num">3</td><td class="num">8</td>
+      <td class="num">3</td><td class="num">11</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/attach-screenshots</code></td>
+      <td class="num">3</td><td class="num">7</td>
+      <td class="num">1</td><td class="num">1</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/resume</code></td>
+      <td class="num">3</td><td class="num">6</td>
+      <td class="num">7</td><td class="num">13</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/devils-advocate</code></td>
+      <td class="num">3</td><td class="num">5</td>
+      <td class="num">2</td><td class="num">6</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/trace-call-path</code></td>
+      <td class="num">3</td><td class="num">5</td>
+      <td class="num">4</td><td class="num">5</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/comms-coach</code></td>
+      <td class="num">3</td><td class="num">4</td>
+      <td class="num">6</td><td class="num">7</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/roast-me</code></td>
+      <td class="num">3</td><td class="num">4</td>
+      <td class="num">1</td><td class="num">1</td>
+      <td class="num">2</td></tr>
+<tr><td><code>/review-pr</code> <span class="lozenge gray">sink</span></td>
+      <td class="num">2</td><td class="num">8</td>
+      <td class="num">0</td><td class="num">0</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/triage-failures</code></td>
+      <td class="num">2</td><td class="num">7</td>
+      <td class="num">5</td><td class="num">13</td>
+      <td class="num">9</td></tr>
+<tr><td><code>/deal-sheet-debug</code> <span class="lozenge gray">sink</span></td>
+      <td class="num">2</td><td class="num">5</td>
+      <td class="num">0</td><td class="num">0</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/playwright</code></td>
+      <td class="num">2</td><td class="num">4</td>
+      <td class="num">3</td><td class="num">6</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/pr-qa</code></td>
+      <td class="num">2</td><td class="num">4</td>
+      <td class="num">4</td><td class="num">12</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/ticket-finalize</code></td>
+      <td class="num">2</td><td class="num">4</td>
+      <td class="num">4</td><td class="num">4</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/auth0-regression</code></td>
+      <td class="num">2</td><td class="num">2</td>
+      <td class="num">1</td><td class="num">2</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/staged-run</code></td>
+      <td class="num">2</td><td class="num">2</td>
+      <td class="num">1</td><td class="num">5</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/manual-migration</code></td>
+      <td class="num">1</td><td class="num">2</td>
+      <td class="num">2</td><td class="num">8</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/sync-vault</code></td>
+      <td class="num">1</td><td class="num">2</td>
+      <td class="num">2</td><td class="num">5</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/prod-support-poller</code></td>
+      <td class="num">1</td><td class="num">1</td>
+      <td class="num">3</td><td class="num">10</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/qe-dashboard</code></td>
+      <td class="num">1</td><td class="num">1</td>
+      <td class="num">5</td><td class="num">7</td>
+      <td class="num">—</td></tr>
+<tr><td><code>/regression-reporter</code></td>
+      <td class="num">1</td><td class="num">1</td>
+      <td class="num">2</td><td class="num">2</td>
+      <td class="num">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>In · files</b> = distinct files that reference the skill (the coupling/blast-radius signal). <b>In · mentions</b> = raw occurrences. <b>Out · skills</b> = distinct other skills this skill points to (out-degree). <b>Ledger runs</b> = times executed per the run logs (excluded from the counts; <em>—</em> = never run standalone, typically a sub-skill invoked inside an orchestrator's run).</p>
+
+  <h2 class="section">Dependency adjacency (the matrix, readable form)</h2>
+  <div class="tablecard">
+    <table class="tight">
+      <thead><tr><th>Skill</th><th>→ references (outgoing)</th><th>← referenced by (incoming, from skills)</th></tr></thead>
+      <tbody>
+<tr><td><code>/ready-for-testing</code></td>
+      <td><code>/ready-for-playwright</code>&times;14 · <code>/zephyr-reporter</code>&times;9 · <code>/three-amigos</code>&times;7 · <code>/sql-data</code>&times;6 · <code>/context-load</code>&times;5 · <code>/code-intelligence</code>&times;4 · <code>/ready-for-qa</code>&times;3 · <code>/pict-scenarios</code>&times;2 · <code>/devils-advocate</code>&times;1 · <code>/zephyr-approve</code>&times;1 · <code>/health-check</code>&times;1</td>
+      <td><code>/api-test-workflow</code> <code>/context-load</code> <code>/coverage-gap-scan</code> <code>/devils-advocate</code> <code>/dsu</code> <code>/health-check</code> <code>/pict-scenarios</code> <code>/playwright-workflow</code> <code>/prod-support</code> <code>/prod-support-poller</code> <code>/prune-duplicates</code> <code>/qe-dashboard</code> <code>/ready-for-playwright</code> <code>/ready-for-qa</code> <code>/resume</code> <code>/run-and-fix</code> <code>/sync-repos</code> <code>/technical-due-diligence</code> <code>/three-amigos</code> <code>/ticket-finalize</code> <code>/ticket-intake</code> <code>/zephyr-approve</code> <code>/zephyr-reporter</code> <span class="note" style="margin:0">+ 15 _shared file(s)</span></td></tr>
+<tr><td><code>/three-amigos</code></td>
+      <td><code>/ticket-intake</code>&times;6 · <code>/ac-quality</code>&times;6 · <code>/ready-for-testing</code>&times;5 · <code>/context-load</code>&times;5 · <code>/tc-review</code>&times;4 · <code>/three-amigos-questions</code>&times;3 · <code>/ready-for-playwright</code>&times;3 · <code>/pict-scenarios</code>&times;3 · <code>/ready-for-qa</code>&times;3 · <code>/sql-data</code>&times;3 · <code>/gap-analysis</code>&times;1 · <code>/health-check</code>&times;1 · <code>/resume</code>&times;1</td>
+      <td><code>/ac-quality</code> <code>/context-load</code> <code>/devils-advocate</code> <code>/dsu</code> <code>/health-check</code> <code>/pict-scenarios</code> <code>/playwright-workflow</code> <code>/prod-support</code> <code>/prod-support-poller</code> <code>/qe-dashboard</code> <code>/ready-for-playwright</code> <code>/ready-for-qa</code> <code>/ready-for-testing</code> <code>/resume</code> <code>/run-and-fix</code> <code>/tc-review</code> <code>/technical-due-diligence</code> <code>/three-amigos-questions</code> <code>/ticket-finalize</code> <code>/ticket-intake</code> <span class="note" style="margin:0">+ 13 _shared file(s)</span></td></tr>
+<tr><td><code>/code-intelligence</code></td>
+      <td><span class="note" style="margin:0">— (references no other skill)</span></td>
+      <td><code>/confluence-test-plan</code> <code>/coverage-gap-scan</code> <code>/prod-support</code> <code>/ready-for-testing</code> <code>/sync-knowledge</code> <code>/sync-repos</code> <code>/trace-call-path</code> <span class="note" style="margin:0">+ 19 _shared file(s)</span></td></tr>
+<tr><td><code>/zephyr-reporter</code></td>
+      <td><code>/ready-for-testing</code>&times;5 · <code>/attach-screenshots</code>&times;1 · <code>/playwright-cli</code>&times;1 · <code>/zephyr-approve</code>&times;1 · <code>/sync</code>&times;1</td>
+      <td><code>/api-test-workflow</code> <code>/attach-screenshots</code> <code>/fix-me</code> <code>/pict-scenarios</code> <code>/playwright-workflow</code> <code>/qe-dashboard</code> <code>/ready-for-qa</code> <code>/ready-for-testing</code> <code>/ticket-finalize</code> <code>/ticket-intake</code> <code>/zephyr-approve</code> <span class="note" style="margin:0">+ 14 _shared file(s)</span></td></tr>
+<tr><td><code>/playwright-workflow</code></td>
+      <td><code>/zephyr-reporter</code>&times;3 · <code>/jira-reporter</code>&times;3 · <code>/api-test-workflow</code>&times;2 · <code>/ready-for-testing</code>&times;2 · <code>/playwright-cli</code>&times;2 · <code>/session-review</code><sup>g</sup>&times;1 · <code>/three-amigos</code>&times;1 · <code>/bug-report</code>&times;1 · <code>/fix-loop</code>&times;1</td>
+      <td><code>/api-test-workflow</code> <code>/bug-gap-analysis</code> <code>/locator-drift-scan</code> <code>/manual-migration</code> <code>/pict-scenarios</code> <code>/playwright</code> <code>/playwright-cli</code> <code>/ready-for-playwright</code> <code>/regression-reporter</code> <code>/resume</code> <code>/run-and-fix</code> <code>/spec-review</code> <code>/ticket-finalize</code> <code>/zephyr-approve</code> <span class="note" style="margin:0">+ 9 _shared file(s)</span></td></tr>
+<tr><td><code>/prod-support</code></td>
+      <td><code>/elastic-drift</code>&times;8 · <code>/kibana</code>&times;5 · <code>/technical-due-diligence</code>&times;4 · <code>/app-insights-drift</code>&times;2 · <code>/sync</code>&times;2 · <code>/ready-for-testing</code>&times;2 · <code>/code-intelligence</code>&times;1 · <code>/verify</code><sup>g</sup>&times;1 · <code>/app-insights-diagnose</code>&times;1 · <code>/three-amigos</code>&times;1</td>
+      <td><code>/app-insights-diagnose</code> <code>/app-insights-drift</code> <code>/auth0-regression</code> <code>/prod-support-poller</code> <code>/sync-repos</code> <code>/trace-call-path</code> <code>/triage-failures</code> <span class="note" style="margin:0">+ 11 _shared file(s)</span></td></tr>
+<tr><td><code>/sql-data</code></td>
+      <td><code>/sync</code>&times;1</td>
+      <td><code>/app-insights-diagnose</code> <code>/locator-drift-scan</code> <code>/pr-qa</code> <code>/ready-for-testing</code> <code>/resume</code> <code>/sql-schema-sync</code> <code>/sync-knowledge</code> <code>/technical-due-diligence</code> <code>/three-amigos</code> <code>/ticket-intake</code> <code>/triage-failures</code> <span class="note" style="margin:0">+ 9 _shared file(s)</span></td></tr>
+<tr><td><code>/ready-for-playwright</code></td>
+      <td><code>/api-test-workflow</code>&times;10 · <code>/ready-for-testing</code>&times;8 · <code>/ready-for-qa</code>&times;8 · <code>/playwright-workflow</code>&times;7 · <code>/context-load</code>&times;5 · <code>/run-and-fix</code>&times;4 · <code>/health-check</code>&times;2 · <code>/three-amigos</code>&times;2 · <code>/bug-report</code>&times;1</td>
+      <td><code>/bug-gap-analysis</code> <code>/context-load</code> <code>/health-check</code> <code>/pict-scenarios</code> <code>/playwright</code> <code>/prune-duplicates</code> <code>/ready-for-qa</code> <code>/ready-for-testing</code> <code>/resume</code> <code>/run-and-fix</code> <code>/three-amigos</code> <span class="note" style="margin:0">+ 6 _shared file(s)</span></td></tr>
+<tr><td><code>/sync</code></td>
+      <td><code>/bug-gap-analysis</code>&times;7 · <code>/gap-analysis</code>&times;7 · <code>/sql-schema-sync</code>&times;6 · <code>/sync-memory</code><sup>g</sup>&times;5 · <code>/condense-claude-md</code><sup>g</sup>&times;4 · <code>/prune-duplicates</code>&times;4 · <code>/sync-knowledge</code>&times;4 · <code>/health-check</code>&times;4 · <code>/sync-skills</code><sup>g</sup>&times;4 · <code>/locator-drift-scan</code>&times;3 · <code>/spec-review</code>&times;3</td>
+      <td><code>/coverage-gap-scan</code> <code>/elastic-drift</code> <code>/locator-drift-scan</code> <code>/prod-support</code> <code>/sql-data</code> <code>/sync-knowledge</code> <code>/sync-vault</code> <code>/zephyr-reporter</code> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/bug-report</code></td>
+      <td><span class="note" style="margin:0">— (references no other skill)</span></td>
+      <td><code>/app-insights-diagnose</code> <code>/app-insights-drift</code> <code>/playwright-workflow</code> <code>/qe-dashboard</code> <code>/ready-for-playwright</code> <code>/regression-reporter</code> <code>/triage-failures</code> <span class="note" style="margin:0">+ 6 _shared file(s)</span></td></tr>
+<tr><td><code>/bug-gap-analysis</code></td>
+      <td><code>/ready-for-playwright</code>&times;1 · <code>/playwright-workflow</code>&times;1</td>
+      <td><code>/confluence-test-plan</code> <code>/coverage-gap-scan</code> <code>/sync</code> <code>/technical-due-diligence</code> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/gap-analysis</code></td>
+      <td><span class="note" style="margin:0">— (references no other skill)</span></td>
+      <td><code>/confluence-test-plan</code> <code>/coverage-gap-scan</code> <code>/sync</code> <code>/technical-due-diligence</code> <code>/three-amigos</code> <code>/ticket-intake</code> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/elastic-drift</code></td>
+      <td><code>/kibana</code>&times;4 · <code>/technical-due-diligence</code>&times;1 · <code>/sync</code>&times;1</td>
+      <td><code>/prod-support</code> <code>/technical-due-diligence</code> <span class="note" style="margin:0">+ 7 _shared file(s)</span></td></tr>
+<tr><td><code>/health-check</code></td>
+      <td><code>/ready-for-testing</code>&times;3 · <code>/ready-for-playwright</code>&times;2 · <code>/three-amigos</code>&times;2</td>
+      <td><code>/confluence-test-plan</code> <code>/dsu</code> <code>/playwright-cli</code> <code>/pr-qa</code> <code>/ready-for-playwright</code> <code>/ready-for-testing</code> <code>/sync</code> <code>/three-amigos</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/context-load</code></td>
+      <td><code>/ready-for-playwright</code>&times;1 · <code>/ready-for-testing</code>&times;1 · <code>/ready-for-qa</code>&times;1 · <code>/three-amigos</code>&times;1</td>
+      <td><code>/confluence-test-plan</code> <code>/ready-for-playwright</code> <code>/ready-for-qa</code> <code>/ready-for-testing</code> <code>/three-amigos</code> <code>/three-amigos-questions</code> <span class="note" style="margin:0">+ 3 _shared file(s)</span></td></tr>
+<tr><td><code>/ready-for-qa</code></td>
+      <td><code>/ready-for-testing</code>&times;9 · <code>/ready-for-playwright</code>&times;8 · <code>/zephyr-reporter</code>&times;8 · <code>/jira-reporter</code>&times;6 · <code>/context-load</code>&times;5 · <code>/three-amigos</code>&times;2</td>
+      <td><code>/context-load</code> <code>/ready-for-playwright</code> <code>/ready-for-testing</code> <code>/resume</code> <code>/run-and-fix</code> <code>/three-amigos</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/ticket-intake</code></td>
+      <td><code>/three-amigos</code>&times;5 · <code>/gap-analysis</code>&times;2 · <code>/confluence-test-plan</code>&times;1 · <code>/ready-for-testing</code>&times;1 · <code>/zephyr-reporter</code>&times;1 · <code>/sql-data</code>&times;1</td>
+      <td><code>/confluence-test-plan</code> <code>/resume</code> <code>/three-amigos</code> <code>/three-amigos-questions</code> <span class="note" style="margin:0">+ 4 _shared file(s)</span></td></tr>
+<tr><td><code>/fix-loop</code></td>
+      <td><code>/session-review</code><sup>g</sup>&times;2</td>
+      <td><code>/fix-me</code> <code>/playwright-workflow</code> <code>/triage-failures</code> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/api-test-workflow</code></td>
+      <td><code>/playwright-workflow</code>&times;8 · <code>/ready-for-testing</code>&times;2 · <code>/zephyr-reporter</code>&times;2 · <code>/jira-reporter</code>&times;1</td>
+      <td><code>/playwright-workflow</code> <code>/ready-for-playwright</code> <code>/run-and-fix</code> <span class="note" style="margin:0">+ 4 _shared file(s)</span></td></tr>
+<tr><td><code>/kibana</code></td>
+      <td><span class="note" style="margin:0">— (references no other skill)</span></td>
+      <td><code>/elastic-drift</code> <code>/prod-support</code> <span class="note" style="margin:0">+ 3 _shared file(s)</span></td></tr>
+<tr><td><code>/confluence-ingest</code></td>
+      <td><code>/confluence-test-plan</code>&times;1 · <code>/sync-knowledge</code>&times;1</td>
+      <td><code>/confluence-test-plan</code> <code>/sync-knowledge</code> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/sql-schema-sync</code></td>
+      <td><code>/sql-data</code>&times;3</td>
+      <td><code>/locator-drift-scan</code> <code>/sync</code> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/sync-knowledge</code></td>
+      <td><code>/sync</code>&times;5 · <code>/confluence-ingest</code>&times;3 · <code>/code-intelligence</code>&times;2 · <code>/sql-data</code>&times;1</td>
+      <td><code>/confluence-ingest</code> <code>/sync</code> <code>/sync-vault</code> <span class="note" style="margin:0">+ 4 _shared file(s)</span></td></tr>
+<tr><td><code>/locator-drift-scan</code></td>
+      <td><code>/playwright-workflow</code>&times;4 · <code>/sql-schema-sync</code>&times;2 · <code>/sync-skills</code><sup>g</sup>&times;2 · <code>/sync</code>&times;2 · <code>/playwright-cli</code>&times;1 · <code>/ruby-migration</code><sup>g</sup>&times;1 · <code>/sql-data</code>&times;1</td>
+      <td><code>/playwright-cli</code> <code>/sync</code> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/confluence-test-plan</code></td>
+      <td><code>/code-intelligence</code>&times;9 · <code>/ticket-intake</code>&times;6 · <code>/bug-gap-analysis</code>&times;5 · <code>/confluence-ingest</code>&times;5 · <code>/context-load</code>&times;4 · <code>/gap-analysis</code>&times;3 · <code>/health-check</code>&times;1</td>
+      <td><code>/confluence-ingest</code> <code>/ticket-intake</code> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/dsu</code></td>
+      <td><code>/health-check</code>&times;3 · <code>/comms-coach</code>&times;2 · <code>/ready-for-testing</code>&times;1 · <code>/three-amigos</code>&times;1 · <code>/sync-repos</code>&times;1</td>
+      <td><code>/comms-coach</code> <span class="note" style="margin:0">+ 4 _shared file(s)</span></td></tr>
+<tr><td><code>/spec-review</code></td>
+      <td><code>/ruby-migration</code><sup>g</sup>&times;4 · <code>/playwright-workflow</code>&times;2</td>
+      <td><code>/coverage-gap-scan</code> <code>/prune-duplicates</code> <code>/sync</code> <code>/technical-due-diligence</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/playwright-cli</code></td>
+      <td><code>/playwright</code>&times;3 · <code>/playwright-workflow</code>&times;1 · <code>/locator-drift-scan</code>&times;1 · <code>/health-check</code>&times;1 · <code>/pr-qa</code>&times;1</td>
+      <td><code>/locator-drift-scan</code> <code>/playwright</code> <code>/playwright-workflow</code> <code>/pr-qa</code> <code>/zephyr-reporter</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/sync-repos</code></td>
+      <td><code>/code-intelligence</code>&times;1 · <code>/ready-for-testing</code>&times;1 · <code>/prod-support</code>&times;1 · <code>/fix-me</code>&times;1</td>
+      <td><code>/coverage-gap-scan</code> <code>/dsu</code> <span class="note" style="margin:0">+ 4 _shared file(s)</span></td></tr>
+<tr><td><code>/zephyr-approve</code></td>
+      <td><code>/ready-for-testing</code>&times;3 · <code>/playwright-workflow</code>&times;2 · <code>/zephyr-reporter</code>&times;1</td>
+      <td><code>/ready-for-testing</code> <code>/zephyr-reporter</code> <span class="note" style="margin:0">+ 4 _shared file(s)</span></td></tr>
+<tr><td><code>/technical-due-diligence</code></td>
+      <td><code>/coverage-gap-scan</code>&times;2 · <code>/ready-for-testing</code>&times;2 · <code>/three-amigos</code>&times;2 · <code>/sql-data</code>&times;2 · <code>/elastic-drift</code>&times;1 · <code>/bug-gap-analysis</code>&times;1 · <code>/gap-analysis</code>&times;1 · <code>/spec-review</code>&times;1</td>
+      <td><code>/elastic-drift</code> <code>/prod-support</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/jira-reporter</code></td>
+      <td><span class="note" style="margin:0">— (references no other skill)</span></td>
+      <td><code>/api-test-workflow</code> <code>/playwright-workflow</code> <code>/qe-dashboard</code> <code>/ready-for-qa</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/coverage-gap-scan</code></td>
+      <td><code>/prune-duplicates</code>&times;6 · <code>/bug-gap-analysis</code>&times;3 · <code>/code-intelligence</code>&times;2 · <code>/gap-analysis</code>&times;2 · <code>/spec-review</code>&times;2 · <code>/ready-for-testing</code>&times;1 · <code>/ruby-migration</code><sup>g</sup>&times;1 · <code>/sync-repos</code>&times;1 · <code>/sync</code>&times;1</td>
+      <td><code>/app-insights-drift</code> <code>/technical-due-diligence</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/app-insights-diagnose</code></td>
+      <td><code>/sql-data</code>&times;4 · <code>/prod-support</code>&times;3 · <code>/app-insights-drift</code>&times;1 · <code>/bug-report</code>&times;1</td>
+      <td><code>/app-insights-drift</code> <code>/prod-support</code> <code>/trace-call-path</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/ticket-close</code></td>
+      <td><span class="note" style="margin:0">— (references no other skill)</span></td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 5 _shared file(s)</span></td></tr>
+<tr><td><code>/prune-duplicates</code></td>
+      <td><code>/ready-for-playwright</code>&times;2 · <code>/ready-for-testing</code>&times;2 · <code>/spec-review</code>&times;1</td>
+      <td><code>/coverage-gap-scan</code> <code>/sync</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/pict-scenarios</code></td>
+      <td><code>/pict-test-designer</code><sup>g</sup>&times;11 · <code>/playwright-workflow</code>&times;2 · <code>/zephyr-reporter</code>&times;2 · <code>/ready-for-playwright</code>&times;1 · <code>/ready-for-testing</code>&times;1 · <code>/three-amigos</code>&times;1</td>
+      <td><code>/ready-for-testing</code> <code>/three-amigos</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/run-and-fix</code></td>
+      <td><code>/ready-for-playwright</code>&times;10 · <code>/ready-for-qa</code>&times;2 · <code>/playwright-workflow</code>&times;1 · <code>/api-test-workflow</code>&times;1 · <code>/ready-for-testing</code>&times;1 · <code>/three-amigos</code>&times;1</td>
+      <td><code>/ready-for-playwright</code> <span class="note" style="margin:0">+ 3 _shared file(s)</span></td></tr>
+<tr><td><code>/fix-me</code></td>
+      <td><code>/fix-loop</code>&times;2 · <code>/zephyr-reporter</code>&times;1</td>
+      <td><code>/sync-repos</code> <span class="note" style="margin:0">+ 3 _shared file(s)</span></td></tr>
+<tr><td><code>/app-insights-drift</code></td>
+      <td><code>/coverage-gap-scan</code>&times;3 · <code>/app-insights-diagnose</code>&times;1 · <code>/prod-support</code>&times;1 · <code>/bug-report</code>&times;1</td>
+      <td><code>/app-insights-diagnose</code> <code>/prod-support</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/tc-review</code></td>
+      <td><code>/three-amigos</code>&times;1</td>
+      <td><code>/three-amigos</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/ac-quality</code></td>
+      <td><code>/three-amigos</code>&times;4</td>
+      <td><code>/three-amigos</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/three-amigos-questions</code></td>
+      <td><code>/context-load</code>&times;5 · <code>/three-amigos</code>&times;4 · <code>/ticket-intake</code>&times;2</td>
+      <td><code>/three-amigos</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/attach-screenshots</code></td>
+      <td><code>/zephyr-reporter</code>&times;1</td>
+      <td><code>/pr-qa</code> <code>/zephyr-reporter</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/resume</code></td>
+      <td><code>/ready-for-playwright</code>&times;3 · <code>/three-amigos</code>&times;3 · <code>/playwright-workflow</code>&times;2 · <code>/ready-for-testing</code>&times;2 · <code>/ticket-intake</code>&times;1 · <code>/ready-for-qa</code>&times;1 · <code>/sql-data</code>&times;1</td>
+      <td><code>/three-amigos</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/devils-advocate</code></td>
+      <td><code>/ready-for-testing</code>&times;3 · <code>/three-amigos</code>&times;3</td>
+      <td><code>/ready-for-testing</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/trace-call-path</code></td>
+      <td><code>/code-intelligence</code>&times;2 · <code>/app-insights-diagnose</code>&times;1 · <code>/prod-support</code>&times;1 · <code>/verify</code><sup>g</sup>&times;1</td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 3 _shared file(s)</span></td></tr>
+<tr><td><code>/comms-coach</code></td>
+      <td><code>/dsu</code>&times;2 · <code>/query-session-stats</code><sup>g</sup>&times;1 · <code>/sync-skills</code><sup>g</sup>&times;1 · <code>/review-pr</code>&times;1 · <code>/roast-me</code>&times;1 · <code>/codeburn</code><sup>g</sup>&times;1</td>
+      <td><code>/dsu</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/roast-me</code></td>
+      <td><code>/sync-skills</code><sup>g</sup>&times;1</td>
+      <td><code>/comms-coach</code> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/review-pr</code></td>
+      <td><span class="note" style="margin:0">— (references no other skill)</span></td>
+      <td><code>/comms-coach</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/triage-failures</code></td>
+      <td><code>/fix-loop</code>&times;8 · <code>/sql-data</code>&times;2 · <code>/prod-support</code>&times;1 · <code>/bug-report</code>&times;1 · <code>/staged-run</code>&times;1</td>
+      <td><code>/staged-run</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/deal-sheet-debug</code></td>
+      <td><span class="note" style="margin:0">— (references no other skill)</span></td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/playwright</code></td>
+      <td><code>/playwright-workflow</code>&times;3 · <code>/ready-for-playwright</code>&times;2 · <code>/playwright-cli</code>&times;1</td>
+      <td><code>/playwright-cli</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/pr-qa</code></td>
+      <td><code>/attach-screenshots</code>&times;4 · <code>/health-check</code>&times;4 · <code>/playwright-cli</code>&times;3 · <code>/sql-data</code>&times;1</td>
+      <td><code>/playwright-cli</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/ticket-finalize</code></td>
+      <td><code>/playwright-workflow</code>&times;1 · <code>/ready-for-testing</code>&times;1 · <code>/zephyr-reporter</code>&times;1 · <code>/three-amigos</code>&times;1</td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/auth0-regression</code></td>
+      <td><code>/prod-support</code>&times;2</td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 2 _shared file(s)</span></td></tr>
+<tr><td><code>/staged-run</code></td>
+      <td><code>/triage-failures</code>&times;5</td>
+      <td><code>/triage-failures</code> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/manual-migration</code></td>
+      <td><code>/ruby-migration</code><sup>g</sup>&times;5 · <code>/playwright-workflow</code>&times;3</td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/sync-vault</code></td>
+      <td><code>/sync-knowledge</code>&times;4 · <code>/sync</code>&times;1</td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/prod-support-poller</code></td>
+      <td><code>/prod-support</code>&times;8 · <code>/ready-for-testing</code>&times;1 · <code>/three-amigos</code>&times;1</td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/qe-dashboard</code></td>
+      <td><code>/zephyr-reporter</code>&times;3 · <code>/ready-for-testing</code>&times;1 · <code>/jira-reporter</code>&times;1 · <code>/three-amigos</code>&times;1 · <code>/bug-report</code>&times;1</td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+<tr><td><code>/regression-reporter</code></td>
+      <td><code>/playwright-workflow</code>&times;1 · <code>/bug-report</code>&times;1</td>
+      <td><em>none from skills</em> <span class="note" style="margin:0">+ 1 _shared file(s)</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><sup>g</sup> = target is a GLOBAL skill (defined in <code>~/.claude/skills</code>, out of project scope). "← referenced by" lists only skill-folder sources; <code>_shared</code> doc sources are summarized as a count.</p>
+
+  <h2 class="section">Coupling risk read (TDD-fair)</h2>
+  <div class="tier warn">
+    <h3><span class="badge">change-carefully</span> High blast radius — top incoming</h3>
+    <p>A contract or name change to any of these ripples across many files. Treat as the ecosystem's load-bearing walls.</p>
+    <ul><li><code>/ready-for-testing</code> — 40 files / 103 mentions</li><li><code>/three-amigos</code> — 34 files / 80 mentions (also a user entry point)</li><li><code>/code-intelligence</code> — 28 files / 57 mentions</li><li><code>/zephyr-reporter</code> — 25 files / 58 mentions</li><li><code>/playwright-workflow</code> — 23 files / 56 mentions</li><li><code>/prod-support</code> — 21 files / 40 mentions (also a user entry point)</li><li><code>/sql-data</code> — 20 files / 43 mentions</li><li><code>/ready-for-playwright</code> — 17 files / 70 mentions</li></ul>
+  </div>
+  <div class="tier ok">
+    <h3><span class="badge">stable</span> Pure sinks — 8 leaf workers</h3>
+    <p>Referenced by others but reference no skill themselves — the stable bottom layer (workers/reporters). Safe to change internals without ecosystem ripple.</p>
+    <ul><li><code>/bug-report</code> · <code>/code-intelligence</code> · <code>/deal-sheet-debug</code> · <code>/gap-analysis</code> · <code>/jira-reporter</code> · <code>/kibana</code> · <code>/review-pr</code> · <code>/ticket-close</code></li></ul>
+  </div>
+  <div class="tier muted">
+    <h3><span class="badge">low-Sev</span> Single-referencer edges &amp; deprecated redirects</h3>
+    <ul>
+      <li><b>Single incoming reference (5):</b> <code>/manual-migration</code> · <code>/sync-vault</code> · <code>/prod-support-poller</code> · <code>/qe-dashboard</code> · <code>/regression-reporter</code> — each has exactly one structural referencer. All are legitimate (poller / dashboard / reporter), but a single edge means one doc edit can silently strand them. <b>Sev: Low.</b></li>
+      <li><b>Deprecated-but-still-referenced:</b> <code>/run-and-fix</code> (4 incoming, 14 historical runs → redirects to <code>/ready-for-playwright</code>) and <code>/sync-vault</code> (→ <code>/sync-knowledge</code>) are deprecated yet still referenced — expected for redirect stubs, but the references should be audited so they're pointer-only, not live routing. <b>Sev: Low.</b></li>
+      <li><b>High incoming but 0 logged runs:</b> <code>/code-intelligence</code> · <code>/prod-support</code> · <code>/sql-data</code> · <code>/sync</code> · <code>/bug-report</code> · <code>/bug-gap-analysis</code> · <code>/gap-analysis</code> · <code>/elastic-drift</code> · <code>/health-check</code> · <code>/context-load</code> · <code>/ticket-intake</code> · <code>/kibana</code> · <code>/confluence-ingest</code> · <code>/sql-schema-sync</code> · <code>/sync-knowledge</code> — heavily referenced yet zero rows as the run-command in the ledgers. For delegated sub-skills (<code>/code-intelligence</code>, <code>/sql-data</code>, <code>/context-load</code>, <code>/health-check</code>) that is expected — an orchestrator invokes them inside its own run, so they earn no separate ledger row. For entry points like <code>/prod-support</code> it means runs were not individually ledgered in this window (its work surfaces under <code>/session-review</code> rows instead). Either way: referenced and working, not unused. <b>Informational.</b></li>
+    </ul>
+  </div>
+
+  <h2 class="section">Side table · references to GLOBAL skills (out of project scope)</h2>
+  <div class="tablecard">
+    <table class="tight">
+      <thead><tr><th>Global skill</th><th class="num">Files</th><th class="num">Mentions</th></tr></thead>
+      <tbody>
+<tr><td><code>/ruby-migration</code></td><td class="num">7</td><td class="num">19</td></tr>
+<tr><td><code>/sync-skills</code></td><td class="num">7</td><td class="num">15</td></tr>
+<tr><td><code>/pict-test-designer</code></td><td class="num">1</td><td class="num">11</td></tr>
+<tr><td><code>/session-review</code></td><td class="num">4</td><td class="num">10</td></tr>
+<tr><td><code>/codeburn</code></td><td class="num">3</td><td class="num">9</td></tr>
+<tr><td><code>/condense-claude-md</code></td><td class="num">2</td><td class="num">8</td></tr>
+<tr><td><code>/sync-memory</code></td><td class="num">2</td><td class="num">7</td></tr>
+<tr><td><code>/skill-creator</code></td><td class="num">3</td><td class="num">5</td></tr>
+<tr><td><code>/todo</code></td><td class="num">2</td><td class="num">2</td></tr>
+<tr><td><code>/verify</code></td><td class="num">2</td><td class="num">2</td></tr>
+<tr><td><code>/query-session-stats</code></td><td class="num">1</td><td class="num">1</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">These are referenced from project files but defined in <code>~/.claude/skills</code> (no <code>skill.md</code> in scope) — listed separately, not in the per-skill table above.</p>
+
+  <h2 class="section">Side table · ledger run-counts (excluded from reference counts)</h2>
+  <div class="tablecard">
+    <table class="tight">
+      <thead><tr><th>Skill</th><th class="num">Runs (logged)</th><th class="num">Incoming files</th></tr></thead>
+      <tbody>
+<tr><td><code>/ready-for-testing</code></td><td class="num">46</td><td class="num">40</td></tr>
+<tr><td><code>/three-amigos</code></td><td class="num">44</td><td class="num">34</td></tr>
+<tr><td><code>/zephyr-reporter</code></td><td class="num">31</td><td class="num">25</td></tr>
+<tr><td><code>/fix-loop</code></td><td class="num">26</td><td class="num">8</td></tr>
+<tr><td><code>/ready-for-qa</code></td><td class="num">26</td><td class="num">8</td></tr>
+<tr><td><code>/ready-for-playwright</code></td><td class="num">25</td><td class="num">17</td></tr>
+<tr><td><code>/playwright-workflow</code></td><td class="num">16</td><td class="num">23</td></tr>
+<tr><td><code>/run-and-fix</code></td><td class="num">14</td><td class="num">4</td></tr>
+<tr><td><code>/zephyr-approve</code></td><td class="num">12</td><td class="num">6</td></tr>
+<tr><td><code>/technical-due-diligence</code></td><td class="num">9</td><td class="num">6</td></tr>
+<tr><td><code>/triage-failures</code></td><td class="num">9</td><td class="num">2</td></tr>
+<tr><td><code>/api-test-workflow</code></td><td class="num">7</td><td class="num">7</td></tr>
+<tr><td><code>/ticket-close</code></td><td class="num">6</td><td class="num">5</td></tr>
+<tr><td><code>/fix-me</code></td><td class="num">3</td><td class="num">4</td></tr>
+<tr><td><code>/coverage-gap-scan</code></td><td class="num">2</td><td class="num">5</td></tr>
+<tr><td><code>/jira-reporter</code></td><td class="num">2</td><td class="num">5</td></tr>
+<tr><td><code>/locator-drift-scan</code></td><td class="num">2</td><td class="num">7</td></tr>
+<tr><td><code>/roast-me</code></td><td class="num">2</td><td class="num">3</td></tr>
+<tr><td><code>/confluence-test-plan</code></td><td class="num">1</td><td class="num">7</td></tr>
+<tr><td><code>/prune-duplicates</code></td><td class="num">1</td><td class="num">4</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Per-skill execution counts parsed from <code>skill-ledger-robert.md</code> + <code>skill-ledger-jess.md</code> (approx: first skill-ref per ledger row). Shown for cross-reference only — a skill with high incoming + 0 runs is a delegated sub-skill, not an unused one.</p>
+
+  <footer class="rep">Technical Due Diligence · reference-coupling census · generated 2026-06-24 · read-only, no source mutated · 62 skills / 253 files</footer>
+
+</div>
+</body>
+</html>

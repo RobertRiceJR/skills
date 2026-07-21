@@ -1,0 +1,37 @@
+{
+  "_comment": "SSOT for the duplication-drift judge. Reuses the shared LLM-judge plumbing (scripts/llm-judge/lib.ts via buildCasesFor + parseResults) and its OWN promptfooconfig.yaml grader frame (doc-reviewer persona, not the Playwright one). Each item is a CANONICAL _shared source block + the INLINE copy of it that lives inside a skill (the self-containment rule duplicates shared context on purpose). HIGH score = the copy is still in sync; LOW = it went stale / contradicts canonical. A terser or partial restatement is FINE — only factual contradictions and material stale omissions are violations. votes: DD1 VOTED x3 (apex), collapsed to mean. Calibrate before trusting (judges/dup-drift/golden/labels.jsonl → npm run judge:dup-calibrate).",
+  "dimensions": [
+    {
+      "id": "DD1",
+      "appliesTo": "both",
+      "name": "Factual consistency",
+      "weight": 3,
+      "threshold": 0.8,
+      "votes": 3,
+      "criteria": "Does EVERY concrete claim the INLINE copy makes still agree with the CANONICAL source — file paths, skill/command names, IDs, numbers, rules, flags, ordering, status (active/deprecated)? Score HIGH if the inline copy is consistent with canonical on every fact it restates (being TERSER or omitting detail is fine — that is not a contradiction). Score LOW if the inline copy asserts something the canonical now contradicts: a path that moved, a skill/file that was renamed or retired, a number/threshold/rule that changed, a step that was added or removed, or a convention the canonical reversed. A copy that confidently states a now-false fact is stale drift."
+    },
+    {
+      "id": "DD2",
+      "appliesTo": "both",
+      "name": "Currency of coverage",
+      "weight": 2,
+      "threshold": 0.7,
+      "votes": 1,
+      "criteria": "Does the INLINE copy reflect the CANONICAL source's CURRENT shape on the points it claims to cover, or is it missing a MATERIAL recent change the skill relies on (a new mandatory step, a new required field/flag, a safety rule the canonical added)? Score HIGH when the inline copy, though possibly partial, is not missing anything the skill needs to act correctly. Score LOW when the canonical has a material element (one that changes what the skill should DO) that the inline copy omits in a way that would make the skill act on an outdated picture. Ignore purely cosmetic or non-actionable omissions."
+    },
+    {
+      "id": "DD3",
+      "appliesTo": "both",
+      "name": "Low carry-forward risk",
+      "weight": 1,
+      "threshold": 0.7,
+      "votes": 1,
+      "criteria": "If the inline copy DOES diverge, how risky is it to leave as-is? Score HIGH when any divergence is harmless (cosmetic, illustrative, or clearly-labelled-historical) so carrying it forward changes no behavior. Score LOW when acting on the divergent inline copy would cause a wrong action: reading a moved file (silent miss), invoking a retired skill, applying a superseded rule, or using a stale ID/threshold. This is the 'does the drift actually bite' dimension."
+    }
+  ],
+  "_flag_note": "Flag a pair for human review when DD1 (factual consistency) falls below intentFloor OR the weighted confidence falls below confidenceFloor. Floors are PROVISIONAL until judge:dup-calibrate runs against a labelled golden set and writes calibration-stamp.json (the /sync gate). Like the spec judge, expect the grader to sit a little below human; tune the floors to the calibrated distribution, not to 0.5 by default.",
+  "flag": {
+    "intentFloor": 0.6,
+    "confidenceFloor": 0.6
+  }
+}

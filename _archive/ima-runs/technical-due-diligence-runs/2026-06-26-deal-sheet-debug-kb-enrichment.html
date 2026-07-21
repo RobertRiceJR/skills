@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-024
+date: 2026-06-26
+scope: deal-sheet-debug skill knowledge base — completeness & enrichment due diligence
+jira: [LFA-1, CI-7733, CI-7513]
+severity: { critical: 2, high: 6, medium: 5, low: 2 }
+status: complete
+addendum: confluence-sweep 2026-06-26 (roadmap extended R8 to R13; F7/R6 de-risked; deal-sheet / deal-scrape split adopted; severity tally unchanged)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-024 · deal-sheet-debug Knowledge Base — Due Diligence & Enrichment Roadmap</title>
+  <style>
+:root{
+  --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+  --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#ffffff;
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+header.report h1{margin:0 0 8px;font-size:29px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+header.report p.sub{margin:0;font-size:15px;opacity:.93;max-width:820px;}
+header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+.legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+.legend .item .k{font-weight:750;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.legend .item .k .dot{width:10px;height:10px;border-radius:50%;}
+.legend .item .d{font-size:12.5px;color:var(--muted);line-height:1.45;}
+.tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead th{background:#eef1ee;text-align:left;padding:13px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);white-space:nowrap;}
+thead th.num{text-align:center;}
+tbody td{padding:12px 14px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f6faf4;}
+td.num{text-align:center;}
+.tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:14px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.tier h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);}
+.tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+.tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+.tier ul{margin:6px 0 0;padding-left:18px;}
+.tier li{margin:6px 0;font-size:13.5px;}
+.tier.ok{border-left-color:var(--accent);} .tier.ok .badge{background:var(--accent);}
+.tier.warn{border-left-color:var(--accent-3);} .tier.warn .badge{background:var(--accent-3);}
+.tier.info{border-left-color:var(--accent-2);} .tier.info .badge{background:var(--accent-2);}
+.tier.muted{border-left-color:var(--muted);} .tier.muted .badge{background:var(--muted);}
+.tier.crit{border-left-color:var(--s1);} .tier.crit .badge{background:var(--s1);}
+.callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+.callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:6px;}
+.callout p{margin:0;font-size:14.5px;line-height:1.55;}
+.callout p + p{margin-top:9px;}
+.callout ol{margin:6px 0 0;padding-left:20px;}
+.callout li{font-size:14px;margin:8px 0;line-height:1.5;}
+.note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.88em;font-family:"SF Mono",Consolas,monospace;}
+pre{background:#eef1ee;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12.5px;overflow-x:auto;font-family:"SF Mono",Consolas,monospace;line-height:1.45;margin:8px 0;white-space:pre-wrap;}
+.fk{font-size:12.5px;color:var(--muted);}
+.fk b{color:var(--ink);}
+footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+.lozenge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.lozenge.green{background:#e3f1dc;color:#2f6e1f;} .lozenge.blue{background:#dbe9f3;color:#1f5781;}
+.lozenge.amber{background:#f7ebd9;color:#8a5a14;} .lozenge.gray{background:var(--line);color:var(--muted);}
+@media print{body{background:#fff;} .wrap{padding:0;} .tablecard,.tier,.legend .item{box-shadow:none;} header.report{box-shadow:none;}}
+@media (max-width:720px){.legend{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE · TDD-024</p>
+    <h1>The <code style="background:rgba(255,255,255,.16);color:#fff">deal-sheet-debug</code> Knowledge Base — Completeness Audit &amp; Enrichment Roadmap</h1>
+    <p class="sub">An adversarial, evidence-first review of what the skill's reference KB actually knows versus the system it claims to debug — and a ranked plan to ingest the Deal Sheet pricing pipeline (Confluence) and the Load Following Automation hedge program (LFA-1) into it.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice / IGS QE</span>
+      <span><b>Date:</b> 2026-06-26</span>
+      <span><b>Scope:</b> deal-sheet-debug/knowledge-base (11 files) + source graphs</span>
+      <span><b>Related:</b> LFA-1, CI-7733, CI-7513</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>2 Critical</div><div class="d">Skill confidently produces a wrong RCA, or is silently blind, on a money/contract path.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>6 High</div><div class="d">A common, real diagnosis class is missed, mis-explained, or unguarded.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>5 Medium</div><div class="d">Overstated confidence or coupling that makes the KB risky to trust/extend.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>2 Low</div><div class="d">Maintainability / retrieval debt that compounds as the KB grows.</div></div>
+  </div>
+
+  <!-- ============ VERDICT ============ -->
+  <div class="callout">
+    <div class="lbl">Verdict — the three concerns that most change the picture</div>
+    <p>The KB is genuinely good at what it has seen: deep, correct, multi-hop cell tracing of <b>one</b> workbook. The risk is that it presents that one sample as if it were the whole system. An acquirer of this skill inherits three things:</p>
+    <ol>
+      <li><b><a href="#f1">One Gas/Choice/Live workbook is presented as "the deal sheet" (F1, Critical).</a></b> Every structural fact — 50 sheets, 69 DNT columns, the VBA map, the unwind engine — was confirmed against a single file. The real system has <b>6 paths</b> (Power/Electric · Choice Gas · GTS Gas, each × Live/WIP). The KB documents 1 of 6 and never says so.</li>
+      <li><b><a href="#f7">The skill can't tell which path a workbook is, and has no guardrail (F7 Critical + F9 High).</a></b> It can only confirm Electric-vs-Gas from the file; GTS-vs-Choice is unresolved. So on an off-sample file it applies the wrong structural map at full confidence rather than caveating.</li>
+      <li><b><a href="#f14">It is blind to the in-flight LFA hedge / load-following re-architecture (F14 High) and mis-defines its own core term (F8 High).</a></b> "DNT" is documented as a CRM system; it is the gas <em>Demand Normalization Tool</em> add-in. Meanwhile an entire emerging bug class — Commodity Hedge deals, the Hedges scrape, backing sheets — is absent.</li>
+    </ol>
+    <p style="margin-top:11px"><b>Bottom line:</b> the cheapest, highest-leverage fix is not more cell tracing — it is <b>(a)</b> capturing the other 5 paths + a product-type/version detector, <b>(b)</b> a one-file upstream-pipeline node from Confluence, and <b>(c)</b> a hedge/load-following node from LFA. Those three close both Criticals and four of six Highs. Full roadmap below.</p>
+    <p style="margin-top:11px"><b>Addendum (2026-06-26):</b> a follow-up Confluence sweep (~60 pages across 6 spaces) <b>confirmed all 15 findings</b>, <b>de-risked two</b> (F7 path-detection + the "Current vs Future" definition), and extended the roadmap to <b>R13</b>. See the <a href="#addendum">Addendum</a> below; the severity tally above is unchanged.</p>
+  </div>
+
+  <!-- ============ SCOPE & PLAN ============ -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier info">
+    <h3><span class="badge">PLAN</span> Instantiated dispatch — TDD-024</h3>
+    <p class="fk"><b>Adaptation note (read first):</b> The target under review is a <b>knowledge base</b>, not application code. The seven TDD dimensions are applied to KB <em>trustworthiness &amp; completeness</em>: "Evidence" cites the KB markdown <code>file:line</code> plus the authoritative source (Jira/Confluence) that confirms or fills the gap; "blast radius" = how badly the skill mis-diagnoses a real deal sheet without the knowledge. Every finding still quotes the evidence on both sides.</p>
+    <ul>
+      <li><b>Target:</b> <code>.claude/skills/deal-sheet-debug/</code> — <code>skill.md</code> + <code>knowledge-base/00–10</code> (11 files, all read in full).</li>
+      <li><b>Source graphs assessed:</b> Confluence "Deal Sheet \ Pricing Sheet" hub <code>1121943672</code> + 11 linked/descendant pages (read via read-only recon agent); Jira initiative <b>LFA-1</b> — 1 initiative, 14 epics, 157 child issues enumerated, 11 read in full (recon agent).</li>
+      <li><b>Dimensions:</b> all 7 in scope.</li>
+      <li><b>Run shape:</b> inline synthesis; source reconnaissance fanned out to 2 read-only general-purpose subagents (Confluence graph · LFA tree), no <code>worktree</code> isolation, no writes by subagents.</li>
+      <li><b>Explicit scope-down (no silent caps):</b> the <em>other 5 workbook files</em> (Electric/GTS, Live/WIP) were <b>not</b> opened — they live on the fileserver and capturing them is roadmap item R1, not this audit. Two named enrichment sources were identified but <b>not yet ingested</b>: the LFA "Load Following Conceptual Design" page (Confluence <code>5227577347</code>) and the <code>IMA.PendingDealSeeding/README.md</code> deal-type matrix (CONTRACT-848). Findings about those are about their <em>absence from the KB</em>, not their contents.</li>
+    </ul>
+  </div>
+
+  <!-- ============ PHASE 1 SURFACE MAP ============ -->
+  <h2 class="section">Phase 1 — Surface Map (what the KB actually is)</h2>
+  <div class="tier muted">
+    <h3><span class="badge">MAP</span> Three knowledge layers — the KB covers only the bottom one</h3>
+    <p>The deal sheet sits in the middle of a pipeline. The KB is a bottom-up artifact and is structurally cut off from the layers above and below it:</p>
+    <ul>
+      <li><b>UPSTREAM (business pipeline — Confluence, owned by Sales Optimization / Supply):</b> usage retrieved &amp; weather-normalized via three Excel add-ins (<b>Usage Retriever</b> → raw usage + NITS/CAP tags; <b>DNT</b> → gas linear-regression normalization; <b>MMT</b> → electric forecasts) → <b>Products</b> offered at price points → Sales Rep adds <b>margin</b> → <b>Quote</b> to a <b>Company</b>. <span class="lozenge gray">KB coverage: none</span></li>
+      <li><b>THE WORKBOOK (the .xlsm itself):</b> 50 sheets, named-range graph, DNT input tables, VBA-written cells, the multi-LEN pipeline, the unwind/liquidated-damages engine, the CRM export bridge. <span class="lozenge green">KB coverage: deep — but for 1 of 6 paths</span></li>
+      <li><b>DOWNSTREAM (LFA program — Jira LFA-1, In&nbsp;Progress):</b> the deal sheet is scraped into <code>Pending.Hedges</code> (CI-7513), feeds Commodity-Hedge deal processing (LFA-2), Position Management (LFA-3), Backing Sheets (LFA-6), Rating/Invoicing — gated by the <code>EnableLoadFollowing</code> flag. <span class="lozenge gray">KB coverage: none</span></li>
+    </ul>
+    <p style="margin-top:10px"><b>Change-radius map (highest blast radius first):</b> <code>01-workbook-architecture.md</code> and <code>02-dnt-field-mappings.md</code> are the load-bearing nodes — Phases 2–5 of the skill, every bug pattern, and both fix recipes resolve through them. Any error or single-sample bias there radiates into every RCA. <code>03-bug-patterns.md</code> is the next-highest: it is matched <em>before</em> deep investigation (skill Phase 2/5), so a weak pattern short-circuits evidence gathering. <code>09</code>/<code>10</code> are deep but narrow leaves.</p>
+  </div>
+
+  <!-- ============ DIMENSION 1 ============ -->
+  <h2 class="section">Dimension 1 — KB coverage architecture, coupling &amp; boundaries</h2>
+
+  <div class="tier crit" id="f1">
+    <h3><span class="badge">CRITICAL</span> F1 · A single Gas/Choice/Live workbook is generalized to "the deal sheet"</h3>
+    <p class="fk"><b>Evidence:</b> <code>knowledge-base/01-workbook-architecture.md:3</code></p>
+    <pre>## Sheet Inventory (confirmed in 5-1-26 ADESACARVANA DUKE Gas.xlsm)</pre>
+    <p class="fk">Every structural file (01 sheet inventory, 02's 69 DNT columns, 04 multi-LEN, 05 VBA map, 09 unwind) is "confirmed in" that one file. The authoritative product taxonomy says there are more — Confluence "Deal Sheet 101" (<code>4732780548</code>, the newest page, May 2025):</p>
+    <pre>"There are three primary commodity deal sheets: power, choice gas, and GTS gas...
+Power pricing is at the account level... Gas pricing is simpler... done at the contract level."</pre>
+    <p class="fk">CI-7733 then multiplies those 3 by Live / WIP config → <b>6 paths</b>. Project memory already records this ("6 deal sheets = 3 product types × Live/WIP"). The captured file is one cell: <b>Gas · Choice · Live</b>.</p>
+    <p><b>Why it matters:</b> Power is priced at the <em>account</em> level with a master-override and a different add-in (MMT, not DNT); GTS adds tolerance + dual billing. Their sheet sets, named ranges and VBA differ. The skill will trace an Electric or GTS workbook against a Gas/Choice map and emit a confident, wrong RCA on a pricing/contract artifact.</p>
+    <p class="fk"><b>Reach:</b> radiates into every Phase 3–6 trace and every pattern match. <b>Severity rationale:</b> High → <b>Critical</b> (money path: deal pricing &amp; contract generation). <b>Remediation:</b> R1 — capture one Live + one WIP file per product type; refactor 01/02 into a path-keyed matrix with per-path deltas.</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> F2 · No version / Live-vs-WIP axis — and drift lands in WIP first</h3>
+    <p class="fk"><b>Evidence:</b> The KB never stamps which workbook <em>version</em> it describes. Deal Sheet 101 notes the sheets get "frequent VBA/formula updates with manual regression testing," and project memory records that <b>WIP is the in-flight next version → structural drift lands there first</b> (CI-7733). The KB's sheet inventory is a flat snapshot with no revision marker.</p>
+    <p><b>Why it matters:</b> a debugger that can't distinguish a Live sheet from its WIP successor will mis-attribute a brand-new (WIP-only) bug to "the deal sheet" generally, or miss that a Live sheet lacks a fix already present in WIP. The most volatile structural changes are exactly the ones it is blind to.</p>
+    <p class="fk"><b>Reach:</b> 01, 03, 05. <b>Severity rationale:</b> High (compounds F1; this is the version axis of the same blind spot). <b>Remediation:</b> R1 — add a Live/WIP column to the path matrix; stamp every structural claim with the file + capture date it was confirmed against.</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> F3 · Closed cell-graph — no edge to the upstream pipeline or downstream consumers</h3>
+    <p class="fk"><b>Evidence:</b> The KB traces a symptom cell down to "a DNT table cell — data comes from the DNT API" (<code>skill.md:316</code>) and stops. It has no node describing where that data originates (Usage Retriever / DNT add-in / MMT) or where the workbook's output goes (the <code>Pending.Hedges</code> scrape, backing sheets). The Confluence hub states the whole chain verbatim:</p>
+    <pre>"retrieve usage and then weather normalize the usage. This weather normalized usage is
+then used to offer Products... that Sales Representatives add margin to... to provide Quotes"</pre>
+    <p><b>Why it matters:</b> many real bugs are <em>boundary</em> bugs — wrong normalized volume (DNT/MMT), a missing tag (Usage Retriever), a bad scrape into Pending.Hedges. A KB that ends at the workbook edge can localize the symptom cell but cannot reach the actual root cause one hop upstream/downstream.</p>
+    <p class="fk"><b>Reach:</b> caps the ceiling of every RCA. <b>Severity rationale:</b> High. <b>Remediation:</b> R2 (upstream node) + R3 (downstream hedge node).</p>
+  </div>
+
+  <!-- ============ DIMENSION 2 ============ -->
+  <h2 class="section">Dimension 2 — Evidence coverage &amp; verification gaps</h2>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> F4 · Speculative patterns carry the same authority as verified ones</h3>
+    <p class="fk"><b>Evidence:</b> <code>03-bug-patterns.md</code> — Patterns 004, 005, 006 each open with:</p>
+    <pre>**First seen**: (not yet observed — documented proactively)</pre>
+    <p class="fk">Pattern 003 (<code>:92</code>): "Risk identified, not yet observed in production." Only Patterns 001 and 002 are evidenced from a real file — yet all six share the identical <code>Pattern NNN</code> structure with a "Fix" section, and the file header (<code>:4</code>) tells the skill to "Check these FIRST... a matching fingerprint saves hours."</p>
+    <p><b>Why it matters:</b> the skill matches symptoms against these <em>before</em> deep investigation. A symptom that resembles a never-observed pattern can be assigned a root cause that has never actually been seen — the KB-equivalent of an assertion-free test that always "passes."</p>
+    <p class="fk"><b>Reach:</b> Phase 2 + Phase 5 short-circuit. <b>Severity rationale:</b> High (drives the diagnostic engine off unverified data). <b>Remediation:</b> R5 — tag every pattern <code>VERIFIED&nbsp;(file,&nbsp;date)</code> vs <code>HYPOTHESIZED</code>; require fresh evidence before a hypothesized pattern can be asserted as the root cause.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F5 · Recipe "confirmed" header contradicts its own body</h3>
+    <p class="fk"><b>Evidence:</b> <code>07-fix-recipes.md:2</code> vs <code>:12</code></p>
+    <pre>:2   "Every recipe has been confirmed to address the root cause — not just the symptom."
+:12  "**First applied**: Not yet applied as of 2026-05-01 (designed but pending user approval)"</pre>
+    <p><b>Why it matters:</b> the only recipe in the file was never applied, yet the file's preamble asserts blanket confirmation. A future operator (or the skill in Phase 7) trusts "confirmed" and applies an unvalidated formula change to a live pricing workbook.</p>
+    <p class="fk"><b>Reach:</b> Phase 7 fix application. <b>Severity rationale:</b> Medium (gated by user approval today, but the claim is false). <b>Remediation:</b> R5 — change the header to "designed; confirmation status per-recipe"; carry an explicit <code>Applied: yes/no</code> field.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F6 · The unwind engine spec is deep but unvalidated against a real unwind</h3>
+    <p class="fk"><b>Evidence:</b> <code>09-unwind-calculation-model.md:154</code></p>
+    <pre>"**`I33:I38` are blank in a saved non-unwind workbook.** They evaluate live; the parser
+sees no value... Read the **formulas**, not the cached values."</pre>
+    <p><b>Why it matters:</b> the liquidated-damages math (the heart of an unwind) was reverse-engineered from formulas in a snapshot where those cells never executed. It is a strong spec, but no actual unwound deal has confirmed the outputs — and it inherits F1's single-sample bias (Gas/Choice only). Liquidated damages are an invoiced dollar figure.</p>
+    <p class="fk"><b>Reach:</b> any unwind RCA / the "unwind calculator" reimplementation. <b>Severity rationale:</b> Medium (well-flagged in the doc itself; blast radius is money but usage is narrow). <b>Remediation:</b> R1/R5 — validate against one captured executed-unwind workbook; mark outputs <code>SPEC — unverified</code> until then.</p>
+  </div>
+
+  <!-- ============ DIMENSION 3 ============ -->
+  <h2 class="section">Dimension 3 — Source-of-truth &amp; trust boundaries</h2>
+
+  <div class="tier crit" id="f7">
+    <h3><span class="badge">CRITICAL</span> F7 · The skill trusts its single-sample map for files whose type it cannot confirm</h3>
+    <p class="fk"><b>Evidence:</b> <code>10-crm-deal-export-bridge.md</code> §4 — the in-file product marker only resolves Electric vs Gas:</p>
+    <pre>Electric (Power/MMT) → is_Mmt_Excel_Document   (confirmed)
+Gas (Choice/DNT, and possibly GTS too) → is_GasDnt_Excel_Document
+Gas — GTS / "Traditional" → No distinct marker observed.
+"...the GTS-vs-Choice gas sub-split is still unconfirmed from the file"</pre>
+    <p><b>Why it matters:</b> the skill's entire structural map assumes the Choice-gas layout, but it <em>cannot reliably determine</em> whether a given workbook is Choice or GTS — and has no detection step at all for Electric before it starts tracing. It will silently apply the wrong sheet/range/VBA map to 2 of the 3 product families, on contract and pricing cells, with no signal that it is out of sample.</p>
+    <p class="fk"><b>Reach:</b> the entry to every investigation. <b>Severity rationale:</b> High → <b>Critical</b> (wrong map on a money/contract path). <b>Remediation:</b> R6 — a Phase-0 product-type/version detector (read <code>is_*_Excel_Document</code>, sheet fingerprints) that selects the correct path map or refuses with a caveat; resolve GTS-vs-Choice via a known-GTS sample (closes the D-2 open item).</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> F8 · The KB mis-defines DNT — its single most-referenced term</h3>
+    <p class="fk"><b>Evidence:</b> <code>02-dnt-field-mappings.md:6</code> says:</p>
+    <pre>"DNT (Deal Not Template / DNT system) is the external CRM/deal management system
+that populates IMA sheets via drag-and-drop or API import."</pre>
+    <p class="fk">The authoritative Confluence definition (page <code>1253048354</code>, "DNT — Demand Normalization Tool"):</p>
+    <pre>"an Excel Addin... used by the Gas [Deal Sheet] to take in usage (demand) and
+weather normalize it using a linear regression forecasting algorithm."</pre>
+    <p><b>Why it matters:</b> "DNT" prefixes the named ranges and tables the entire KB is organized around (<code>DNT_SalesInput_*</code>, <code>DNT_INPUT_*</code>). The KB's foundational acronym is wrong — it is a gas weather-normalization <em>add-in</em>, not a CRM. Any RCA that explains "where DNT data comes from" to a user will be both incorrect and credibility-damaging, and it conflates the add-in with the actual CRM/IMA export path.</p>
+    <p class="fk"><b>Reach:</b> the conceptual frame of 02, 04, 05. <b>Severity rationale:</b> High (a load-bearing definitional error). <b>Remediation:</b> R2 — correct the definition; separate "DNT the add-in" (normalization) from "IMA export / CRM" (provenance, already in file 10).</p>
+  </div>
+
+  <!-- ============ DIMENSION 4 ============ -->
+  <h2 class="section">Dimension 4 — Staleness &amp; drift failure modes</h2>
+
+  <div class="tier warn" id="f9">
+    <h3><span class="badge">HIGH</span> F9 · No out-of-sample guardrail — off-path inputs fail silently, not loudly</h3>
+    <p class="fk"><b>Evidence:</b> <code>skill.md:40–61</code> (Phase 1 "load the KB") → <code>skill.md:64</code> (Phase 2 "triage the symptom") proceed straight into tracing. There is no step that detects the workbook is a path/version the KB never captured, and no instruction to caveat or stop. Combined with F7 (can't ID the path), the failure mode is a confident wrong answer.</p>
+    <p><b>Why it matters:</b> the worst outcome for a diagnostic tool is not "I don't know" — it is "here is the root cause" when it is guessing off the wrong map. Today the skill has no way to say "this is an Electric/GTS/WIP sheet outside my verified sample; treat structural claims as unconfirmed."</p>
+    <p class="fk"><b>Reach:</b> every run on a non-Gas/Choice/Live file. <b>Severity rationale:</b> High. <b>Remediation:</b> R6 — pair the F7 detector with an explicit guardrail: if path/version ∉ captured set, emit a banner and downgrade structural assertions to hypotheses.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F10 · External-workbook links are detectable but not catalogued per path</h3>
+    <p class="fk"><b>Evidence:</b> <code>09:156</code> flags <code>'[3]Injection Sched'</code> as an external workbook; <code>skill.md:639</code> / Pattern 006 cover <code>[1]UtilityControls</code>, <code>CreditCheck NEW</code>, <code>DealSubmitListsNEW</code> generically. There is no inventory of <em>which</em> external workbooks each path expects, with paths and the fields they supply.</p>
+    <p><b>Why it matters:</b> Pattern 006 (broken external link → stale cached value) is one of the more plausible real bugs, but without a per-path catalog the skill can detect "a link is broken" yet not state what the value <em>should</em> be or where the source lives — so the RCA stops at "external link, possibly stale."</p>
+    <p class="fk"><b>Reach:</b> Pattern 006 RCAs. <b>Severity rationale:</b> Medium. <b>Remediation:</b> R7 — an external-workbook registry keyed by path (file, fields supplied, owner).</p>
+  </div>
+
+  <!-- ============ DIMENSION 5 ============ -->
+  <h2 class="section">Dimension 5 — KB maintainability</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F11 · Strict append-only + no provenance discipline lets wrong facts calcify</h3>
+    <p class="fk"><b>Evidence:</b> <code>skill.md:603</code> and <code>00-index.md</code>:</p>
+    <pre>skill.md:603  "always append — never delete existing entries."
+00-index.md   "Never delete existing entries — append only, preserve history"</pre>
+    <p><b>Why it matters:</b> the append-only rule is sound for <em>history</em>, but applied to <em>facts</em> it means a definitional error (F8) or a single-sample over-claim (F1) can never be corrected in place — only buried under newer entries. There is no per-claim provenance line (source, date confirmed, confidence) to let a reader tell verified fact from old guess.</p>
+    <p class="fk"><b>Reach:</b> whole KB, worsens over time. <b>Severity rationale:</b> Medium. <b>Remediation:</b> R5 — permit factual <em>correction</em> (with a changelog note) while keeping session history append-only; add a one-line <code>Source / Confirmed / Confidence</code> stamp convention (the <code>09</code>/<code>10</code> header style, applied everywhere).</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> F12 · No single canonical "6 paths" taxonomy inside the KB</h3>
+    <p class="fk"><b>Evidence:</b> the product/path taxonomy is scattered — partially in <code>10-crm-deal-export-bridge.md</code> §4, partially in project memory, partially in CI-7733's ticket.md, and the foundational <code>01</code> doesn't mention it at all. No one KB file answers "what are the 6 paths and how do I tell them apart."</p>
+    <p><b>Why it matters:</b> the taxonomy is the organizing principle the whole KB needs (per F1/F7), yet a reader must assemble it from three places. <b>Severity rationale:</b> Low (organizational). <b>Remediation:</b> R7 — a canonical <code>paths</code> node: the 3 products × Live/WIP grid, account-vs-contract pricing, add-in per product, in-file marker, detection cues.</p>
+  </div>
+
+  <!-- ============ DIMENSION 6 ============ -->
+  <h2 class="section">Dimension 6 — Source-dependency health</h2>
+
+  <div class="tier warn" id="f14">
+    <h3><span class="badge">HIGH</span> F14 · Blind to the in-flight LFA hedge / load-following re-architecture</h3>
+    <p class="fk"><b>Evidence:</b> LFA-2 (Deal Processing, <em>In Progress</em>, ~140 children) introduces a Commodity-Hedge deal type and re-frames every index deal:</p>
+    <pre>"we will be treating ANY index deal the same (because they all can technically add
+hedges at any point in their contract term)... By using a new FeatureFlag
+'EnableLoadFollowing', we'll be able to control when we start treating any Index deal
+this way vs. existing handling."</pre>
+    <p class="fk">The deal sheet is now scraped into <code>Pending.Hedges</code> (CI-7513) and drives new backing sheets (LFA-6, e.g. CONTRACT-1037: "Fixed Energy will be the sum of all hedge charges... If 100% hedged then should reflect $0.00"). The KB contains <b>zero</b> occurrences of "hedge," "load following," or "position."</p>
+    <p><b>Why it matters:</b> this is the active direction of the product. A skill whose job is to debug deal sheets, but which doesn't know hedges exist, will be unable to diagnose the entire emerging bug class as <code>EnableLoadFollowing</code> rolls out — the highest-growth area of deal-sheet defects over the next quarters. This finding also resolves the user's <b>"Current and Future (Hedges)"</b>: the IMA360 LF contract UI stacks an <em>active term</em> then a <em>future term</em> of layered hedge strips (CI-7774, CI-7853); definitive design is Confluence <code>5227577347</code>.</p>
+    <p class="fk"><b>Reach:</b> all future hedge/LF deals. <b>Severity rationale:</b> High (and rising). <b>Remediation:</b> R3 — a hedge/load-following lifecycle node.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> F13 · Richest source doc is 5 years stale; KB has no source pointers or "last-validated" dates</h3>
+    <p class="fk"><b>Evidence:</b> the Confluence pricing-pipeline hub and most of its add-in pages were last modified <b>Jun 2020</b>; only "Deal Sheet 101" (May 2025) is current. The KB cites neither — there is no "see source X, last validated Y" pointer on any structural claim, so staleness is invisible.</p>
+    <p><b>Why it matters:</b> the upstream definitions the KB should ingest (R2) are themselves aging, and LFA is actively superseding parts of the pipeline. Without source + validation dates, a reader can't judge whether a KB fact reflects the current system. <b>Severity rationale:</b> Medium. <b>Remediation:</b> R2/R5 — carry a <code>Source:</code>/<code>Last validated:</code> header on every node (the knowledge-tree convention already used elsewhere in this repo).</p>
+  </div>
+
+  <!-- ============ DIMENSION 7 ============ -->
+  <h2 class="section">Dimension 7 — Retrieval / usability hotspots</h2>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> F15 · "Read ALL files every session" won't scale as the KB grows</h3>
+    <p class="fk"><b>Evidence:</b> <code>skill.md:42</code> "read every file in the knowledge-base/ subdirectory" and <code>00-index.md</code> "Read all files before starting any investigation." The roadmap below roughly doubles the KB (paths × products + upstream + hedge + backing-sheet nodes).</p>
+    <p><b>Why it matters:</b> eager full-load every run grows linearly with the KB and dilutes the Phase-2 match step with irrelevant paths (e.g. loading Electric + GTS + hedge nodes to debug a Gas/Choice cell). <b>Severity rationale:</b> Low (works today; a scaling concern). <b>Remediation:</b> R6 — after the F7 detector picks a path, load the shared nodes + that path's node only; index 03 by symptom for targeted match.</p>
+  </div>
+
+  <!-- ============ THE ANSWER: ENRICHMENT ROADMAP ============ -->
+  <h2 class="section">The Enrichment Roadmap — how to get the most due-diligent knowledge in</h2>
+  <div class="callout">
+    <div class="lbl">Ranked by leverage (findings closed ÷ effort)</div>
+    <p>Seven workstreams. R1–R3 are the core: they close <b>both</b> Criticals and four of the six Highs, and they are sourced from material already located in this audit. R4–R7 harden and scale.</p>
+  </div>
+
+  <div class="tablecard">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Workstream</th><th>New / changed KB</th><th>Sources to ingest</th><th>Closes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num"><b>R1</b></td>
+          <td><b>Capture the other 5 paths + version axis.</b> Pull one Live + one WIP workbook for Power/Electric, Choice Gas, GTS Gas. Refactor 01/02 into a path-keyed matrix recording per-path sheet/range/VBA deltas; stamp each claim with the file it was confirmed against.</td>
+          <td><code>01</code>, <code>02</code> (refactor) + a <code>paths</code> node</td>
+          <td>Fileserver Booked-Deals folders via the file&nbsp;10 <code>DealSheetExportGuid</code> bridge; CI-7733 path table; a known-GTS sample</td>
+          <td>F1, F2, F6(partial), F7(partial)</td>
+        </tr>
+        <tr>
+          <td class="num"><b>R2</b></td>
+          <td><b>Upstream pricing-pipeline node.</b> Document usage → normalize → offer → margin → quote; the 3 add-ins with <em>correct</em> definitions (Usage Retriever / DNT / MMT); weather-normalization algorithms; tag semantics (NITS, CAP/PLC); product types (FFR, pass-through). <b>Fix the DNT definition.</b></td>
+          <td>new <code>11-pricing-pipeline-upstream.md</code>; correct <code>02:6</code></td>
+          <td>Confluence hub <code>1121943672</code> + Deal&nbsp;Sheet&nbsp;101 + DNT/MMT/Usage-Retriever/NITS/CAP/FFR/Quotes/Companies pages</td>
+          <td>F3(upstream), F8, F13</td>
+        </tr>
+        <tr>
+          <td class="num"><b>R3</b></td>
+          <td><b>Hedge / load-following lifecycle node.</b> Commodity-Hedge deal type; hedge-strip layering (%, fixed rate, bill-month, cost component); <code>Pending.Hedges</code>→<code>IMA.Hedges</code>→PM/CM; <code>EnableLoadFollowing</code> flag; the deal-sheet Hedges scrape payload; <b>Current (active term) vs Future term</b> strips.</td>
+          <td>new <code>12-hedge-load-following-model.md</code></td>
+          <td>LFA-2, CI-7513, CONTRACT-873; IMA360 LF UI (CI-7762/7774/7853); Confluence <code>5227577347</code> (LF Conceptual Design — not yet read)</td>
+          <td>F3(downstream), F14</td>
+        </tr>
+        <tr>
+          <td class="num"><b>R4</b></td>
+          <td><b>Backing-sheet structure node.</b> Summary Bill vs Interval/Index sheets; charge-column algebra (Energy Charge, Fixed Energy = Σ hedges, Service Component Adder, $0 at 100% hedged); bill methods SCB / Dual / Bill Ready.</td>
+          <td>new <code>13-backing-sheets.md</code></td>
+          <td>LFA-6 (CONTRACT-1037 / 1073–1078 / 1129)</td>
+          <td>F14(extends)</td>
+        </tr>
+        <tr>
+          <td class="num"><b>R5</b></td>
+          <td><b>Verification-hygiene pass.</b> Tag each pattern VERIFIED(file,date) vs HYPOTHESIZED; fix the Recipe-001 "confirmed" header + add an <code>Applied</code> field; add a per-claim <code>Source/Confirmed/Confidence</code> stamp; permit factual correction (changelog note) while keeping session history append-only.</td>
+          <td><code>03</code>, <code>07</code>, <code>09</code>, convention in <code>00</code></td>
+          <td>internal (no external source)</td>
+          <td>F4, F5, F6, F11</td>
+        </tr>
+        <tr>
+          <td class="num"><b>R6</b></td>
+          <td><b>Detection + routing + guardrail.</b> Phase-0 product-type/version detector (<code>is_*_Excel_Document</code> + sheet fingerprints) selecting the path map; out-of-sample banner that downgrades structural claims to hypotheses; symptom→file routing so the skill loads shared + selected-path nodes only.</td>
+          <td><code>skill.md</code> (new Phase 0); <code>00</code> routing</td>
+          <td>file&nbsp;10 markers; R1 path matrix</td>
+          <td>F7, F9, F15</td>
+        </tr>
+        <tr>
+          <td class="num"><b>R7</b></td>
+          <td><b>Registries.</b> Canonical 6-paths taxonomy node; external-workbook registry keyed by path (file, fields supplied, owner).</td>
+          <td><code>paths</code> node; new external-workbook registry</td>
+          <td>R1 captures; Pattern-006 external refs</td>
+          <td>F10, F12</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note"><b>Open inputs to fetch before R3 closes fully (named, not yet ingested — no silent caps):</b> Confluence <code>5227577347</code> "Load Following Conceptual Design" (the definitive Current-vs-Future hedge definition) and <code>IMA.PendingDealSeeding/README.md</code> (CONTRACT-848 — the authoritative DealType × PrimaryPriceType × passthrough matrix, the alternative reading of "paths" as processing lanes rather than workbook files). "6 paths" is treated as <b>3 products × Live/WIP</b> at MEDIUM confidence (CI-7733-confirmed); confirm the processing-lane reading against that README.</p>
+
+  <!-- ============ ADDENDUM — CONFLUENCE SWEEP ============ -->
+  <h2 class="section" id="addendum">Addendum — Confluence Sweep (2026-06-26)</h2>
+  <div class="callout">
+    <div class="lbl">What this addendum adds</div>
+    <p>A five-agent read-only sweep dissected <b>~60 Confluence pages across six spaces</b> (CI · LFA · CC · BB · OS · CTT). It <b>did not overturn any of the 15 findings</b> — it confirmed them, <b>de-risked two</b>, and showed the deal sheet's <em>output side</em> (scrape → contract → rating → invoicing) and its <em>pricing math</em> are each as large as the workbook. The roadmap extends from R7 to <b>R13</b>; the verdict and severity tally are unchanged.</p>
+  </div>
+
+  <h2 class="section">Roadmap extension — R8 through R13</h2>
+  <div class="tablecard">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Workstream (newly surfaced)</th><th>What it captures</th><th>Confluence sources</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num"><b>R8</b></td><td><b>Deal-scrape / ingestion pipeline node</b> (the workbook's output side; new <code>deal-scrape/</code> tree)</td><td>Drop folder boundary → Deal Scraper (Excel-on-batch-servers, "Risk Dashboard", CI-7806) → <code>Pending.*</code> (servicelocations/Deals/Hedges) → Scrape→Verify→<b>Pending Deal Wizard</b> + service-location match (4 statuses) → IMA Classic→PM→IMA360; Control-M "Process Deals" job</td><td>179273767, 694059076, 179404818, 5853708366</td></tr>
+        <tr><td class="num"><b>R9</b></td><td><b>Pricing-calculation &amp; rate-detail map node</b> (what the inputs become)</td><td><code>TotalPrice = (((BasePrice/ShrinkFactor)+Other)×BTUFactor)+Pooling+Markup</code>; component→Industrial column map; IMA→PM rate-detail IDs (Index 31 / SCA 33 / Hedge 32 / B&amp;I 25 / Losses 27), gated by <code>EnableLoadFollowing</code>; <b>Hedge requires an Index detail on the same package</b></td><td>2377515089, 5629116490, 3052011597</td></tr>
+        <tr><td class="num"><b>R10</b></td><td><b>Product / price-type / deal-type registry</b> (extends R7)</td><td>FFR · Index-FR (NYMEX+) · Pass-Through (NITS/CAP); deal types New/Rollover/Modify/Blend&amp;Extend/Blend-Layering/Unwind/Late Start/<b>Commodity Hedge</b>; per-product rules (swing tolerance = GTS not Choice; calendar-strip vs full-contract hedge)</td><td>1253212168, 1253048332, 5950505006</td></tr>
+        <tr><td class="num"><b>R11</b></td><td><b>Backing-sheet &amp; bill-method downstream node</b> (extends R4)</td><td><code>BackingSheetExcelExporter</code> (BRM) dynamic columns, <code>LMP Index Energy = usage×(LMP+Adder)</code>; <b>4 bill methods</b> (Bill Ready / Rate Ready / Dual / SCB) + tables; <b>dual architecture</b> — legacy BRM vs new BillingPlatform (no exporter yet)</td><td>5606277132, 853443160, 5461147706</td></tr>
+        <tr><td class="num"><b>R12</b></td><td><b>Add-in &amp; version/type-detection registry</b> (makes R6 concrete + cheap)</td><td>DNT/MMT VSTO URLs; <b>filename suffix <code>MMT</code>=electric / <code>v1</code>=gas</b>; per-env fileserver path matrix (Live/WIP/QA); Pricing Sheet tab password "hedge"; "must be on fileserver"</td><td>1963950327, 179273767, 3063087105</td></tr>
+        <tr><td class="num"><b>R13</b></td><td><b>Source-of-knowledge index</b> (meta node)</td><td>The 6 Confluence spaces + Jira projects (CI/LFA/CONTRACT/BB/CISD) where deal-sheet knowledge actually lives — so future ingestion knows where to look</td><td>all agents (see map below)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section">Scope corrections — two findings moved in our favor</h2>
+  <div class="tier ok">
+    <h3><span class="badge">DE-RISKED</span> F7 / R6 · product-path detection is now cheap</h3>
+    <p>The original Critical assumed the skill could not tell which of the 6 paths a workbook is. The sweep found a working detector: the <b>filename suffix</b> (<code>MMT</code> = electric, <code>v1</code> = gas; Smoke Test 179273767), the in-file <code>is_Mmt_Excel_Document</code> / <code>is_GasDnt_Excel_Document</code> marker, and the <code>generateDealSheetUri</code> <code>DealSheetType</code> enum. F7 stays Critical (the skill still has no detector/guardrail <em>today</em>), but R6/R12 are now low-effort, not research.</p>
+  </div>
+  <div class="tier ok">
+    <h3><span class="badge">RESOLVED</span> F14 / R3 · "Current vs Future (Hedges)" — nothing to find; synthesize it</h3>
+    <p>The phrase has <b>zero</b> canonical Confluence definition. Operationally it is hedge-layer timing vs <b>bill month</b>: "currently active" (covers the bill month being rated) vs "Future" (starts later); a deal is load-following iff its Contract Version contains <code>-LF</code>. Best source = OS SOP 4632346626 ("Layers Full Term (Future)" / "(currently active)"); system expression = "active hedge per bill month" (CONTRACT-980/981). R3 therefore <em>authors</em> this glossary entry rather than ingesting one.</p>
+    <p class="fk">Bonus for R5: CISD-1832 is a gold verification example — it reconciles two valid volume calcs (drop-date 527,927 kWh vs unwind-date 163,922 kWh) with exact SQL and proves "not a bug."</p>
+  </div>
+
+  <h2 class="section">Where the knowledge lives — 6-space source map (R13)</h2>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Space</th><th>Key</th><th>What it holds for the deal sheet</th></tr></thead>
+      <tbody>
+        <tr><td>Cowboys &amp; Indians</td><td><code>CI</code></td><td>QE / test plans + the Deal Sheet \ Pricing Sheet hub (this audit's anchor)</td></tr>
+        <tr><td>Load Following Automation</td><td><code>LFA</code></td><td>The program's design home — Conceptual Design (root 5227577347) + 7 topic pages + Implementation Decisions log</td></tr>
+        <tr><td>(C&amp;I dev)</td><td><code>CC</code></td><td>Implementation truth — sprint release notes, IMA rate-code/package creation, the backing-sheet exporter</td></tr>
+        <tr><td>(Bulls &amp; Bears)</td><td><code>BB</code></td><td>Deal-sheet coverage/pricing-options vocab; position-management (Supply) side</td></tr>
+        <tr><td>(Operations SOPs)</td><td><code>OS</code></td><td>Operator runbooks — initial hedge &amp; layers, the current-vs-future swim lane</td></tr>
+        <tr><td>(Contracts)</td><td><code>CTT</code></td><td>The bill-method registry (Bill Ready / Rate Ready / Dual / SCB) + tables</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section">Architecture decision — deal-sheet ↔ deal-scrape</h2>
+  <div class="tier info">
+    <h3><span class="badge">DECISION</span> Kept as separate, cross-linked references (one skill, for now)</h3>
+    <p>The workbook and the scrape are different systems: different <b>owners</b> (Sales Optimization / Supply vs C&amp;I&nbsp;IT), different <b>tech</b> (client-side Excel/VBA vs a server-side batch ingestion service + <code>Pending.*</code> SQL + Control-M), and different <b>failure surfaces</b> (<code>#SPILL!</code>/recalc/formula vs drop-folder collisions / scrape / service-location-match / Control-M). The <b>Drop folder is the clean seam</b> and <code>DealSheetExportGuid</code> is the bridge.</p>
+    <ul>
+      <li>KB split into sibling trees: <code>knowledge-base/deal-sheet/</code> (workbook architecture, DNT mappings, multi-LEN, VBA, unwind, fix recipes) and <code>knowledge-base/deal-scrape/</code> (scraper failure patterns + the CRM export bridge, + R8).</li>
+      <li><b>One skill retained</b> — the Phase-9 hand-off (scraper Class-B alert → workbook investigation) is exactly why a single orchestrator is correct.</li>
+      <li><b>Promote <code>deal-scrape</code> to its own skill when</b> its domain outgrows triage — it is heading there (Pending Deal Wizard, service-location matching, Control-M, hedge scrape, batch-server Excel upgrades).</li>
+    </ul>
+  </div>
+
+  <footer class="rep">
+    TDD-024 · Technical Due Diligence · IGS Quality Engineering · 2026-06-26 ·
+    Target: <code>.claude/skills/deal-sheet-debug</code> KB · Sources: Confluence CI "Deal Sheet \ Pricing Sheet" graph + Jira LFA-1 initiative ·
+    Read-only audit — no files in the target were modified.
+  </footer>
+
+</div>
+</body>
+</html>

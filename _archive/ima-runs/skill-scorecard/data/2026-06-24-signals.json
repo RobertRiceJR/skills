@@ -1,0 +1,342 @@
+{
+"date": "2026-06-24",
+"source": "_shared/skill-graph.json + run-counts.seed.json",
+"skills": [
+{
+"name": "ac-quality",
+"in": 3,
+"out": 1,
+"runs": null
+},
+{
+"name": "api-test-workflow",
+"in": 6,
+"out": 4,
+"runs": 7
+},
+{
+"name": "app-insights-diagnose",
+"in": 5,
+"out": 4,
+"runs": null
+},
+{
+"name": "app-insights-drift",
+"in": 6,
+"out": 4,
+"runs": null
+},
+{
+"name": "attach-screenshots",
+"in": 2,
+"out": 1,
+"runs": null
+},
+{
+"name": "auth0-regression",
+"in": 2,
+"out": 1,
+"runs": null
+},
+{
+"name": "bug-gap-analysis",
+"in": 13,
+"out": 2,
+"runs": null
+},
+{
+"name": "bug-report",
+"in": 12,
+"out": 0,
+"runs": null
+},
+{
+"name": "code-intelligence",
+"in": 27,
+"out": 0,
+"runs": null
+},
+{
+"name": "comms-coach",
+"in": 4,
+"out": 5,
+"runs": null
+},
+{
+"name": "confluence-ingest",
+"in": 7,
+"out": 2,
+"runs": null
+},
+{
+"name": "confluence-test-plan",
+"in": 7,
+"out": 7,
+"runs": 1
+},
+{
+"name": "context-load",
+"in": 10,
+"out": 4,
+"runs": null
+},
+{
+"name": "coverage-gap-scan",
+"in": 8,
+"out": 8,
+"runs": 2
+},
+{
+"name": "deal-sheet-debug",
+"in": 2,
+"out": 0,
+"runs": null
+},
+{
+"name": "devils-advocate",
+"in": 3,
+"out": 2,
+"runs": null
+},
+{
+"name": "dsu",
+"in": 7,
+"out": 13,
+"runs": null
+},
+{
+"name": "elastic-drift",
+"in": 13,
+"out": 3,
+"runs": null
+},
+{
+"name": "fix-loop",
+"in": 8,
+"out": 1,
+"runs": 26
+},
+{
+"name": "fix-me",
+"in": 3,
+"out": 2,
+"runs": 3
+},
+{
+"name": "gap-analysis",
+"in": 11,
+"out": 0,
+"runs": null
+},
+{
+"name": "health-check",
+"in": 9,
+"out": 3,
+"runs": null
+},
+{
+"name": "jira-reporter",
+"in": 4,
+"out": 0,
+"runs": 2
+},
+{
+"name": "kibana",
+"in": 7,
+"out": 0,
+"runs": null
+},
+{
+"name": "locator-drift-scan",
+"in": 8,
+"out": 7,
+"runs": 2
+},
+{
+"name": "manual-migration",
+"in": 1,
+"out": 2,
+"runs": null
+},
+{
+"name": "pict-scenarios",
+"in": 4,
+"out": 6,
+"runs": null
+},
+{
+"name": "playwright",
+"in": 2,
+"out": 3,
+"runs": null
+},
+{
+"name": "playwright-cli",
+"in": 5,
+"out": 4,
+"runs": null
+},
+{
+"name": "playwright-workflow",
+"in": 22,
+"out": 9,
+"runs": 16
+},
+{
+"name": "prod-support",
+"in": 20,
+"out": 9,
+"runs": null
+},
+{
+"name": "prod-support-poller",
+"in": 1,
+"out": 3,
+"runs": null
+},
+{
+"name": "prune-duplicates",
+"in": 5,
+"out": 3,
+"runs": 1
+},
+{
+"name": "ready-for-playwright",
+"in": 17,
+"out": 8,
+"runs": 25
+},
+{
+"name": "ready-for-qa",
+"in": 7,
+"out": 6,
+"runs": 26
+},
+{
+"name": "ready-for-testing",
+"in": 37,
+"out": 11,
+"runs": 46
+},
+{
+"name": "regression-reporter",
+"in": 2,
+"out": 2,
+"runs": null
+},
+{
+"name": "resume",
+"in": 3,
+"out": 7,
+"runs": null
+},
+{
+"name": "roast-me",
+"in": 5,
+"out": 1,
+"runs": 2
+},
+{
+"name": "skill-evolve",
+"in": 3,
+"out": 4,
+"runs": null
+},
+{
+"name": "spec-review",
+"in": 7,
+"out": 2,
+"runs": null
+},
+{
+"name": "sql-data",
+"in": 19,
+"out": 1,
+"runs": null
+},
+{
+"name": "sql-schema-sync",
+"in": 9,
+"out": 1,
+"runs": null
+},
+{
+"name": "sync",
+"in": 16,
+"out": 12,
+"runs": null
+},
+{
+"name": "sync-knowledge",
+"in": 8,
+"out": 4,
+"runs": null
+},
+{
+"name": "tc-review",
+"in": 3,
+"out": 1,
+"runs": null
+},
+{
+"name": "technical-due-diligence",
+"in": 7,
+"out": 8,
+"runs": 9
+},
+{
+"name": "three-amigos",
+"in": 32,
+"out": 13,
+"runs": 44
+},
+{
+"name": "three-amigos-questions",
+"in": 3,
+"out": 3,
+"runs": null
+},
+{
+"name": "ticket-close",
+"in": 5,
+"out": 0,
+"runs": 6
+},
+{
+"name": "ticket-finalize",
+"in": 2,
+"out": 4,
+"runs": null
+},
+{
+"name": "ticket-intake",
+"in": 8,
+"out": 6,
+"runs": null
+},
+{
+"name": "trace-call-path",
+"in": 3,
+"out": 3,
+"runs": null
+},
+{
+"name": "triage-failures",
+"in": 2,
+"out": 4,
+"runs": 9
+},
+{
+"name": "zephyr-approve",
+"in": 6,
+"out": 3,
+"runs": 12
+},
+{
+"name": "zephyr-reporter",
+"in": 24,
+"out": 5,
+"runs": 31
+}
+]
+}

@@ -1,0 +1,4 @@
+{"date":"2026-06-17","corpus":"project","files":422,"genuineTurns":1541,"voiceLikely":37,"voiceShare":0.024,"voice_filler_rate":0.37,"voice_hedge_rate":0.25,"voice_tagQ_per_turn":1,"splitConfidence":0.907}
+{"date":"2026-06-22","corpus":"project","files":365,"genuineTurns":1546,"voiceLikely":56,"voiceShare":0.036,"voice_filler_rate":0.5,"voice_hedge_rate":0.39,"voice_tagQ_per_turn":0.89,"splitConfidence":0.902}
+{"date":"2026-07-05","corpus":"project","files":284,"genuineTurns":1656,"voiceLikely":182,"voiceShare":0.11,"voice_filler_rate":1.32,"voice_hedge_rate":0.66,"voice_tagQ_per_turn":0.72,"splitConfidence":0.78}
+{"date":"2026-07-05","corpus":"project","files":285,"genuineTurns":1602,"voiceLikely":180,"voiceShare":0.112,"voice_filler_rate":1.38,"voice_hedge_rate":0.69,"voice_tagQ_per_turn":0.72,"splitConfidence":0.776}

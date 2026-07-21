@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<!--
+  TDD Report Components — living gallery. Renders every output-kit component (pre-existing + harvested)
+  in one page for eyeball verification in light / dark / print.
+  REFERENCE ARTIFACT, NOT A TDD RUN: no TDD-NNN, no tdd-meta block, no reference/index.md row.
+  Styling is inlined from _shared/output-kit/report.css (the SSOT) per the standard portability rule.
+  Toggle light/dark with the button top-right (or set <html data-theme="dark">). Print-preview to check
+  the print fallbacks (code card flips to light; dark falls back to light ink).
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDD Report Components — Gallery</title>
+<style>
+:root {
+  --ink:        #1b1f1d;  --bg:         #f7f9f7;  --muted:      #5b6472;  --line:       #e4e9e5;
+  --accent:     #4f9d3a;  --accent-2:   #2c6e9b;  --accent-3:   #e08a3e;  --accent-soft:#eef5ea;  --card: #ffffff;
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+  --font-head: "Inter", "Segoe UI", Arial, sans-serif;
+  --font-body: "Inter", "Segoe UI", Arial, sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  --danger:#c02a24; --warning:#8a5a14; --success:#2f6e1f; --info:#1f5781; --neutral:#5b6472;
+  --danger-soft:#f6e4e3; --warning-soft:#f7ebd9; --success-soft:#e3f1dc; --info-soft:#dbe9f3; --neutral-soft:#eef0ef;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 40px 28px 80px; }
+header.report { background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 100%); color: #fff; border-radius: 16px; padding: 34px 36px; margin-bottom: 28px; box-shadow: 0 8px 28px rgba(27,31,29,.18); }
+header.report .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 11.5px; font-weight: 700; opacity: .85; margin: 0 0 10px; }
+header.report h1 { margin: 0 0 8px; font-size: 29px; line-height: 1.15; font-weight: 750; font-family: var(--font-head); }
+header.report p.sub { margin: 0; font-size: 15px; opacity: .93; max-width: 760px; }
+header.report .meta { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.25); display: flex; flex-wrap: wrap; gap: 22px; font-size: 12.5px; opacity: .93; align-items: center; }
+h2.section { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 750; margin: 34px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--line); font-family: var(--font-head); }
+.legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 26px; }
+.legend .item { background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 14px 16px; }
+.legend .item .k { font-weight: 750; font-size: 13px; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+.legend .item .k .dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend .item .d { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.tablecard { background: var(--card); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; box-shadow: 0 2px 10px rgba(20,25,40,.04); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead th { background: #eef1ee; text-align: left; padding: 13px 14px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 750; border-bottom: 1px solid var(--line); white-space: nowrap; }
+thead th.num { text-align: center; }
+tbody td { padding: 12px 14px; border-bottom: 1px solid #eef0ee; vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f6faf4; }
+td.num { text-align: center; }
+.score { display: inline-block; min-width: 30px; padding: 4px 0; border-radius: 7px; font-weight: 750; font-size: 13px; color: #fff; text-align: center; }
+.s1{background:var(--s1);} .s2{background:var(--s2);} .s3{background:var(--s3);}
+.s4{background:var(--s4);} .s5{background:var(--s5); color:#3a2e00;}
+.s6{background:var(--s6); color:#2c2900;} .s7{background:var(--s7);}
+.s8{background:var(--s8);} .s9{background:var(--s9);} .s10{background:var(--s10);}
+.tier { border-left: 5px solid var(--accent); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; background: var(--card); border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.tier h3 { margin: 0 0 8px; font-size: 15px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-family: var(--font-head); }
+.tier h3 .badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; color: #fff; background: var(--accent); }
+.tier p { margin: 0 0 8px; font-size: 13.5px; color: var(--ink); }
+.tier ul { margin: 6px 0 0; padding-left: 18px; }
+.tier li { margin: 6px 0; font-size: 13.5px; }
+.tier.ok    { border-left-color: var(--accent);   } .tier.ok    .badge { background: var(--accent);   }
+.tier.warn  { border-left-color: var(--accent-3); } .tier.warn  .badge { background: var(--accent-3); }
+.tier.info  { border-left-color: var(--accent-2); } .tier.info  .badge { background: var(--accent-2); }
+.tier.muted { border-left-color: var(--muted);    } .tier.muted .badge { background: var(--muted);    }
+.callout { background: var(--accent-soft); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: 12px; padding: 18px 22px; margin: 6px 0 30px; }
+.callout .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 750; color: var(--accent); margin-bottom: 6px; }
+.callout p { margin: 0; font-size: 14.5px; line-height: 1.55; }
+.callout p + p { margin-top: 9px; }
+.note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+code { background: #eef1ee; padding: 1px 6px; border-radius: 5px; font-size: .88em; font-family: "SF Mono", Consolas, monospace; }
+footer.rep { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
+.lozenge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.lozenge.green  { background: #e3f1dc; color: #2f6e1f; }
+.lozenge.blue   { background: #dbe9f3; color: #1f5781; }
+.lozenge.amber  { background: #f7ebd9; color: #8a5a14; }
+.lozenge.gray   { background: var(--line); color: var(--muted); }
+.lozenge.danger     { background: var(--danger-soft);  color: var(--danger); }
+.lozenge.bug        { background: var(--danger-soft);  color: var(--danger); }
+.lozenge.validation { background: var(--warning-soft); color: var(--warning); }
+.lozenge.auth       { background: var(--info-soft);    color: var(--info); }
+.lozenge.noise,
+.lozenge.perf       { background: var(--neutral-soft); color: var(--neutral); }
+.lozenge .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; vertical-align:middle; background:currentColor; }
+tr.noise td, li.noise   { opacity:.55; text-decoration:line-through; text-decoration-color:var(--neutral); }
+tr.signal td, li.signal { box-shadow: inset 3px 0 0 var(--success); }
+.spine { list-style:none; margin:0 0 26px; padding:0; counter-reset:spine-step; }
+.spine > li { position:relative; padding:0 0 18px 42px; }
+.spine > li::before { content:counter(spine-step); counter-increment:spine-step; position:absolute; left:0; top:0; width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; font-weight:750; font-size:13px; font-family:var(--font-head); display:flex; align-items:center; justify-content:center; }
+.spine > li::after { content:""; position:absolute; left:12px; top:26px; bottom:0; width:2px; background:var(--line); }
+.spine > li:last-child::after { display:none; }
+.gate { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:6px 0 26px; }
+.gate .branch { border:1px solid var(--line); border-radius:12px; padding:16px 18px; background:var(--card); }
+.gate .branch.discard { border-top:4px solid var(--danger); }
+.gate .branch.promote { border-top:4px solid var(--success); }
+.gate .branch h4 { margin:0 0 6px; font-size:14px; font-family:var(--font-head); display:flex; align-items:center; gap:8px; }
+.codecard { background:#1e2420; border:1px solid var(--line); border-radius:12px; overflow:hidden; margin:6px 0 22px; }
+.codecard .bar { display:flex; align-items:center; gap:7px; padding:9px 14px; background:#161b18; border-bottom:1px solid #0d100e; }
+.codecard .bar .dot { width:11px; height:11px; border-radius:50%; }
+.codecard .bar .dot.r{background:#e06b64;} .codecard .bar .dot.y{background:#e8b074;} .codecard .bar .dot.g{background:#8fd27a;}
+.codecard .bar .cap { margin-left:8px; font-size:11.5px; color:#9aa6a0; font-family:var(--font-mono); }
+.codecard pre { margin:0; padding:16px 18px; overflow:auto; font:13px/1.5 var(--font-mono); color:#e8efe9; }
+.codecard pre .k { color:#84c2ec; } .codecard pre .s { color:#8fd27a; } .codecard pre .v { color:#e8b074; } .codecard pre .c { color:#6b7a70; font-style:italic; }
+:root[data-theme="dark"] {
+  --ink:#e8efe9; --bg:#0f1411; --muted:#93a399; --line:#2b352e; --accent:#5cb446; --accent-2:#58a8df; --accent-3:#eaa15c; --accent-soft:#16241a; --card:#18201b;
+  --danger:#e06b64; --warning:#e8b074; --success:#8fd27a; --info:#84c2ec; --neutral:#9aa6a0;
+  --danger-soft:#3a1e1c; --warning-soft:#3a2c14; --success-soft:#1e3a22; --info-soft:#173247; --neutral-soft:#2a332d;
+}
+[data-theme="dark"] header.report { background: linear-gradient(135deg, #0c100e 0%, #2f7a39 100%); box-shadow: 0 8px 28px rgba(0,0,0,.55); }
+[data-theme="dark"] thead th { background: #1f2723; }
+[data-theme="dark"] tbody td { border-bottom-color: #222b25; }
+[data-theme="dark"] tbody tr:hover{ background: #1d251f; }
+[data-theme="dark"] code { background: #222b25; color: #e8efe9; }
+[data-theme="dark"] .lozenge.green { background:#1e3a22; color:#8fd27a; }
+[data-theme="dark"] .lozenge.blue  { background:#173247; color:#84c2ec; }
+[data-theme="dark"] .lozenge.amber { background:#3a2c14; color:#e8b074; }
+[data-theme="dark"] .lozenge.gray  { background:#2a332d; color:#9aa6a0; }
+@media print { body { background: #fff; } .wrap { padding: 0; } .tablecard, .tier, .legend .item { box-shadow: none; } header.report { box-shadow: none; }
+  :root[data-theme="dark"] { --ink:#1b1f1d; --bg:#fff; --card:#fff; --line:#e4e9e5; --muted:#5b6472; }
+  [data-theme="dark"] thead th { background:#eef1ee; } [data-theme="dark"] code { background:#eef1ee; color:#1b1f1d; }
+  .codecard { background:#f6f7f6; } .codecard pre { color:#1b1f1d; }
+  .codecard .bar { background:#eef1ee; border-bottom-color:#e4e9e5; } .codecard .bar .cap { color:#5b6472; }
+  .codecard pre .k { color:#1f5781; } .codecard pre .s { color:#2f6e1f; } .codecard pre .v { color:#8a5a14; } .codecard pre .c { color:#5b6472; }
+  .toggle { display:none; } }
+@media (max-width: 720px) { .legend { grid-template-columns: 1fr; } .gate { grid-template-columns: 1fr; } }
+/* gallery-local only (not part of report.css) */
+.toggle { position: fixed; top: 14px; right: 14px; z-index: 9; font: 600 12px var(--font-body); padding: 7px 13px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+.swatches { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
+.gl-note { font-size:12px; color:var(--muted); margin:0 0 18px; }
+</style>
+</head>
+<body>
+<button class="toggle" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')">Toggle light / dark</button>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE · Component Gallery</p>
+    <h1>TDD Report Components</h1>
+    <p class="sub">Every output-kit component — pre-existing and harvested — rendered in one page. Toggle the theme (top-right) and print-preview to verify the light / dark / print triad.</p>
+    <div class="meta">
+      <span><b>Overall Ranking:</b> <span class="score s4">4</span></span>
+      <span><b>Findings:</b> 1 / 3 / 8 / 7</span>
+      <span><b>Status:</b> reference artifact (not a run)</span>
+    </div>
+  </header>
+
+  <h2 class="section">Legend / key cards</h2>
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--danger)"></span>Critical</div><div class="d">Data loss · auth bypass · money computed wrong.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High / Medium</div><div class="d">Core feature breaks · risky coupling · weak coverage.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low</div><div class="d">Localized smell · cosmetic debt · minor version lag.</div></div>
+  </div>
+
+  <h2 class="section">Verdict callout</h2>
+  <div class="callout">
+    <div class="lbl">Verdict — the three findings that matter most</div>
+    <p>1. Hottest finder ships 10k rows unpaginated — an OOM waiting to happen on a large tenant.</p>
+    <p>2. Party-merge write path has no rollback; a mid-batch failure leaves orphaned rows.</p>
+    <p>3. Two money-path resolvers have zero test coverage.</p>
+  </div>
+
+  <h2 class="section">Overall ranking — score heatmap (1-10)</h2>
+  <p class="gl-note">The pill primitive the TDD roll-up reuses. 1 = on fire, 10 = clean.</p>
+  <div class="swatches">
+    <span class="score s1">1</span><span class="score s2">2</span><span class="score s3">3</span><span class="score s4">4</span><span class="score s5">5</span>
+    <span class="score s6">6</span><span class="score s7">7</span><span class="score s8">8</span><span class="score s9">9</span><span class="score s10">10</span>
+  </div>
+
+  <h2 class="section">Finding tiers + severity lozenges</h2>
+  <div class="tier warn"><h3><span class="badge">Critical</span> Unpaginated 10k-row finder <span class="lozenge danger"><span class="dot"></span>bug</span></h3>
+    <p>Evidence: <code>src/utils/sql/finders.ts:142</code> — returns the full result set with no <code>TOP</code>/paging.</p></div>
+  <div class="tier info"><h3><span class="badge">Medium</span> Coupling makes change risky <span class="lozenge validation">validation</span></h3>
+    <p>Shared mutable config read by 9 callers; a change radiates unpredictably.</p></div>
+  <div class="tier muted"><h3><span class="badge">Low</span> Inconsistent naming <span class="lozenge noise">noise</span></h3>
+    <p>Cosmetic; batch-fixable.</p></div>
+
+  <h2 class="section">Triage table — signal / noise rows</h2>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Operation · result</th><th class="num">Count</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr class="noise"><td>POST /graphql · 499</td><td class="num">217</td><td>navigation noise — discard</td></tr>
+        <tr class="signal"><td>checkForDuplicateParties · 200</td><td class="num">4</td><td>masked resolver error — chase</td></tr>
+        <tr class="signal"><td>mergeParties · 200</td><td class="num">2</td><td>masked resolver error — chase</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section">Lozenge vocabulary</h2>
+  <div class="swatches">
+    <span class="lozenge green">green</span><span class="lozenge blue">blue</span><span class="lozenge amber">amber</span><span class="lozenge gray">gray</span>
+    <span class="lozenge danger">danger</span><span class="lozenge bug">bug</span><span class="lozenge validation">validation</span><span class="lozenge auth">auth</span><span class="lozenge noise">noise</span><span class="lozenge perf">perf</span>
+    <span class="lozenge danger"><span class="dot"></span>with dot</span>
+  </div>
+
+  <h2 class="section">Numbered process spine</h2>
+  <ol class="spine">
+    <li><b>Sweep</b> — bucket failing graphql requests by op + resultCode.</li>
+    <li><b>Drill</b> — pull the failing op's rows; grab the <code>operation_Id</code>.</li>
+    <li><b>Join</b> — match <code>operation_Id</code> to the exceptions table for the root cause.</li>
+  </ol>
+
+  <h2 class="section">Decision gate</h2>
+  <div class="gate">
+    <div class="branch discard"><h4><span class="lozenge noise">discard</span> Noise</h4><p>Sub-second 499 = client navigated away. No exception to find.</p></div>
+    <div class="branch promote"><h4><span class="lozenge danger">promote</span> Signal</h4><p>Operation glued on + 200 + <code>success==false</code> = a masked resolver error. Chase it.</p></div>
+  </div>
+
+  <h2 class="section">Code / terminal card</h2>
+  <div class="codecard">
+    <div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="cap">KQL · analytics-query</span></div>
+    <pre><span class="c">// failing graphql requests, bucketed</span>
+<span class="k">requests</span>
+| <span class="k">where</span> name <span class="k">contains</span> <span class="s">"graphql"</span> <span class="k">and</span> success == <span class="v">false</span>
+| <span class="k">summarize</span> n = <span class="k">sum</span>(itemCount) <span class="k">by</span> op, resultCode
+| <span class="k">order by</span> n <span class="k">desc</span></pre>
+  </div>
+
+  <footer class="rep">Reference artifact — not a TDD run. Styling inlined from _shared/output-kit/report.css (SSOT). See report-components.md.</footer>
+
+</div>
+</body>
+</html>

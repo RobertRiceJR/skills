@@ -1,0 +1,9 @@
+{
+  "name": "eval-judge",
+  "version": "0.1.0",
+  "description": "Skill-quality evaluation: llm-judge (semantic skill-quality judge scoring description-trigger accuracy, coherence, portability, and dead-reference freedom) and skill-creator (create/optimize skills + trigger-eval harness, Windows-patched to run without a marketplace reinstall).",
+  "author": {
+    "name": "Robert Rice",
+    "email": "robertrice12009@yahoo.com"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "ranAt": "2026-06-24",
+  "grader": "agent-dispatch-claude",
+  "overallMae": 0.095,
+  "gate": "PASS",
+  "rubricHash": "921ddeb6aae93534"
+}

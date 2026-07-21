@@ -1,0 +1,14 @@
+[
+  { "query": "analyze my communication style", "should_trigger": true },
+  { "query": "comms coach", "should_trigger": true },
+  { "query": "how do I structure my sentences when I talk to claude", "should_trigger": true },
+  { "query": "linguistic style report", "should_trigger": true },
+  { "query": "am I getting better at dictation over time", "should_trigger": true },
+  { "query": "give me feedback on my voice messages", "should_trigger": true },
+  { "query": "what are my speaking patterns", "should_trigger": true },
+  { "query": "roast the test suite", "should_trigger": false },
+  { "query": "how much have I spent on claude code", "should_trigger": false },
+  { "query": "generate my DSU", "should_trigger": false },
+  { "query": "review my code changes for bugs", "should_trigger": false },
+  { "query": "show me my session token usage", "should_trigger": false }
+]

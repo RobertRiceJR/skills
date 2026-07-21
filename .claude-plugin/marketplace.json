@@ -1,0 +1,33 @@
+{
+  "name": "robert-skills",
+  "owner": {
+    "name": "Robert Rice",
+    "email": "robertrice12009@yahoo.com"
+  },
+  "metadata": {
+    "description": "Robert's centralized, portable skill collection. Themed plugins install into any repo on this machine; skills resolve from the current working directory and degrade gracefully when a project-specific anchor is absent.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "universal-core",
+      "source": "./plugins/universal-core",
+      "description": "Project-agnostic workflow skills usable in any repo: session-review, todo, condense-claude-md, sync-memory, comms-coach, claude-architect. Ships the universal session-stats hook plus dormant memory/SQL hooks."
+    },
+    {
+      "name": "qe-toolkit",
+      "source": "./plugins/qe-toolkit",
+      "description": "QE / test-suite-flavored skills, tuned for Playwright suites but safe to run anywhere: roast-me (suite health roast), technical-due-diligence (acquirer-grade risk review), devils-advocate (adversarial test-plan review)."
+    },
+    {
+      "name": "skill-ops",
+      "source": "./plugins/skill-ops",
+      "description": "Skill-ecosystem maintenance: sync-skills (architecture drift detector), skill-evolve (blast-radius-aware skill editing), skill-scorecard (ecosystem scoring & ranking)."
+    },
+    {
+      "name": "eval-judge",
+      "source": "./plugins/eval-judge",
+      "description": "Skill-quality evaluation: llm-judge (semantic skill-quality judge) and skill-creator (create/optimize skills, trigger-eval harness, Windows-patched)."
+    }
+  ]
+}

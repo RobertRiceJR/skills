@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-025
+date: 2026-07-01
+scope: hedge_reconciliation.py — Supply→Industrial→IMA.Hedges backfill pipeline (+ relevance to deal-sheet-debug hub)
+jira: [LFA-1, CI-7513, CONTRACT-954]
+severity: { critical: 2, high: 5, medium: 4, low: 3 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-025 — Hedge Reconciliation Pipeline (Supply → IMA.Hedges)</title>
+  <style>
+:root{
+  --ink:#1b1f1d;--bg:#f7f9f7;--muted:#5b6472;--line:#e4e9e5;--accent:#4f9d3a;--accent-2:#2c6e9b;--accent-3:#e08a3e;--accent-soft:#eef5ea;--card:#ffffff;
+  --s1:#b5261c;--s2:#c84a32;--s3:#dd6b3f;--s4:#e08a3e;--s5:#d4a017;--s6:#b6a92e;--s7:#8aab3c;--s8:#5fa345;--s9:#2f8f3e;--s10:#1d7a33;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif;--font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+header.report h1{margin:0 0 8px;font-size:29px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+header.report p.sub{margin:0;font-size:15px;opacity:.93;max-width:820px;}
+header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+h3.sub{font-size:15px;margin:22px 0 10px;font-family:var(--font-head);}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+.legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+.legend .item .k{font-weight:750;font-size:22px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.legend .item .k .dot{width:12px;height:12px;border-radius:50%;}
+.legend .item .d{font-size:12px;color:var(--muted);line-height:1.4;text-transform:uppercase;letter-spacing:.05em;font-weight:700;}
+.tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);margin:6px 0 8px;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+thead th{background:#eef1ee;text-align:left;padding:12px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);}
+tbody td{padding:11px 14px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f6faf4;}
+.tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:14px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.tier h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);scroll-margin-top:20px;}
+.tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+.tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+.tier ul{margin:6px 0 0;padding-left:18px;}
+.tier li{margin:6px 0;font-size:13.5px;}
+.tier.ok{border-left-color:var(--accent);}.tier.ok .badge{background:var(--accent);}
+.tier.warn{border-left-color:var(--accent-3);}.tier.warn .badge{background:var(--accent-3);}
+.tier.crit{border-left-color:var(--s1);}.tier.crit .badge{background:var(--s1);}
+.tier.info{border-left-color:var(--accent-2);}.tier.info .badge{background:var(--accent-2);}
+.tier.muted{border-left-color:var(--muted);}.tier.muted .badge{background:var(--muted);}
+.callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+.callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:6px;}
+.callout p{margin:0 0 10px;font-size:14.5px;line-height:1.55;}
+.callout ol{margin:6px 0 0;padding-left:20px;}
+.callout ol li{margin:9px 0;font-size:14px;line-height:1.5;}
+.note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.88em;font-family:"SF Mono",Consolas,monospace;}
+pre{background:#f2f4f2;border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;font:12.5px/1.5 "SF Mono",Consolas,monospace;margin:10px 0;}
+pre code{background:none;padding:0;font-size:1em;}
+.ev{font-size:12.5px;color:var(--muted);font-weight:700;margin:2px 0;}
+.fld{font-size:13.5px;margin:7px 0;}
+.fld b{color:var(--ink);}
+a.anchor,a.jump{color:var(--accent-2);text-decoration:none;}
+a.anchor:hover,a.jump:hover{text-decoration:underline;}
+.lozenge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.lozenge.green{background:#e3f1dc;color:#2f6e1f;}
+.lozenge.amber{background:#f7ebd9;color:#8a5a14;}
+.lozenge.red{background:#f6dedb;color:#9a2b20;}
+.lozenge.gray{background:var(--line);color:var(--muted);}
+footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+@media print{body{background:#fff;}.wrap{padding:0;}.tablecard,.tier{box-shadow:none;}header.report{box-shadow:none;}}
+@media (max-width:720px){.legend{grid-template-columns:repeat(2,1fr);}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE — TDD-025</p>
+    <h1>Hedge Reconciliation Pipeline — Supply → IMA.Hedges</h1>
+    <p class="sub">Adversarial staff-engineer review of <code>hedge_reconciliation.py</code>, a one-shot Python backfill a staff engineer surfaced as a candidate source for "how hedge data gets into IMA360." Two questions: (1) what are the material risks in the pipeline itself, and (2) is any of it reusable for the deal-sheet-debug skill hub?</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice (QE) — deal-sheet-debug hub owner</span>
+      <span><b>Date:</b> 2026-07-01</span>
+      <span><b>Scope:</b> hedge-reconciliation (2 files, ~575 LOC)</span>
+      <span><b>Jira:</b> LFA-1 · CI-7513 · CONTRACT-954</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>2</div><div class="d">Critical</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>5</div><div class="d">High</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>4</div><div class="d">Medium</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>3</div><div class="d">Low</div></div>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">Verdict — the three findings that most move go / no-go</div>
+    <p>This is a <b>one-off dev backfill</b>, not a pipeline, and it writes straight into the <code>IMA.Hedges</code> system-of-record. As a <i>reference artifact</i> it is genuinely useful to the hub; as <i>code to adopt or trust</i> it is not — it has two data-loss/duplication defects and bypasses the production hedge path the hub already documents.</p>
+    <ol>
+      <li><b>Non-transactional delete-then-insert can wipe live hedge rows with no rollback.</b> The DELETE commits in its own connection <i>before</i> the INSERT connection even opens — any interruption between them leaves the SoR emptied of these hedges and never refilled. → <a class="jump" href="#f-delete">Dim 4 · Critical</a></li>
+      <li><b>"Idempotent, safe to rerun" is false — confirmed live.</b> The only unique index on <code>IMA.Hedges</code> is on <code>HedgeKey</code>, which the script sets to <code>NEWID()</code> (always unique); there is <b>no</b> constraint on the dedup tuple the README claims, and the code never checks. A rerun that skips the delete duplicates financial rows. → <a class="jump" href="#f-idem">Dim 4 · Critical</a></li>
+      <li><b>Relevance = reference-only, quarantined.</b> It bypasses the canonical <code>deal sheet → scrape → Pending.Hedges → IMA.Hedges</code> (HedgeKey handshake, CONTRACT-954) path — so it must never be encoded as "how hedges reach IMA360." But it cheaply confirms the hub's open <code>IMA.Hedges</code> column-shape TBD and documents the Supply-side source + the Supply≠Industrial ContractId gotcha. Harvest the facts; discard the mechanism. → <a class="jump" href="#relevance">Relevance section</a></li>
+    </ol>
+  </div>
+
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tablecard">
+    <table>
+      <tbody>
+        <tr><td style="width:190px"><b>Target</b></td><td><code>C:\Users\rrice\Repos\ci-working-notes\projects\load-following-automation\hedge-reconciliation</code></td></tr>
+        <tr><td><b>Files in scope</b></td><td><code>hedge_reconciliation.py</code> (575 LOC), <code>README.md</code> (123 LOC). No other files in the folder.</td></tr>
+        <tr><td><b>Run shape</b></td><td>Inline — small cohesive target, all 7 dimensions in one context. No fan-out.</td></tr>
+        <tr><td><b>Live verification</b></td><td>Read-only <code>INFORMATION_SCHEMA</code> + <code>sys.indexes</code> query on <code>mssql-industrial-int</code> to confirm <code>IMA.Hedges</code> column shape and constraints (evidence for Dim 4 + the relevance call). No writes.</td></tr>
+        <tr><td><b>Dimensions</b></td><td>All 7 in scope.</td></tr>
+        <tr><td><b>Not verifiable</b></td><td>Supply-side tables (<code>Supply.dbo.DailyLoadFollowingContracts</code>, <code>CustomerContractTermsDetailed</code>) — no Supply MCP; treated as unverified claims. Runtime behavior not executed (read-only audit).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section">Phase 1 — Surface Map</h2>
+  <p class="fld">One entry point: <code>main()</code> (<code>hedge_reconciliation.py:497</code>), run via <code>__main__</code>. A strictly linear procedural pipeline, no modules/classes:</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Step</th><th>Function</th><th>Touches</th><th>Blast radius</th></tr></thead>
+      <tbody>
+        <tr><td>1. Load Supply hedges</td><td><code>load_supply_hedges</code> :67</td><td>READ <code>Supply.dbo.DailyLoadFollowingContracts ⋈ CustomerContractTermsDetailed</code></td><td>Read-only source</td></tr>
+        <tr><td>2. Extract Industrial IDs</td><td><code>extract_contract_ids</code> → <code>extract_industrial_contract_id</code> :33</td><td>Regex on <code>ProductName</code></td><td>In-memory</td></tr>
+        <tr><td>3. Load IMA contracts</td><td><code>load_ima_contracts</code> :109</td><td>READ <code>Industrial IMA.Contracts + ServiceLocation* + UtilityLinesOfBusiness</code></td><td>Read-only</td></tr>
+        <tr><td>4. Fuzzy-match unmatched</td><td><code>fuzzy_match_unmatched</code> :139</td><td>In-memory <code>SequenceMatcher</code></td><td><b>Assigns contract IDs → drives every write</b></td></tr>
+        <tr><td>5–7. Match terms + details</td><td><code>load_ima_contract_terms</code> :185, <code>match_to_ima</code> :235, <code>load_ima_contract_details</code> :206</td><td>READ <code>IMA.ContractTerms</code>, <code>IMA.ContractDetails</code></td><td>Read-only</td></tr>
+        <tr><td>8–9. Normalize + compute</td><td><code>calculate_calendar_months</code> :316, <code>calculate_hedge_fields</code> :356</td><td>In-memory date + money math</td><td><b>Computes persisted FixedRate / Value / Margin / CommodityCost</b></td></tr>
+        <tr><td>10. Delete old</td><td><code>delete_old_hedges</code> :412</td><td><b>WRITE (DELETE)</b> <code>IMA.Hedges WHERE CreateBy='CI-Dev-LOAD'</code></td><td><b>SoR mutation — separate txn</b></td></tr>
+        <tr><td>11. Insert new</td><td><code>insert_into_ima</code> :447</td><td><b>WRITE (INSERT)</b> <code>IMA.Hedges</code></td><td><b>SoR mutation — separate txn</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>Change-radius map:</b> Steps 10–11 are the high-blast nodes (they mutate the system of record). Step 4 (fuzzy match) and Steps 8–9 (date + money math) are the correctness-critical feeders — a defect there writes wrong-but-valid financial data. The two SoR writes run in <b>two independent transactions</b>, which is the root of the top finding. <code>DRY_RUN=True</code> (line 29) gates the writes at author-time.</p>
+
+  <!-- ===================== DIM 1 ===================== -->
+  <h2 class="section">Dimension 1 — Architecture, Coupling, Boundaries</h2>
+
+  <div class="tier warn" id="f-bypass">
+    <h3><span class="badge">HIGH</span> Writes directly to the IMA.Hedges SoR, bypassing the canonical scrape path; HedgeKey fabricated with NEWID()</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:462-466</p>
+<pre><code>INSERT INTO IMA.Hedges (
+    ContractTermId, HedgeTypeId, StartDate, EndDate,
+    FixedRate, Value, CreateBy, CreateDate, ModifyBy, ModifyDate,
+    HedgeKey, Margin, CommodityCost, AdditionDate
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NEWID(), ?, ?, ?)</code></pre>
+    <p class="fld"><b>Why it matters:</b> The hub's own model node documents the production path as <code>deal-sheet Hedges field → scrape → Pending.Hedges (CI-7513) → on save → IMA.Hedges with a populated HedgeKey (CONTRACT-954)</code>. This script skips <code>Pending.Hedges</code> and the HedgeKey handshake entirely, minting a <b>random</b> <code>HedgeKey</code>. Rows land in the SoR with no lineage back to any deal sheet, scrape record, or the RabbitMQ→Snowflake position feed that keys on HedgeKey. Downstream joins on HedgeKey find orphans.</p>
+    <p class="fld"><b>Call path / reach:</b> <code>main:551 → insert_into_ima:447</code>. Every inserted row is affected.</p>
+    <p class="fld"><b>Severity rationale:</b> High (money-path SoR + integration lineage) — not bumped to Critical because it is an intentional migration shortcut, not a claimed production path.</p>
+    <p class="fld"><b>Remediation sketch:</b> Treat strictly as a bounded historical backfill; if hedges must be created going forward, route through the scrape / <code>POST api/Hedges</code> path so the HedgeKey handshake and lineage hold.</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> Hardcoded cross-DB connection strings; no configuration boundary</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:25-30</p>
+<pre><code>SUPPLY_CS = "Driver={ODBC Driver 17 for SQL Server};Server=supply.sql.int.igsenergy.net;Database=Supply;Trusted_Connection=yes;"
+INDUSTRIAL_CS = "Driver={ODBC Driver 17 for SQL Server};Server=industrial.sql.int.igsenergy.net;Database=Industrial;Trusted_Connection=yes;"
+DRY_RUN = True  # Set to False to commit
+MIN_MATCH_SCORE = 0.70  # Fuzzy match threshold</code></pre>
+    <p class="fld"><b>Why it matters:</b> Env (INT vs QA vs PROD), the dry-run gate, and the match threshold are all in-source. Pointing this at another environment means editing code; there is no separation between "what to run" and "where to run it." Low because it's a single-operator manual script — but it makes the dangerous <code>DRY_RUN</code> flip a source edit (see Dim 5).</p>
+    <p class="fld"><b>Remediation sketch:</b> Lift connection target, <code>DRY_RUN</code>, and thresholds to CLI args / env vars.</p>
+  </div>
+
+  <!-- ===================== DIM 2 ===================== -->
+  <h2 class="section">Dimension 2 — Test Coverage &amp; Gaps</h2>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> Zero automated tests over subtle money-path logic</h3>
+    <p class="ev">Evidence: whole folder — <code>find</code> returns only <code>hedge_reconciliation.py</code> + <code>README.md</code>; no test file, no assertion anywhere.</p>
+    <p class="fld"><b>Why it matters:</b> Four error-prone routines each feed a NOT NULL money column in the SoR and none is exercised by a test: the calendar-month date normalization (<code>calculate_calendar_months:316</code>), the ContractId regex (<code>extract_industrial_contract_id:33</code>), the fuzzy-match threshold logic (<code>fuzzy_match_unmatched:139</code>), and the FixedRate/Margin/CommodityCost math (<code>calculate_hedge_fields:356</code>). Each has edge cases (proved in Dim 4) that produce wrong-but-valid rows. The only safety net is manual inspection of <code>DRY_RUN</code> log output.</p>
+    <p class="fld"><b>Severity rationale:</b> The rubric rates "no test coverage on a money path" as Critical; held at High because realized blast radius is captured by the Dim 4 findings and this is a manual one-shot, not a deployed service.</p>
+    <p class="fld"><b>Remediation sketch:</b> Pure-function unit tests on the four feeders (esp. the date-normalization boundary cases) before any non-dry-run against a shared DB.</p>
+  </div>
+
+  <!-- ===================== DIM 3 ===================== -->
+  <h2 class="section">Dimension 3 — Security Surface &amp; Trust Boundaries</h2>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> SQL IN-clause built by f-string interpolation (defused by an int() cast)</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:214-223</p>
+<pre><code>term_ids_str = ','.join(str(int(tid)) for tid in contract_term_ids)
+query = f"""
+SELECT TermId, FromDate, ToDate, Margin
+FROM IMA.ContractDetails
+WHERE TermId IN ({term_ids_str})
+  AND Margin IS NOT NULL ..."""</code></pre>
+    <p class="fld"><b>Why it matters:</b> String-interpolated SQL is the classic injection smell, but every element is <code>int()</code>-cast first, so a non-numeric value raises before it reaches the query — not injectable as written. The risk is latent: if the cast is ever relaxed (e.g. to accept GUID term keys) it becomes a live injection into a query against the SoR DB. Every other query is a static string or uses bound <code>?</code> params. No secrets in-file (Windows <code>Trusted_Connection</code>).</p>
+    <p class="fld"><b>Remediation sketch:</b> Parameterize the IN-list (<code>?</code> placeholders) so the safety doesn't depend on the upstream cast.</p>
+  </div>
+  <p class="note"><b>Otherwise no material findings</b> — traced all six queries: five are static or fully parameterized; no hardcoded credentials; auth is Windows integrated. One trust note: writes stamp <code>CreateBy='CI-Dev-LOAD'</code> regardless of the real invoking Windows identity, so there is no actor audit trail on SoR mutations (folded into Dim 5).</p>
+
+  <!-- ===================== DIM 4 ===================== -->
+  <h2 class="section">Dimension 4 — Error Handling &amp; Failure Modes</h2>
+
+  <div class="tier crit" id="f-delete">
+    <h3><span class="badge">CRITICAL</span> Non-transactional DELETE-then-INSERT → data-loss window on the system of record</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:416-439 (delete) then a separate connection at :455-488 (insert)</p>
+<pre><code># delete_old_hedges — its OWN connection + commit
+with pyodbc.connect(INDUSTRIAL_CS) as conn:
+    ...
+    cursor.execute(delete_query)   # DELETE ... WHERE CreateBy='CI-Dev-LOAD'
+    conn.commit()                  # :439  <-- committed HERE, before insert exists
+
+# insert_into_ima — a DIFFERENT connection, opened afterward
+with pyodbc.connect(INDUSTRIAL_CS) as conn:      # :455
+    for idx, row in df.iterrows():
+        cursor.execute(insert_query, (...))
+    if not dry_run:
+        conn.commit()              # :488  <-- only commit for the inserts</code></pre>
+    <p class="fld"><b>Why it matters:</b> In a real run (<code>DRY_RUN=False</code>) the DELETE of every <code>CI-Dev-LOAD</code> hedge is committed in its own transaction at line 439, and only <i>then</i> does a second connection begin inserting. Any failure in between — an insert-loop exception (bad cast, constraint), a dropped connection, a killed process — leaves <code>IMA.Hedges</code> with all these hedges <b>deleted and never restored</b>. There is no surrounding transaction, no savepoint, no restore step. The <code>main()</code> try/except (:568) only logs and re-raises. On a financial system of record with no rollback, this is the maximum blast radius.</p>
+    <p class="fld"><b>Call path / reach:</b> <code>main:550 (delete) → main:551 (insert)</code>, sequential, two transactions.</p>
+    <p class="fld"><b>Severity rationale:</b> Critical (data loss on a money-path SoR, no rollback).</p>
+    <p class="fld"><b>Remediation sketch:</b> Wrap delete + insert in a single transaction on one connection (<code>autocommit=False</code>, one <code>commit()</code> at the very end, <code>rollback()</code> on any exception). Ideally snapshot the deleted rows first.</p>
+  </div>
+
+  <div class="tier crit" id="f-idem">
+    <h3><span class="badge">CRITICAL</span> "Idempotent / safe to rerun" is false — no enforcing constraint (confirmed live) and no code check</h3>
+    <p class="ev">Evidence: README.md:117-122 &amp; :404 claim; hedge_reconciliation.py:447-485 (insert has no existence check); live <code>sys.indexes</code> on <code>IMA.Hedges</code></p>
+<pre><code>README §Idempotency: "safe to rerun ... Checks for exact matches:
+   ContractTermId + StartDate + EndDate + FixedRate ... Skips existing hedges (no duplicates)"
+
+-- Live on mssql-industrial-int (2026-07-01) — the ONLY unique index:
+UQ_Hedges_HedgeKey  (is_unique=1)  ->  HedgeKey
+-- No unique index on (ContractTermId, StartDate, EndDate, FixedRate).
+-- And the script sets HedgeKey = NEWID() (line 466) => every row is unique by construction.</code></pre>
+    <p class="fld"><b>Why it matters:</b> The advertised safety net does not exist at either layer. (a) <code>insert_into_ima</code> contains <b>no</b> "does this hedge already exist?" query — it unconditionally inserts every prepared row. (b) The DB cannot catch a duplicate either: the sole unique constraint is on <code>HedgeKey</code>, which is <code>NEWID()</code>, so duplicates on the business tuple are physically insertable. The <code>drop_duplicates</code> at :403 only dedups <i>within a single run's</i> DataFrame. The <b>only</b> thing preventing accumulation across runs is the fragile delete-first step — which, per the finding above, is a separate transaction. Run the insert twice without the delete (or after the delete fails) and you silently double the hedge coverage for every contract term.</p>
+    <p class="fld"><b>Call path / reach:</b> Any re-execution; compounds directly with the delete/insert split above.</p>
+    <p class="fld"><b>Severity rationale:</b> High → <b>Critical</b> (money path — duplicated hedge % / rates inflate contract coverage and downstream margin/unwind math).</p>
+    <p class="fld"><b>Remediation sketch:</b> Either add a real pre-insert existence check on the business tuple, or add a unique index to enforce it and use <code>MERGE</code>/upsert — and correct the README, which describes behavior the code does not implement.</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> Fuzzy-match fallback can attach a priced hedge to the wrong contract</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:160-174</p>
+<pre><code>if len(matching_utility_contracts) == 0:
+    matching_utility_contracts = ima_contracts          # <-- search ALL contracts
+    min_score_threshold = MIN_MATCH_SCORE + 0.15         # 0.85
+...
+for _, ima_row in matching_utility_contracts.iterrows():
+    score = fuzzy_match(customer, ima_row['Name'])
+    if score > best_score:
+        best_score = score
+        best_match = ima_row['Id'] if score >= min_score_threshold else None</code></pre>
+    <p class="fld"><b>Why it matters:</b> When the utility filter finds nothing, the code name-matches against <i>every</i> IMA contract at a 0.85 <code>SequenceMatcher</code> ratio and takes the best. Two similarly named customers ("City of Fostoria" vs "City of Fostonia") can exceed 0.85. A false match writes a real <code>FixedRate</code> + <code>Margin</code> hedge onto the <b>wrong customer's contract term</b> in the SoR — a financial mis-attribution with no confidence column, no review gate, and (per Dim 2) no test. The README notes only 299 of 559 hedges match directly; ~260 ride this fuzzy path, so the exposure is a large minority of all rows.</p>
+    <p class="fld"><b>Severity rationale:</b> High (money-path correctness, silent, unreviewed). Not Critical only because it corrupts individual rows, not the whole table.</p>
+    <p class="fld"><b>Remediation sketch:</b> Persist the match score + method per row; route sub-perfect matches to a manual review file instead of auto-writing; never fall back to the all-contracts search without human sign-off.</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> Calendar-month normalization can invert the date range (StartDate &gt; EndDate)</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:334-347</p>
+<pre><code>end_date_normalized = to_date + relativedelta(day=31)       # last day of the END month
+if from_date.day == 1:
+    start_date_normalized = from_date
+else:
+    start_date_normalized = from_date + relativedelta(months=1, day=1)  # 1st of NEXT month</code></pre>
+    <p class="fld"><b>Why it matters:</b> A hedge that both starts mid-month and ends in that same month — e.g. <code>Apr 12 → Apr 20</code> — normalizes to <code>StartDate = May 1</code>, <code>EndDate = Apr 30</code>: a <b>negative-duration</b> hedge. Nothing guards <code>start &gt; end</code>; both columns are NOT NULL <code>datetime2</code> so the DB accepts it. Such a row silently corrupts any month-coverage or weighted-average-rate summation (the hub's "December total" sanity math), and feeds unwind calculations. Short intra-month strips are exactly what a mid-term hedge layer looks like.</p>
+    <p class="fld"><b>Severity rationale:</b> High (silent invalid financial data, no guard, no test).</p>
+    <p class="fld"><b>Remediation sketch:</b> After normalization, assert <code>StartDate &lt;= EndDate</code>; decide the business rule for sub-month strips (drop, or clamp to the covered month) explicitly rather than emitting an inverted range.</p>
+  </div>
+
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> Fabricated "15% of fixed rate" margin persisted to a NOT NULL money column, unflagged</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:365-367</p>
+<pre><code>df['Margin'] = df['ActualMargin'].fillna(df['FixedRate'] * 0.15).round(8)
+df['CommodityCost'] = (df['FixedRate'] - df['Margin']).round(8)</code></pre>
+    <p class="fld"><b>Why it matters:</b> When no overlapping <code>ContractDetails</code> margin is found, the script invents one — 15% of the fixed rate — and writes it (and the derived <code>CommodityCost</code>) into the SoR's NOT NULL <code>Margin</code>/<code>CommodityCost</code> columns (both <code>decimal(12,8)</code>, confirmed live). Nothing distinguishes a fabricated margin from a real one downstream. The README frames the script as loading "actual contract margins ... instead of assuming a flat 15% cost" (§4) — yet the fallback does exactly the thing the README says it avoids, for every unmatched row.</p>
+    <p class="fld"><b>Severity rationale:</b> High (invented financial value on a money path, indistinguishable downstream).</p>
+    <p class="fld"><b>Remediation sketch:</b> Do not fabricate; route margin-less hedges to review, or add an explicit "estimated margin" flag column so downstream consumers can exclude them.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> "First overlapping ContractDetails margin wins" — arbitrary pick among several</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:296-298 (and the duplicate pass at :541-542)</p>
+<pre><code>if len(matching_details) > 0:
+    merged_row['ActualMargin'] = matching_details.iloc[0]['Margin']   # first by FromDate</code></pre>
+    <p class="fld"><b>Why it matters:</b> A hedge date range can overlap multiple <code>ContractDetails</code> rows with different margins over the strip. The code takes <code>iloc[0]</code> (earliest <code>FromDate</code>) and ignores the rest — no weighting, no "which detail actually applies to this strip" logic. The persisted margin can be the wrong one for part of the hedge window.</p>
+    <p class="fld"><b>Remediation sketch:</b> Define the intended selection (date-weighted average, or the detail covering the hedge midpoint) and apply it deterministically.</p>
+  </div>
+
+  <!-- ===================== DIM 5 ===================== -->
+  <h2 class="section">Dimension 5 — Tech Debt &amp; Maintainability</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> HedgeTypeId hardcoded to 1 — no lookup against IMA.HedgeTypes</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:398</p>
+<pre><code>insert_df['HedgeTypeId'] = 1</code></pre>
+    <p class="fld"><b>Why it matters:</b> Every hedge is stamped <code>HedgeTypeId = 1</code> with no lookup against the <code>IMA.HedgeTypes</code> table (which exists — confirmed in the hub schema map). If 1 is not the correct type for a load-following / commodity hedge, or if types are environment-specific, all 383 rows are mistyped and any type-scoped query (or the position feed) mis-buckets them. A magic FK with no validation.</p>
+    <p class="fld"><b>Remediation sketch:</b> Resolve the intended type by name from <code>IMA.HedgeTypes</code> at runtime; fail loudly if absent.</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> Documentation / config hygiene: contradictory counts + a source-edited kill switch</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:4 vs README.md:7,111 ; hedge_reconciliation.py:29</p>
+<pre><code>module docstring:4  "load 399 hedges from Supply"
+README:7            "inserts 383 deduplicated hedges"
+README:111          "383 hedges inserted"
+line 29             DRY_RUN = True  # flip to False in source to commit</code></pre>
+    <p class="fld"><b>Why it matters:</b> The headline row counts disagree across the two files (399 vs 383 vs 559 sourced), so the prose metrics are already stale and can't be trusted as run evidence. Separately, arming the writes is a source edit to <code>DRY_RUN</code> — one careless commit leaves the destructive path armed by default for the next runner. Both are low-severity individually but erode confidence in an already-untested SoR-mutating script.</p>
+    <p class="fld"><b>Remediation sketch:</b> Emit counts only from the run log (never hardcode in prose); make the write gate an explicit CLI flag (<code>--commit</code>) that defaults to dry-run.</p>
+  </div>
+
+  <!-- ===================== DIM 6 ===================== -->
+  <h2 class="section">Dimension 6 — Dependency Health &amp; Version Risk</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> No dependency manifest / pinning; deprecated pandas SQL path; ODBC Driver 17 hardcoded</h3>
+    <p class="ev">Evidence: folder has no <code>requirements.txt</code>/<code>pyproject.toml</code>; hedge_reconciliation.py:8-13, :25-26, :90</p>
+<pre><code>import pyodbc, pandas as pd, from dateutil.relativedelta import relativedelta
+df = pd.read_sql(query, conn)   # :90 — pyodbc connection, not a SQLAlchemy engine
+"Driver={ODBC Driver 17 for SQL Server}; ..."   # :25-26</code></pre>
+    <p class="fld"><b>Why it matters:</b> Three compounding reproducibility risks: (1) no pinned dependency set — the next runner resolves whatever <code>pandas</code>/<code>pyodbc</code>/<code>dateutil</code> is on the box, and the date-normalization + money math are version-sensitive; (2) <code>pd.read_sql</code> against a raw DBAPI connection is deprecated (pandas steers to SQLAlchemy engines) and emits warnings today, breakage later; (3) ODBC Driver 17 is hardcoded — Driver 18 (the current default install) flips <code>Encrypt</code> to <code>yes</code> and would reject this connection string without <code>TrustServerCertificate</code>. Any of the three can silently change behavior or fail the connection on a rebuilt machine.</p>
+    <p class="fld"><b>Remediation sketch:</b> Add a pinned <code>requirements.txt</code>; move to a SQLAlchemy engine for <code>read_sql</code>; make the ODBC driver version configurable / detect it.</p>
+  </div>
+
+  <!-- ===================== DIM 7 ===================== -->
+  <h2 class="section">Dimension 7 — Performance Hotspots</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> Full-table loads + O(hedges × terms) Python-loop join; mislabeled as a recurring "pipeline"</h3>
+    <p class="ev">Evidence: hedge_reconciliation.py:185-203 (load all terms), :278-304 (nested per-row filter); README.md:94-96</p>
+<pre><code>ima_terms = load_ima_contract_terms()      # README: 197,074 terms, all into pandas
+for idx, row in result.iterrows():          # per matched hedge...
+    matching_terms = ima_terms[             # ...full-DataFrame boolean scan of 197k rows
+        (ima_terms['ContractId'] == row['Id']) &
+        (ima_terms['StartDate'] <= row['ToDate']) &
+        (ima_terms['EndDate'] >= row['FromDate'])]</code></pre>
+    <p class="fld"><b>Why it matters:</b> It pulls all ~38,771 contracts and ~197,074 contract terms into memory, then does the date-overlap join as a Python <code>iterrows</code> loop that re-scans the full 197k-row terms frame for every hedge — an O(hedges × terms) pattern the DB could do with an indexed range join. Tolerable for a one-shot backfill of ~600 hedges, but the README brands this a "pipeline" (implying recurring) and the algorithm would not scale to that use. A redundant second margin pass (:530-542) re-does work <code>match_to_ima</code> already computed at :290-302.</p>
+    <p class="fld"><b>Remediation sketch:</b> Push the date-overlap join into SQL (or a pandas <code>merge</code> keyed on ContractId first), and drop the duplicate margin pass. If it is truly one-shot, rename/document it as a backfill, not a pipeline.</p>
+  </div>
+
+  <!-- ===================== RELEVANCE ===================== -->
+  <h2 class="section" id="relevance">Relevance to the deal-sheet-debug Skill Hub</h2>
+  <div class="callout">
+    <div class="lbl">Relevance verdict</div>
+    <p><b>Reference material, not a reusable component — and it must be quarantined.</b> The hub (node <code>12-hedge-load-following-model.md</code>) already owns the hedge model and, critically, the <i>canonical</i> ingestion path: <code>deal sheet → scrape → Pending.Hedges → IMA.Hedges (HedgeKey handshake, CONTRACT-954)</code>. This script is a <b>parallel backfill route that bypasses all of that</b>. If it were folded in as "how hedge data gets into IMA360," it would actively mislead — the hub would document a dev shortcut as production truth. So: <b>harvest the verified facts, discard the mechanism.</b></p>
+  </div>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>What the script offers</th><th>Verdict</th><th>Recommended hub action</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>The <code>IMA.Hedges</code> column shape.</b> Its 14-column INSERT (<code>:462-466</code>) matches the live table <b>exactly</b> (verified 2026-07-01): ContractTermId, HedgeTypeId, StartDate, EndDate, FixedRate <code>dec(12,8)</code>, Value <code>dec(18,8)</code>, CreateBy/ModifyBy <code>varchar(150)</code>, HedgeKey <code>uniqueidentifier</code>, Margin/CommodityCost <code>dec(12,8)</code>, AdditionDate, + identity HedgeId.</td>
+          <td><span class="lozenge green">Harvest</span></td>
+          <td>Closes the hub's explicit open TBD ("verify <code>IMA.Hedges</code> column lists", node 15). Record the column shape in <code>15-industrial-schema-map.md</code>, cited to live introspection (not to this script).</td>
+        </tr>
+        <tr>
+          <td><b>Field semantics:</b> <code>FixedEnergyPrice</code> ($/MWh) ÷ 1000 = <code>FixedRate</code> ($/kWh); <code>PercentFixed</code> (decimal 0.5) → <code>Value</code> column; <code>CommodityCost = FixedRate − Margin</code>.</td>
+          <td><span class="lozenge green">Harvest</span></td>
+          <td>Maps the deal sheet's "Monthly Hedges" strip (% of load, fixed rate, cost comps) onto the persisted columns — a useful test oracle. Add to node 12, flagged "unverified — confirm against a real scrape."</td>
+        </tr>
+        <tr>
+          <td><b>Supply-side origin + the ContractId gotcha:</b> <code>Supply.dbo.DailyLoadFollowingContracts ⋈ CustomerContractTermsDetailed</code> as the LF source; Supply ContractId ≠ Industrial ContractId, the latter embedded in <code>ProductName</code> as <code>-(\d{4,6})-</code>.</td>
+          <td><span class="lozenge amber">Harvest w/ caveat</span></td>
+          <td>New upstream fact the hub lacks. Add to node 11 (pricing pipeline upstream) as an <i>alternative</i> data lineage — <b>unverified</b> (no Supply MCP to confirm), clearly labeled as the backfill's source, not the deal-sheet path.</td>
+        </tr>
+        <tr>
+          <td><b>Billing-period → calendar-month normalization edge cases</b> (Dim 4: inverted ranges, overlap math).</td>
+          <td><span class="lozenge amber">Harvest as test input</span></td>
+          <td>Excellent negative-test oracle for hedge coverage math. Feed the edge cases into TC design; do <b>not</b> copy the buggy normalization code.</td>
+        </tr>
+        <tr>
+          <td><b>The ingestion mechanism</b> (direct SoR INSERT, NEWID() HedgeKey, delete+reinsert, 15% margin fallback, fuzzy auto-match, HedgeTypeId=1).</td>
+          <td><span class="lozenge red">Quarantine</span></td>
+          <td>Never encode as production semantics. If referenced at all, label it "one-off dev backfill (<code>CreateBy='CI-Dev-LOAD'</code>) — bypasses scrape/HedgeKey handshake; carries the defects in TDD-025."</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>Bottom line for the hub:</b> worth ~30 minutes of ingestion — pull the confirmed column shape into node 15 and the Supply-source + field-semantics facts into nodes 11/12, each cited and caveated. Do not adopt the code, its "idempotent" claim, or its financial heuristics. This dovetails with TDD-024's finding that the hub is "blind to the upstream pipeline + LFA hedges": this script partially lights up that upstream — but only the <i>backfill</i> corner of it, not the scrape path that R9 / Position-Management still owns.</p>
+
+  <footer class="rep">TDD-025 · Technical Due Diligence · IMA 360 QE · 2026-07-01 · read-only audit — no code or DB mutated. Live schema verified on mssql-industrial-int.</footer>
+
+</div>
+</body>
+</html>

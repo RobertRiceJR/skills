@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-027
+date: 2026-07-01
+scope: src/utils/sql/queries — WITH (NOLOCK) decision analysis (166 read-only finders)
+jira: []
+severity: { critical: 0, high: 1, medium: 3, low: 2 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-027 · NOLOCK Analysis — src/utils/sql/queries</title>
+  <style>
+:root {
+  --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+  --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#ffffff;
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+* { box-sizing:border-box; }
+html { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 var(--font-body); }
+.wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+header.report { background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%); color:#fff; border-radius:16px; padding:34px 36px; margin-bottom:28px; box-shadow:0 8px 28px rgba(27,31,29,.18); }
+header.report .eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:11.5px; font-weight:700; opacity:.85; margin:0 0 10px; }
+header.report h1 { margin:0 0 8px; font-size:29px; line-height:1.15; font-weight:750; font-family:var(--font-head); }
+header.report p.sub { margin:0; font-size:15px; opacity:.93; max-width:820px; }
+header.report .meta { margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.25); display:flex; flex-wrap:wrap; gap:22px; font-size:12.5px; opacity:.93; }
+h2.section { font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:750; margin:34px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--line); font-family:var(--font-head); }
+.legend { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px; }
+.legend .item { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:14px 16px; }
+.legend .item .k { font-weight:750; font-size:13px; margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+.legend .item .k .dot { width:10px; height:10px; border-radius:50%; }
+.legend .item .d { font-size:12.5px; color:var(--muted); line-height:1.45; }
+.tablecard { background:var(--card); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:0 2px 10px rgba(20,25,40,.04); }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+thead th { background:#eef1ee; text-align:left; padding:13px 14px; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:750; border-bottom:1px solid var(--line); white-space:nowrap; }
+thead th.num { text-align:center; }
+tbody td { padding:12px 14px; border-bottom:1px solid #eef0ee; vertical-align:top; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover { background:#f6faf4; }
+td.num { text-align:center; }
+.tier { border-left:5px solid var(--accent); border-radius:10px; padding:16px 20px; margin-bottom:14px; background:var(--card); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+.tier h3 { margin:0 0 8px; font-size:15px; display:flex; align-items:center; gap:9px; flex-wrap:wrap; font-family:var(--font-head); }
+.tier h3 .badge { font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; color:#fff; background:var(--accent); }
+.tier p { margin:0 0 8px; font-size:13.5px; color:var(--ink); }
+.tier ul { margin:6px 0 0; padding-left:18px; }
+.tier li { margin:6px 0; font-size:13.5px; }
+.tier.ok { border-left-color:var(--accent); } .tier.ok .badge { background:var(--accent); }
+.tier.warn { border-left-color:var(--accent-3); } .tier.warn .badge { background:var(--accent-3); }
+.tier.info { border-left-color:var(--accent-2); } .tier.info .badge { background:var(--accent-2); }
+.tier.muted { border-left-color:var(--muted); } .tier.muted .badge { background:var(--muted); }
+.tier pre { background:#f4f6f4; border:1px solid var(--line); border-radius:8px; padding:12px 14px; overflow-x:auto; font-size:12.5px; line-height:1.5; font-family:"SF Mono",Consolas,monospace; margin:8px 0; }
+.callout { background:var(--accent-soft); border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:12px; padding:18px 22px; margin:6px 0 30px; }
+.callout .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:750; color:var(--accent); margin-bottom:6px; }
+.callout p { margin:0; font-size:14.5px; line-height:1.55; }
+.callout p + p { margin-top:9px; }
+.callout ol { margin:10px 0 0; padding-left:20px; }
+.callout ol li { font-size:14px; margin:7px 0; line-height:1.5; }
+.note { font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.5; }
+code { background:#eef1ee; padding:1px 6px; border-radius:5px; font-size:.88em; font-family:"SF Mono",Consolas,monospace; }
+footer.rep { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); text-align:center; }
+.lozenge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.lozenge.green { background:#e3f1dc; color:#2f6e1f; }
+.lozenge.amber { background:#f7ebd9; color:#8a5a14; }
+.lozenge.gray { background:var(--line); color:var(--muted); }
+@media print { body { background:#fff; } .wrap { padding:0; } .tablecard,.tier,.legend .item { box-shadow:none; } header.report { box-shadow:none; } }
+@media (max-width:720px) { .legend { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE · TDD-027</p>
+    <h1>Do we need <code style="background:rgba(255,255,255,.15);color:#fff">WITH (NOLOCK)</code> on the SQL finder queries?</h1>
+    <p class="sub">Every query in <code style="background:rgba(255,255,255,.15);color:#fff">src/utils/sql/queries</code> is a read-only SELECT used to sample or verify test data against the shared IMA 360 CRM &amp; Industrial databases. This run answers the NOLOCK question against the databases' <em>actual</em> concurrency configuration — not from first principles.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> QE / prospective acquirer review</span>
+      <span><b>Date:</b> 2026-07-01</span>
+      <span><b>Scope:</b> 166 finders across 7 files</span>
+      <span><b>Verdict:</b> No — do not add NOLOCK</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>Critical · 0</div><div class="d">No finding of this severity.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High · 1</div><div class="d">Adopting NOLOCK is a suite-wide correctness downgrade with zero concurrency upside.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium · 3</div><div class="d">Error-601 aborts on hot tables; dirty reads corrupt the merge-safety &amp; HU predicates.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low · 2</div><div class="d">Current path is already optimal; one defensive-documentation gap.</div></div>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">The Answer — bottom line up front</div>
+    <p><b>No. Do not add <code>WITH (NOLOCK)</code> to these queries — not to any of the 166.</b> It would buy you nothing and cost you correctness. The reasoning is one fact, verified live against all four databases the suite touches:</p>
+    <ol>
+      <li><b><code>READ_COMMITTED_SNAPSHOT</code> is ON</b> on the CRM <em>and</em> Industrial databases in <em>both</em> INT and QA (verified via <code>sys.databases</code>, 2026-07-01). Under RCSI, the default <code>READ COMMITTED</code> already serves reads from row versions — your SELECTs take <b>no shared locks</b>, never block a writer, and are never blocked by one. <a href="#f1">→ Finding&nbsp;1</a></li>
+      <li><b>NOLOCK's only real benefit — avoiding blocking — is therefore already provided</b>, but without NOLOCK's hazards. Adding it is a pure downgrade: same concurrency, plus dirty reads, missing/duplicate rows, and <code>Error&nbsp;601</code> scan-aborts. <a href="#f2">→ Finding&nbsp;2</a></li>
+      <li><b>The finders are exactly where dirty reads hurt most</b> — the merge-safety predicate and HU-eligibility filters depend on precise, committed counts; a dirty read reintroduces the very flakes (CI-7631/7633/7761) those predicates were built to prevent. <a href="#f3">→ Finding&nbsp;3</a></li>
+    </ol>
+    <p>The current implementation — single-statement autocommit reads on an RCSI database — is already the correct, lock-light shape. The right action is <b>no code change</b>, plus a one-line note that the suite relies on RCSI. <a href="#f5">→ Finding&nbsp;5</a></p>
+  </div>
+
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier muted">
+    <h3><span class="badge">SCOPE</span> What was and wasn't reviewed</h3>
+    <p><b>Target:</b> <code>src/utils/sql/queries/</code> — 7 files, 166 exported finders, plus the execution path that runs them (<code>sql.client.ts</code>, <code>sql.config.ts</code>, <code>sql.industrial.config.ts</code>) and the live isolation configuration of the 4 databases they hit.</p>
+    <p><b>Question (user-scoped):</b> a single decision — should <code>WITH (NOLOCK)</code> be added to each query? This is a <em>subset</em> run, not a full seven-dimension audit. The dimensions that bear on the NOLOCK decision are covered in depth: <b>concurrency &amp; correctness</b> (Dim&nbsp;3), <b>failure modes</b> (Dim&nbsp;4), and <b>performance</b> (Dim&nbsp;7).</p>
+    <p><b>Explicitly out of scope</b> (no silent caps): architecture/coupling (Dim&nbsp;1), test coverage (Dim&nbsp;2), tech debt (Dim&nbsp;5), dependency health (Dim&nbsp;6). Those were audited across this same directory six days ago in <b>TDD-017</b> (2026-06-25, <em>"String params interpolated (not bound) into live-DB SQL; CI filter copy-pasted ~80×"</em>) and are not re-litigated here.</p>
+    <p><b>Method:</b> evidence-first — read every query file and the execution path, then queried the running databases (read-only) to establish the isolation level in effect rather than assuming a default.</p>
+  </div>
+
+  <h2 class="section">Phase 1 — Surface Map (how a query actually runs)</h2>
+  <div class="tier info">
+    <h3><span class="badge">PATH</span> Finder string → autocommit read → no lock held</h3>
+    <p>Every finder is a plain SQL string (or a <code>ParameterizedQuery</code>) returned from the <code>queries.*</code> modules, handed to the <code>sqlDB.*</code> facade, and executed by one method:</p>
+    <pre>// src/utils/sql/sql.client.ts:38-50
+async executeQuery&lt;T&gt;(query: string | ParameterizedQuery): Promise&lt;T[]&gt; {
+    const pool = await this.connect();
+    const request = pool.request();
+    ...
+    const results = await request.query&lt;T&gt;(query.text);   // ← single statement, autocommit
+    return results.recordset ?? [];
+}</pre>
+    <p><b>What this tells us about locking:</b></p>
+    <ul>
+      <li><b>No explicit transaction.</b> No <code>beginTransaction()</code> / <code>pool.transaction()</code> anywhere in the SQL layer (grep-confirmed). Each finder is a single autocommit statement — so cross-statement anomalies (non-repeatable read, phantom) can't even arise; only <em>within</em>-statement consistency matters.</li>
+      <li><b>No isolation-level override.</b> No <code>SET TRANSACTION ISOLATION LEVEL</code> and no <code>isolationLevel</code> in the connection config (<code>sql.config.ts:11-25</code>). Every statement runs at the server/database default = <code>READ COMMITTED</code>.</li>
+      <li><b>The database default is not lock-based.</b> Because <code>READ_COMMITTED_SNAPSHOT</code> is ON (Finding 1), <code>READ COMMITTED</code> here means <em>row-versioned</em> reads — statement-level snapshot, no shared (S) locks acquired.</li>
+      <li><b>Targets are shared non-prod app DBs.</b> <code>Context.getCrmSqlServer()</code> / <code>getIndustrialSqlServer()</code> resolve to INT (default) or QA — the live app writes to these concurrently. Prod is a separate MCP-only server this suite never queries. So the <em>only</em> stake in the NOLOCK question is the quality of test-data selection, never production integrity.</li>
+    </ul>
+    <p class="note">166 finders by file: party 47 · account 48 · opportunity 43 · industrial 14 · contract 6 · enum 6 · communications 2. All are SELECT-only; <code>_shared/fragments.ts</code> holds two helper builders (<code>dateWindow</code>, <code>toIdList</code>), not queries.</p>
+  </div>
+
+  <h2 class="section">Findings (ranked by blast radius of adopting NOLOCK)</h2>
+
+  <div class="tier warn" id="f1">
+    <h3><span class="badge">HIGH</span> 1 · On a RCSI database, NOLOCK is a pure downgrade — it removes locks that are already not being taken</h3>
+    <p><b>Evidence — live query, all four databases (2026-07-01):</b></p>
+    <pre>SELECT name, is_read_committed_snapshot_on, snapshot_isolation_state_desc
+FROM sys.databases WHERE name = DB_NAME();
+
+CRM  (INT)        → is_read_committed_snapshot_on = True   snapshot_isolation_state = ON
+CRM  (QA)         → is_read_committed_snapshot_on = True   snapshot_isolation_state = ON
+Industrial (INT)  → is_read_committed_snapshot_on = True   snapshot_isolation_state = ON
+Industrial (QA)   → is_read_committed_snapshot_on = True   snapshot_isolation_state = ON</pre>
+    <p><b>Why it matters:</b> people reach for <code>NOLOCK</code> for exactly one reason — to stop a reader from taking shared locks that block, or get blocked by, writers. Under <code>READ_COMMITTED_SNAPSHOT</code>, the default isolation <em>already</em> does that: readers are served from the version store and acquire no S-locks. So NOLOCK's entire upside is already delivered by the database configuration — for free, and without side effects. Adding NOLOCK on top changes the concurrency behaviour by <b>zero</b> while opting every finder into <code>READ UNCOMMITTED</code> semantics (dirty reads, allocation-order scan anomalies). You would be trading a guaranteed-consistent statement snapshot for an inconsistent one and getting nothing back.</p>
+    <p><b>Reach:</b> all 166 finders, both environments. This is the finding that decides the question for the whole directory.</p>
+    <p><b>Severity rationale:</b> High, not Critical — the blast radius is suite-wide test reliability (flaky, non-reproducible data selection), not production data or money. It cannot reach prod: the suite never connects to a prod DB.</p>
+    <p><b>Remediation:</b> add nothing. The default path is correct. (If RCSI were <em>off</em>, the honest answer would be "enable RCSI at the DB, don't sprinkle NOLOCK" — but it's already on.)</p>
+  </div>
+
+  <div class="tier info" id="f2">
+    <h3><span class="badge">MEDIUM</span> 2 · NOLOCK would introduce <code>Error 601</code> scan-aborts on the hot append tables these finders read</h3>
+    <p><b>Evidence — the log-table finders that read high-churn tables:</b></p>
+    <pre>// src/utils/sql/queries/queries.industrial.ts:93-100 · 130-135
+FROM dbo.[log] l  WHERE l.Exception LIKE '%ProcessErroredDeals%' ...     // getProcessErroredDealsErrors
+FROM dbo.[Log] l  WHERE l.Logger IN ('IGS.CIBatch','IGS.DealCapture') ... // getCIBatchRecentErrors</pre>
+    <p><b>Why it matters:</b> <code>READ UNCOMMITTED</code> scans read pages in allocation order without stability locks. When a concurrent writer causes a page split or row movement mid-scan (routine on a hot, constantly-appended log table), SQL Server can raise <code>Error 601: "Could not continue scan with NOLOCK due to data movement."</code> The query doesn't return bad data — it <b>throws</b>, and the finder fails. The classic "read a busy log table" scenario is the one place a NOLOCK argument sounds plausible, yet it's precisely where 601 and skipped/duplicated rows are most likely. Under RCSI (today) these same reads get a stable, non-blocking snapshot with none of that risk.</p>
+    <p><b>Reach:</b> the two Industrial log finders most directly; more broadly any finder scanning a churning table (HU request/response tables, merge history) inherits the same class of intermittent, load-dependent failure.</p>
+    <p><b>Severity rationale:</b> Medium — intermittent data-setup aborts under load; a workaround exists (don't add NOLOCK), and it degrades reliability rather than corrupting anything downstream.</p>
+    <p><b>Remediation:</b> do not add NOLOCK; the RCSI snapshot already reads these tables cleanly without blocking the batch writers.</p>
+  </div>
+
+  <div class="tier info" id="f3">
+    <h3><span class="badge">MEDIUM</span> 3 · Dirty reads would corrupt the merge-safety and HU-eligibility predicates — reviving the exact flakes they were built to kill</h3>
+    <p><b>Evidence — the merge-safety predicate depends on precise, committed state:</b></p>
+    <pre>// src/utils/sql/queries/queries.party.ts:663-670
+const MERGE_SAFE_PARTY_PREDICATE = `
+    p.RelationshipManagerId = 1
+    AND p.IsMerged = 0
+    AND p.PartyTypeId = ${PartyType.Organization}
+    AND NOT EXISTS (SELECT 1 FROM Party.IneligibleForMergeParties gts WHERE gts.PartyId = p.PartyId)
+    AND (SELECT COUNT(*) FROM Party.Accounts acct WHERE acct.PartyId = p.PartyId) <= 3
+    AND (SELECT COUNT(*) FROM Opportunity.Opportunities opp WHERE opp.PartyId = p.PartyId) <= 3`;</pre>
+    <p><b>Why it matters:</b> these finders don't just fetch rows — they encode business-safety invariants. <code>getMergeSafeDuplicatePairs</code> selects only pairs with <code>IsMerged = 0</code>, an exact account/opp count ≤ 3, and no GTS-ineligible row; the HU family (<code>queries.account.ts</code>) selects on <code>NOT EXISTS</code> request rows and <code>COUNT(...) = 0</code> "no HU yet" conditions. A dirty read of an <em>in-flight, uncommitted</em> merge, account insert, or HU request — data that may then roll back — would let a finder pick a party/opportunity that isn't actually eligible. Result: the merge test then trips the masked server-side error (CI-7761) or the non-atomic <code>MergedOpportunities</code> PK violation (CI-7631/7633) that the predicate's comments say it exists to avoid. NOLOCK would silently reintroduce those flakes, at random, under concurrent load — the hardest kind to reproduce.</p>
+    <p><b>Reach:</b> the party merge finders (<code>getMergeSafeDuplicatePairs*</code>, <code>getPartiesForMerge</code>), the HU eligibility/status family in <code>queries.account.ts</code>, and any count/NOT-EXISTS-gated finder — dozens of queries.</p>
+    <p><b>Severity rationale:</b> Medium — produces flaky, misleading test runs (a green test that selected invalid data, or a spurious failure), not permanent corruption.</p>
+    <p><b>Remediation:</b> keep the default RCSI reads, which see only committed rows as of statement start — exactly the semantic these predicates assume.</p>
+  </div>
+
+  <div class="tier muted" id="f4">
+    <h3><span class="badge">LOW</span> 4 · The one place NOLOCK is "traditionally" argued for — the busy log tables — still fails the cost/benefit here</h3>
+    <p><b>Evidence:</b> <code>getProcessErroredDealsErrors</code> and <code>getCIBatchRecentErrors</code> (<code>queries.industrial.ts:93,130</code>) read append-heavy diagnostic log tables — the textbook "just NOLOCK it" case.</p>
+    <p><b>Why it matters:</b> even granting the sympathetic case, the trade is bad. (a) The blocking concern is already gone under RCSI. (b) A dirty read here means reading a logged exception row from a transaction that <em>later rolls back</em> — i.e. an error that never really committed — which actively misleads the very diagnostics these finders feed (Risk Dashboard / deal-scraper triage). (c) Exposure to <code>Error 601</code> (Finding 2) is highest on exactly these tables. So the "hot log table" intuition points the wrong way here.</p>
+    <p><b>Severity rationale:</b> Low — narrow to two diagnostic finders; worst case is a misleading or briefly-failed diagnostic read, not test-data corruption.</p>
+    <p><b>Remediation:</b> none; leave as default reads.</p>
+  </div>
+
+  <div class="tier ok" id="f5">
+    <h3><span class="badge">LOW</span> 5 · The current design is already the correct lock-light shape — the only gap is that the RCSI dependency is undocumented</h3>
+    <p><b>Evidence:</b> single-statement autocommit reads (<code>sql.client.ts:38-50</code>), no isolation override (<code>sql.config.ts:11-25</code>), RCSI ON (Finding 1). This combination gives every finder a transactionally-consistent, non-blocking snapshot as of statement start — the best available correctness/concurrency profile for read-only test-data selection, with no hints required.</p>
+    <p><b>Why it matters:</b> the suite's clean concurrency behaviour is <em>inherited from a database setting it doesn't control</em>. If a DBA ever disabled <code>READ_COMMITTED_SNAPSHOT</code> on INT/QA, these reads would silently revert to acquiring shared locks and <em>could</em> begin blocking / being blocked by the app — the failure mode people wrongly try to pre-empt with NOLOCK. That dependency is nowhere recorded in the SQL layer.</p>
+    <p><b>Severity rationale:</b> Low — latent, contingent on an external config change; no present impact.</p>
+    <p><b>Remediation:</b> add a one-line comment at the top of <code>sql.client.ts</code> (or the query README) noting: <em>"Reads rely on <code>READ_COMMITTED_SNAPSHOT = ON</code> on the CRM &amp; Industrial DBs for non-blocking, consistent snapshots — do not add NOLOCK; if RCSI is ever disabled, revisit isolation here, not with table hints."</em> Optionally add a startup/CI assertion querying <code>sys.databases.is_read_committed_snapshot_on</code>.</p>
+  </div>
+
+  <h2 class="section">Per-file verdict</h2>
+  <div class="tablecard">
+    <table>
+      <thead>
+        <tr><th>Query file</th><th class="num">Finders</th><th>Query kind</th><th>Notable tables read</th><th>NOLOCK verdict</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>queries.party.ts</code></td><td class="num">47</td><td>Read-only SELECT</td><td>Party.*, Opportunity.MergedOpportunities, merge-safety predicate</td><td><span class="lozenge green">No change</span></td></tr>
+        <tr><td><code>queries.account.ts</code></td><td class="num">48</td><td>Read-only SELECT</td><td>Party.LDCAccounts, HistoricalUsage* (churny), MDM.*</td><td><span class="lozenge green">No change</span></td></tr>
+        <tr><td><code>queries.opportunity.ts</code></td><td class="num">43</td><td>Read-only SELECT</td><td>Opportunity.*, status history, bulk-transfer batch items</td><td><span class="lozenge green">No change</span></td></tr>
+        <tr><td><code>queries.industrial.ts</code></td><td class="num">14</td><td>Read-only SELECT</td><td><b>dbo.[Log] / dbo.[log]</b> (hot append), IMA.*, Maintenance.*</td><td><span class="lozenge green">No change</span></td></tr>
+        <tr><td><code>queries.contract.ts</code></td><td class="num">6</td><td>Read-only SELECT</td><td>[CI-6750].ImaContracts, MDM.UtilityLinesOfBusiness</td><td><span class="lozenge green">No change</span></td></tr>
+        <tr><td><code>queries.enum.ts</code></td><td class="num">6</td><td>Read-only SELECT</td><td>Small lookup/enum tables (statuses, task types)</td><td><span class="lozenge green">No change</span></td></tr>
+        <tr><td><code>queries.communications.ts</code></td><td class="num">2</td><td>Read-only SELECT</td><td>ImaCommunication.EmailTemplates / EmailImages</td><td><span class="lozenge green">No change</span></td></tr>
+        <tr><td><code>_shared/fragments.ts</code></td><td class="num">—</td><td>Predicate helpers</td><td>n/a (builds <code>dateWindow</code> / <code>toIdList</code>)</td><td><span class="lozenge gray">N/A</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Uniform verdict: <b>0 of 166 finders should receive <code>WITH (NOLOCK)</code>.</b> The verdict is identical across files because it derives from a database-wide fact (RCSI ON), not from any per-query property. The Industrial log-table reads are called out because they are the strongest <em>candidate</em> for NOLOCK — and even they should not have it (Finding 4).</p>
+
+  <h2 class="section">Recommendation</h2>
+  <div class="callout">
+    <div class="lbl">What to do</div>
+    <p><b>1. Add no NOLOCK hints.</b> The proposed change is contraindicated on a RCSI database — all cost, no benefit.</p>
+    <p><b>2. Record the dependency.</b> One comment in <code>sql.client.ts</code> (Finding 5) so the next engineer knows the clean concurrency behaviour rides on <code>READ_COMMITTED_SNAPSHOT = ON</code>, and that the correct lever — if it's ever disabled — is isolation configuration, not table hints.</p>
+    <p><b>3. If a specific finder is ever slow,</b> that is a scan-volume / indexing issue (these already use <code>TOP N</code> + indexed predicates), not a locking one — NOLOCK would not help a query that is slow for any reason other than lock waits, and under RCSI there are no lock waits to remove.</p>
+  </div>
+
+  <footer class="rep">TDD-027 · Technical Due Diligence · IMA 360 Playwright QE · 2026-07-01 · Read-only analysis; live isolation config verified against CRM &amp; Industrial (INT + QA). Companion to TDD-017 (general review of the same directory).</footer>
+
+</div>
+</body>
+</html>

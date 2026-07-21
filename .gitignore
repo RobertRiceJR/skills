@@ -1,0 +1,14 @@
+# Personal / machine-specific Claude Code config
+.claude/settings.local.json
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# llm-judge generated artifacts (also covered by the skill's own .gitignore)
+**/generated-cases.json
+**/results/
+
+# OS cruft
+Thumbs.db
+.DS_Store

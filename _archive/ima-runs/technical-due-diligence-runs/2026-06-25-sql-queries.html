@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-017
+date: 2026-06-25
+scope: src/utils/sql/queries — 6 query modules (account, contract, enum, industrial, opportunity, party) — SQL utilities overhaul, part 3 of 4
+jira: []
+severity: { critical: 0, high: 1, medium: 5, low: 4 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-017 — SQL Queries due diligence</title>
+  <style>
+:root {
+  --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+  --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#ffffff;
+  --s1:#b5261c; --s2:#c84a32; --s3:#dd6b3f; --s4:#e08a3e; --s5:#d4a017;
+  --s6:#b6a92e; --s7:#8aab3c; --s8:#5fa345; --s9:#2f8f3e; --s10:#1d7a33;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 var(--font-body); }
+.wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+header.report { background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%); color:#fff; border-radius:16px; padding:34px 36px; margin-bottom:28px; box-shadow:0 8px 28px rgba(27,31,29,.18); }
+header.report .eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:11.5px; font-weight:700; opacity:.85; margin:0 0 10px; }
+header.report h1 { margin:0 0 8px; font-size:29px; line-height:1.15; font-weight:750; font-family:var(--font-head); }
+header.report p.sub { margin:0; font-size:15px; opacity:.93; max-width:760px; }
+header.report .meta { margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.25); display:flex; flex-wrap:wrap; gap:22px; font-size:12.5px; opacity:.93; }
+h2.section { font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:750; margin:34px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--line); font-family:var(--font-head); }
+.legend { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px; }
+.legend .item { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:14px 16px; }
+.legend .item .k { font-weight:750; font-size:13px; margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+.legend .item .k .dot { width:10px; height:10px; border-radius:50%; }
+.legend .item .d { font-size:12.5px; color:var(--muted); line-height:1.45; }
+.tablecard { background:var(--card); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:0 2px 10px rgba(20,25,40,.04); }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+thead th { background:#eef1ee; text-align:left; padding:13px 14px; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:750; border-bottom:1px solid var(--line); white-space:nowrap; }
+tbody td { padding:12px 14px; border-bottom:1px solid #eef0ee; vertical-align:top; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover { background:#f6faf4; }
+.tier { border-left:5px solid var(--accent); border-radius:10px; padding:16px 20px; margin-bottom:14px; background:var(--card); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+.tier h3 { margin:0 0 8px; font-size:15px; display:flex; align-items:center; gap:9px; flex-wrap:wrap; font-family:var(--font-head); }
+.tier h3 .badge { font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; color:#fff; background:var(--accent); }
+.tier p { margin:0 0 8px; font-size:13.5px; color:var(--ink); }
+.tier ul { margin:6px 0 0; padding-left:18px; } .tier li { margin:6px 0; font-size:13.5px; }
+.tier.ok { border-left-color:var(--accent);} .tier.ok .badge{ background:var(--accent);}
+.tier.warn { border-left-color:var(--accent-3);} .tier.warn .badge{ background:var(--accent-3);}
+.tier.info { border-left-color:var(--accent-2);} .tier.info .badge{ background:var(--accent-2);}
+.tier.muted { border-left-color:var(--muted);} .tier.muted .badge{ background:var(--muted);}
+.tier.crit { border-left-color:var(--s1);} .tier.crit .badge{ background:var(--s1);}
+.callout { background:var(--accent-soft); border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:12px; padding:18px 22px; margin:6px 0 30px; }
+.callout .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:750; color:var(--accent); margin-bottom:6px; }
+.callout p { margin:0; font-size:14.5px; line-height:1.55; } .callout p + p { margin-top:9px; }
+.callout ol { margin:6px 0 0; padding-left:20px; } .callout li { font-size:14px; margin:8px 0; line-height:1.5; }
+.callout a { color:var(--accent-2); font-weight:650; text-decoration:none; } .callout a:hover { text-decoration:underline; }
+.note { font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.5; }
+code { background:#eef1ee; padding:1px 6px; border-radius:5px; font-size:.88em; font-family:"SF Mono",Consolas,monospace; }
+pre { background:#1b1f1d; color:#e9eee9; border-radius:9px; padding:14px 16px; overflow-x:auto; font-size:12.5px; line-height:1.5; font-family:"SF Mono",Consolas,monospace; margin:10px 0; }
+pre .cmt { color:#7f8c7a; }
+.ev { font-size:12px; color:var(--muted); font-family:"SF Mono",Consolas,monospace; margin:2px 0 0; }
+footer.rep { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); text-align:center; }
+@media print { body { background:#fff; } .wrap { padding:0; } .tablecard,.tier,.legend .item { box-shadow:none; } header.report { box-shadow:none; } }
+@media (max-width:720px) { .legend { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>SQL Queries — the named-query catalog</h1>
+    <p class="sub">Part 3 of 4 of the <code>src/utils/sql</code> overhaul review: the six <code>queries/queries.*.ts</code> modules (account, contract, enum, industrial, opportunity, party) — ~2,726 LOC of SQL string builders that back the finder facade. Companion runs: TDD-015 (client/facade), TDD-016 (config), TDD-018 (types), and the <a href="2026-06-25-sql-layer-rollup.html">layer roll-up</a>.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice / QE inheriting + overhauling this layer</span>
+      <span><b>Date:</b> 2026-06-25</span>
+      <span><b>Run:</b> TDD-017</span>
+      <span><b>Scope:</b> src/utils/sql/queries/*.ts</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>Critical — 0</div><div class="d">Data loss · auth bypass · money wrong · untested money/auth path</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High — 1</div><div class="d">Injection surface on a credentialed live-DB connection</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium — 5</div><div class="d">Duplication / inconsistency / brittle literals that compound</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low — 4</div><div class="d">Localized smell · consistency with conventions · advisory</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout">
+    <div class="lbl">Verdict — the three things to fix first in this slice</div>
+    <p>These six modules are the heart of the layer and, on the whole, are careful work — every query is <code>TOP</code>-bounded, most apply the CI filter, and the merge finders show real engineering discipline. The risks are about <em>how</em> the SQL is assembled, not what it computes:</p>
+    <ol>
+      <li><a href="#f1"><b>[High] String parameters are interpolated straight into SQL, not bound.</b></a> Utility codes, LOB names, note text, event-type names, and a party number are dropped into WHERE clauses with <code>${...}</code> against a credentialed connection to live INT/QA/PROD. Inputs are test-controlled today, but the layer offers no parameterization barrier — and the Industrial config one folder over already does this correctly with <code>.input()</code>.</li>
+      <li><a href="#f2"><b>[Medium] The CI filter is copy-pasted ~80+ times, never extracted.</b></a> The same <code>RelationshipManagerId = 1</code> + 1-year <code>CreateDate</code> window is duplicated across nearly every query — and drift is already visible (a 2-year window in two account queries). The file <em>proves</em> it knows how to extract a predicate (<code>MERGE_SAFE_PARTY_PREDICATE</code>) — it just didn’t do it for the most-repeated one.</li>
+      <li><a href="#f3"><b>[Medium] Terminal-state filtering uses two mechanisms with drifting string sets.</b></a> Some queries gate on <code>ImaOpportunityStatusId NOT IN (7,8)</code> (the documented convention); others on <code>os.Name NOT IN (...)</code> string lists that disagree across files (<code>'Lost'</code> present in some, absent in others) — two ways to express one rule, inconsistently.</li>
+    </ol>
+    <p>Net: introduce parameter binding, extract the CI filter and the status gate into shared fragments, and replace the magic-ID literals with a named registry. High-value, mechanical, low-risk.</p>
+  </div>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tablecard"><table><tbody>
+    <tr><td><b>Run ID</b></td><td>TDD-017 (sequential after TDD-016 in this batch)</td></tr>
+    <tr><td><b>Date</b></td><td>2026-06-25</td></tr>
+    <tr><td><b>Jira</b></td><td>—</td></tr>
+    <tr><td><b>Target</b></td><td><code>queries.account.ts</code> (670) · <code>queries.opportunity.ts</code> (851) · <code>queries.party.ts</code> (796) · <code>queries.industrial.ts</code> (257) · <code>queries.contract.ts</code> (99) · <code>queries.enum.ts</code> (53) — ~2,726 LOC</td></tr>
+    <tr><td><b>Root path</b></td><td><code>c:\Users\rrice\IGS_360\test_suite-IMA_360_playwright</code></td></tr>
+    <tr><td><b>In scope</b></td><td>All SQL string builders, their parameterization, the CI/terminal-state conventions, magic literals, randomization</td></tr>
+    <tr><td><b>Excluded</b></td><td>Facade (TDD-015), config (TDD-016), result types (TDD-018)</td></tr>
+    <tr><td><b>Size / shape</b></td><td>6 files / ~2,726 LOC — <b>inline single-context run</b>, all 7 dimensions; the two injection-bearing files (account, party, opportunity) read in full</td></tr>
+  </tbody></table></div>
+  <p class="note">Knowledge-base intake first: the CI filter, NEWID() random sampling, terminal-state exclusion (7=Won/8=Dead), and the 32+ documented column-drift findings are the conventions these queries are graded against. The SQL sanity spec (<code>src/tests/sql/sql.queries.spec.ts</code>) is treated as a partial mitigation for column drift.</p>
+
+  <!-- PHASE 1 -->
+  <h2 class="section">Phase 1 — Surface Map</h2>
+  <div class="tier muted">
+    <h3>Public surface &amp; change-radius</h3>
+    <ul>
+      <li>Each module exports a <code>queries&lt;Domain&gt;</code> object of pure string-builder functions returning raw SQL. Consumed by the facade (<code>sql.db.ts</code> imports 5 of the 6) which wraps each in an <code>executeQuery</code> call.</li>
+      <li><b><code>queries.industrial.ts</code> is the exception</b> — it is <em>not</em> imported by the facade; it is imported <b>directly by 3 spec files</b> (<code>contract.record.overview.e2e</code>, <code>contract.contacts.e2e</code>, <code>sql.queries.spec</code>). So there are two access patterns in the layer (facade-mediated vs direct import) — see F10.</li>
+      <li>The merge finders in <code>queries.party.ts</code> (<code>:619–746</code>) are the most sophisticated: a shared <code>MERGE_SAFE_PARTY_PREDICATE</code> constant, normalized-name helper, and composable <code>*Pairs</code> fragments unioned by <code>wrapMergePairs</code>.</li>
+    </ul>
+    <p><b>Change-radius:</b> these strings reach the suite through the facade’s 228 call sites (TDD-015). A change to a shared fragment (if one existed) would be one edit; today a change to the CI filter is ~80 edits (F2).</p>
+  </div>
+
+  <!-- DIM 3 (lead with the High) -->
+  <h2 class="section">Dimension 3 — Security Surface &amp; Trust Boundaries</h2>
+
+  <div class="tier warn" id="f1">
+    <h3><span class="badge">HIGH</span> String parameters are interpolated into SQL, not bound — an injection surface on a credentialed live-DB connection</h3>
+    <p class="ev">Evidence: queries.account.ts:159, 328–329, 357–358, 638–639 · queries.party.ts:279, 286, 421, 431 · queries.opportunity.ts:445</p>
+    <pre>WHERE u.Code = '${utilityCode}'                       <span class="cmt">// queries.account.ts:159, 328, 357, 638</span>
+  AND lob.Name = '${lobName}'                          <span class="cmt">// queries.account.ts:329, 358, 639</span>
+WHERE p.PartyNumber = '${partyNumber}'                 <span class="cmt">// queries.party.ts:279 AND :286 (UNION halves)</span>
+WHERE en.Note = '${noteText}'                          <span class="cmt">// queries.party.ts:421</span>
+WHERE en.Note LIKE '% ${word} %'                       <span class="cmt">// queries.party.ts:431</span>
+WHERE et.Name = '${eventTypeName}'                      <span class="cmt">// queries.opportunity.ts:445</span></pre>
+    <p><b>Why it matters:</b> These are <code>string</code>-typed parameters interpolated directly into WHERE clauses on a connection that authenticates with a real service account against live INT/QA — and, by the same code path, PROD-adjacent environments. A value containing a single quote breaks the query; a crafted value injects SQL. Today every caller passes a test-controlled constant (a utility code like <code>'NIPSCO'</code>, a note like <code>'#duplicate'</code>), so there is no <em>live</em> exploit — which is why this is High, not Critical. But the layer provides <b>no parameterization barrier at all</b> for string inputs, and several of these builders are general-purpose (<code>getProspectAccountWithNoHuByUtility(utilityCode, lobName)</code>, <code>getPartiesWithNoteContainingWord(word)</code>) — the moment one is fed a value derived from a fixture file, a CSV, or DB-sourced data, it becomes exploitable, and the <code>en.Note LIKE '% ${word} %'</code> case will also silently mis-match on any value containing <code>%</code> or <code>'</code>. The decisive point: the sibling Industrial config (TDD-016) binds the same class of parameter correctly with <code>.input()</code> — the layer already knows the right way and doesn’t use it here.</p>
+    <p><b>Call path / reach:</b> Reached via the facade finders <code>getOpportunityByUtilityCode</code>, <code>getProspectAccountWith(s)NoHuByUtility</code>, <code>getUlobByUtilityCode</code>, <code>getPartyEmailHistoryByPartyNumber</code>, <code>getPartyWithExactNote</code>, <code>getPartyWithNoteContainingWord</code>, <code>getOpportunityWithBrokerRemovedEvent</code> — i.e. the account/party/opportunity test fixtures that pass utility/LOB/note/event values.</p>
+    <p><b>Severity rationale:</b> High, with the security multiplier applied (credentialed, write-capable DB connection). Not Critical because current inputs are trusted constants and the connection is internal-network test infra — but it is the single finding in the whole layer with an external-risk shape, and the only correct long-term answer is binding.</p>
+    <p><b>Remediation sketch:</b> Convert the builders that take string params to parameterized form — return <code>{ text, params }</code> and have <code>executeQuery</code> apply <code>request().input(...)</code> per param (the pattern already in <code>sql.industrial.config.ts:178/196/210</code>). For the <code>LIKE</code> case, bind the value and escape <code>%</code>/<code>_</code>. This also fixes the latent quote-breakage, not just the injection.</p>
+  </div>
+
+  <!-- DIM 1 -->
+  <h2 class="section">Dimension 1 — Architecture, Coupling, Boundaries</h2>
+
+  <div class="tier info" id="f10">
+    <h3><span class="badge">MEDIUM</span> <code>queries.industrial.ts</code> bypasses the facade — two competing access patterns in one layer</h3>
+    <p class="ev">Evidence: sql.db.ts:32–36 imports only 5 query modules (no industrial); queries.industrial.ts consumed directly by contract.record.overview.e2e.spec.ts, contract.contacts.e2e.spec.ts, sql.queries.spec.ts</p>
+    <pre><span class="cmt">// sql.db.ts imports account, contract, enum, opportunity, party — NOT industrial:</span>
+import { queriesAccount }    from './queries/queries.account';
+import { queriesContract }   from './queries/queries.contract';
+import { queriesEnum }       from './queries/queries.enum';
+import { queriesOpportunity} from './queries/queries.opportunity';
+import { queriesParty }      from './queries/queries.party';
+<span class="cmt">// queries.industrial.ts (14 builders) is imported DIRECTLY by specs instead.</span></pre>
+    <p><b>Why it matters:</b> Five of the six query modules flow through the <code>sqlDB</code> facade; the sixth, <code>queries.industrial.ts</code> (14 builders, 257 LOC), is imported straight into spec files. So the layer has two ways to reach a query — the reuse-first facade (which the <code>/sql-data</code> skill and the 109-finder manifest assume is the single front door) and a direct import that the manifest can’t see. A query reachable only by direct import is invisible to the reuse ladder, so it’s prone to being re-composed bespoke. (Note: these are the Industrial <em>string</em> builders, distinct from the Industrial <em>pool</em> finders in <code>sql.industrial.config.ts</code> reviewed in TDD-016 — the Industrial domain is split across two files <em>and</em> two access patterns.)</p>
+    <p><b>Severity rationale:</b> Medium — coupling/consistency that undercuts the reuse model the rest of the tooling is built on.</p>
+    <p><b>Remediation sketch:</b> Either route <code>queries.industrial.ts</code> through facade finders (consistent front door) or consciously document it as a direct-import module and reflect that in the manifest; don’t leave it ambiguous.</p>
+  </div>
+
+  <!-- DIM 5 -->
+  <h2 class="section">Dimension 5 — Tech Debt &amp; Maintainability</h2>
+
+  <div class="tier info" id="f2">
+    <h3><span class="badge">MEDIUM</span> The CI filter is copy-pasted ~80+ times and never extracted — and is already drifting</h3>
+    <p class="ev">Evidence: e.g. queries.party.ts:5–6, 15–16, 36–37, 51–52, 79–80, 97–98, …; queries.opportunity.ts:11–12, 46–47, …; queries.account.ts:30–31, 94–95, 161–162, … vs the relaxed window at account:219, 254</p>
+    <pre>WHERE p.RelationshipManagerId = 1
+  AND p.CreateDate BETWEEN DATEADD(YEAR, -1, GETDATE()) AND DATEADD(WEEK, -2, GETDATE())   <span class="cmt">// repeated ~80+ times</span>
+<span class="cmt">// ...but two account queries quietly use a TWO-year window:</span>
+AND p.CreateDate BETWEEN DATEADD(YEAR, -2, GETDATE()) AND DATEADD(WEEK, -2, GETDATE())     <span class="cmt">// account:219, 254</span>
+<span class="cmt">// the file PROVES it can extract a predicate — it just didn't for this one:</span>
+const MERGE_SAFE_PARTY_PREDICATE = ` p.RelationshipManagerId = 1 AND p.IsMerged = 0 ... `;  <span class="cmt">// party:642–649</span></pre>
+    <p><b>Why it matters:</b> The CI filter is the single most-repeated fragment in the layer — the canonical convention from CLAUDE.md, duplicated verbatim across roughly 80+ query sites in three files. A change to the window (the documented convention) is ~80 edits, and drift is <em>already present</em>: two account HU queries use a 2-year window (with a comment explaining why), so “the CI filter” is silently not one thing. The kicker is that <code>queries.party.ts</code> already demonstrates the fix — <code>MERGE_SAFE_PARTY_PREDICATE</code> (<code>:642</code>) and <code>NORMALIZED_PARTY_NAME</code> (<code>:652</code>) are exactly the extract-a-shared-fragment pattern — it was simply never applied to the fragment that needed it most.</p>
+    <p><b>Severity rationale:</b> Medium — a compounding maintainability tax and an active correctness-drift surface; the highest-leverage cleanup in the slice.</p>
+    <p><b>Remediation sketch:</b> Export <code>CI_PARTY_FILTER</code> (and a parameterized <code>ciPartyFilter({ years = 1 })</code> for the HU exceptions) from a shared fragments module, mirroring <code>MERGE_SAFE_PARTY_PREDICATE</code>; replace the ~80 literals. One window definition, one place to change it.</p>
+  </div>
+
+  <div class="tier info" id="f3">
+    <h3><span class="badge">MEDIUM</span> Terminal-state filtering uses two mechanisms, and the string variant drifts across files</h3>
+    <p class="ev">Evidence: id-based at queries.opportunity.ts:128, 189, 394 + queries.party.ts:215, 604; string-based at queries.opportunity.ts:13, 27, 127, 160 vs queries.account.ts:258, 292, 427</p>
+    <pre>AND cs.ImaOpportunityStatusId NOT IN (7, 8)             <span class="cmt">// the documented convention (7=Won, 8=Dead)</span>
+AND os.Name NOT IN ('Won', 'Dead', 'Closed')           <span class="cmt">// queries.opportunity.ts:13, 27, 127, 160 — string set A</span>
+AND os.Name NOT IN ('Won', 'Lost', 'Dead', 'Closed')   <span class="cmt">// queries.account.ts:258, 292, 427 — string set B (adds 'Lost')</span></pre>
+    <p><b>Why it matters:</b> One concept — “exclude terminal opportunities” — is expressed two ways: the id-based gate on <code>ImaOpportunityCurrentStatuses</code> (the convention, with 7=Won/8=Dead confirmed in the KB) and base <code>OpportunityStatuses.Name</code> string lists. Worse, the string lists disagree: account queries add <code>'Lost'</code>; opportunity queries don’t — and the KB notes 8 is <em>Dead</em>, not Lost. So depending on which finder a test uses, the terminal-state definition differs, which means two finders that look interchangeable sample subtly different populations. This is exactly the kind of silent inconsistency that makes the reuse ladder (pick the “looser sufficient” finder) unsafe.</p>
+    <p><b>Severity rationale:</b> Medium — correctness/consistency; can skew which opportunities a test sees without any visible symptom.</p>
+    <p><b>Remediation sketch:</b> Standardize on the id-based <code>ImaOpportunityStatusId NOT IN (7,8)</code> gate (a shared fragment, like F2), and delete the string-name variants; if a base-status filter is genuinely needed, define one canonical set.</p>
+  </div>
+
+  <div class="tier info" id="f4">
+    <h3><span class="badge">MEDIUM</span> Hardcoded ID blocklists and magic agent IDs — brittle, INT-specific, no lookup</h3>
+    <p class="ev">Evidence: queries.account.ts:183–185 (+ use at :215), 385 · queries.opportunity.ts:446 · queries.party.ts:600</p>
+    <pre>// TODO: identify the Industrial-side prerequisite so this becomes a structural filter
+//       rather than a hardcoded blocklist.                              <span class="cmt">// account.ts:183–184 — acknowledged debt</span>
+const HU_REJECTING_PARTY_IDS = '43377747, 32888822, 31468485, 31432617, 31494708, 31417310';  <span class="cmt">// :185</span>
+  AND pa.PartyId NOT IN (${HU_REJECTING_PARTY_IDS})                      <span class="cmt">// :215</span>
+  AND hu.RequestedByOrganizationAgentId &lt;&gt; 45576                          <span class="cmt">// account:385 / opp:446 — "system agent"</span>
+  AND t.OrganizationAgentId NOT IN (47894, 56199)                        <span class="cmt">// party:600 — RSA_LEADS, AUTOMATED_TESTER</span></pre>
+    <p><b>Why it matters:</b> Concrete INT row IDs are baked into query text: a six-party HU-rejection blocklist (with an explicit unresolved <code>TODO</code> at <code>:183–184</code> noting it should be a structural filter), the “system agent” <code>45576</code>, and the <code>RSA_LEADS</code>/<code>AUTOMATED_TESTER</code> agents <code>47894, 56199</code>. If any of these rows is repurposed, deleted, or differs in QA, the query silently samples a different population — no error, just skewed or empty data. There’s no enum or lookup; the meaning lives only in comments. This is the kind of embedded-magic the overhaul should retire.</p>
+    <p><b>Severity rationale:</b> Medium — brittle test data with a silent failure mode; INT-specific values that don’t travel to QA.</p>
+    <p><b>Remediation sketch:</b> Resolve the agent IDs by name at runtime (an enum finder already exists for statuses/task types) and replace the HU blocklist with the structural Industrial-side gate its own TODO calls for; at minimum hoist all three into a named, commented constants module.</p>
+  </div>
+
+  <div class="tier info" id="f5">
+    <h3><span class="badge">MEDIUM</span> Magic numeric literals saturate the predicates with meaning that lives only in comments</h3>
+    <p class="ev">Evidence: e.g. queries.account.ts:53–54 (status 7 / type 3), 444–445 · queries.industrial.ts:22, 44, 46 · queries.opportunity.ts:76, 145, 700 · queries.party.ts:14</p>
+    <pre>WHERE ldc.LDCAccountStatusId = 7 AND ldc.LDCAccountTypeId = 3            <span class="cmt">// account:53–54</span>
+WHERE sl.ServiceStatusId IN (1, 6) ... AND sl.AccountTypeId IN (1,2,4)   <span class="cmt">// industrial:22, 44</span>
+  AND sl.UtilityLineOfBusinessId &lt;&gt; 79                                   <span class="cmt">// industrial:46</span>
+  AND osa.ImaSaleActivityId = 18 ... AND ot.OpportunityTransferReasonId = 20  <span class="cmt">// opp:76, 145</span>
+  AND e.EventTypeId = 101                                                <span class="cmt">// party:14 (note event)</span></pre>
+    <p><b>Why it matters:</b> Status ids, type ids, activity ids, event-type ids, transfer-reason ids, and supplemental flags are scattered as bare integers across ~2,700 lines. Most carry an inline comment, but the meaning is in prose, not in a typed constant, so the same id (<code>7</code> = Won? or LDCAccountStatus? depends on the column) means different things in different files and can’t be checked. This is the maintainability cost the overhaul most directly addresses.</p>
+    <p><b>Severity rationale:</b> Medium — pervasive; compounds with F4 (IDs) and makes the queries hard to read and safe-edit.</p>
+    <p><b>Remediation sketch:</b> A typed enum/constants module (<code>LdcAccountStatus.Active = 4</code>, <code>ImaOpportunityStatus.Won = 7</code>, …) referenced in the builders; the repo’s <code>schema-constants.md</code> already enumerates most of these — generate from it.</p>
+  </div>
+
+  <div class="tier muted" id="f6">
+    <h3><span class="badge">LOW</span> Hardcoded date literals that silently age</h3>
+    <p class="ev">Evidence: queries.party.ts:300 (<code>MergedDate &gt;= '2026-04-01'</code>), 433 (<code>en.CreateDate &gt; '2020-01-01'</code>)</p>
+    <pre>WHERE MergedDate &gt;= '2026-04-01' ... <span class="cmt">// party:300 getStuckMergedParties — fixed window, drifts from "recent"</span>
+AND en.CreateDate &gt; '2020-01-01'      <span class="cmt">// party:431/433 — arbitrary floor</span></pre>
+    <p><b>Why it matters:</b> <code>getStuckMergedParties</code> pins a fixed start date (<code>'2026-04-01'</code>) for “recent” merge attempts; as time passes it stops meaning “recent.” The <code>'2020-01-01'</code> note floor is an arbitrary literal. Neither is parameterized or relative (<code>DATEADD</code>), unlike the rest of the layer’s date handling.</p>
+    <p><b>Severity rationale:</b> Low — narrow blast radius (diagnostics/note finders), but a literal that ages into wrongness.</p>
+    <p><b>Remediation sketch:</b> Use relative windows (<code>DATEADD</code>) or a parameter, consistent with the CI filter’s approach.</p>
+  </div>
+
+  <div class="tier muted" id="f7">
+    <h3><span class="badge">LOW</span> The CI filter is applied inconsistently — intentional omissions look the same as accidental ones</h3>
+    <p class="ev">Evidence: RM-only (no date) at queries.party.ts:20–26, 131–141, 416–423; documented omission at queries.contract.ts:25–26, 43–45; intentional drop at queries.party.ts:638–640</p>
+    <p><b>Why it matters:</b> Some finders apply RM=1 + the date window; some apply only RM=1; some neither. Several omissions are deliberate and documented (contracts live on pre-window parties — <code>contract.ts:25–26</code>; the merge predicate drops the window to surface old+new duplicate pairs — <code>party.ts:638–640</code>). Others (<code>getPartiesWithCallOutcomes</code> <code>party:20–26</code>, <code>getPartiesWithExactNote</code> <code>party:416–423</code>) omit the date window with no comment, so a reader can’t tell intentional from accidental. Once F2 extracts the filter, these become explicit opt-outs rather than silent divergences.</p>
+    <p><b>Severity rationale:</b> Low — correctness ambiguity; mostly resolved as a side effect of F2.</p>
+    <p><b>Remediation sketch:</b> After F2, make every non-standard query opt out explicitly (<code>/* no date window: contracts predate it */</code>) so the intent is on the page.</p>
+  </div>
+
+  <div class="tier muted" id="f8">
+    <h3><span class="badge">LOW</span> <code>SELECT *</code> + <code>ORDER BY &lt;ordinal&gt;</code> in the enum/snapshot queries</h3>
+    <p class="ev">Evidence: queries.enum.ts:4, 10, 16 · queries.party.ts:270, 310</p>
+    <pre>SELECT TOP 50 * FROM Opportunity.ImaLineOfBusinessOpportunityTypes ORDER BY 1   <span class="cmt">// enum:4</span>
+SELECT * FROM Opportunity.OpportunityStatuses ORDER BY OpportunityStatusId       <span class="cmt">// enum:10</span>
+SELECT TOP 10 * FROM Party.MergeSnapshots ORDER BY 1                              <span class="cmt">// party:310</span></pre>
+    <p><b>Why it matters:</b> <code>SELECT *</code> couples the result shape to the table’s column order, while the facade casts the result to a narrow type (<code>{ TaskTypeId, Name }</code>) — so a schema column change drifts silently against the type (links to TDD-018). <code>ORDER BY 1</code> (ordinal) is fragile if the select list changes. Low because these are reference-data reads, but they’re the easiest to tighten.</p>
+    <p><b>Severity rationale:</b> Low — reference-data only; cosmetic + a small drift surface.</p>
+    <p><b>Remediation sketch:</b> Select explicit columns and order by name, matching the rest of the layer.</p>
+  </div>
+
+  <div class="tier muted" id="f9">
+    <h3><span class="badge">LOW</span> Sanitized-but-interpolated IN-lists, and a few deterministic finders that skip NEWID()</h3>
+    <p class="ev">Evidence: IN-lists at queries.contract.ts:79–91, queries.party.ts:447–448, queries.opportunity.ts:784; deterministic order at queries.account.ts:436–453, 456–465, queries.opportunity.ts:133–147</p>
+    <pre>WHERE c.ImaContractId IN (${idList || 'NULL'})       <span class="cmt">// contract:89 — idList is parseInt+filter+join (safe)</span>
+WHERE VictimOpportunityId IN (${victimOpportunityIds.join(',')})  <span class="cmt">// party:447 — number[] (safe-ish)</span>
+ORDER BY ldc.AccountId DESC   <span class="cmt">// account:452 — deterministic; comment says pick() randomizes in-memory</span></pre>
+    <p><b>Why it matters:</b> Two minor convention deviations. (1) IN-lists are interpolated rather than bound — they’re sanitized (<code>parseInt</code>+<code>Number.isFinite</code> for contract; <code>number[]</code> elsewhere), so no live injection, but it’s the same interpolation habit as F1 on the numeric side. (2) A handful of finders order deterministically (<code>ORDER BY AccountId DESC</code>) instead of <code>NEWID()</code> and rely on the facade’s in-memory <code>pick()</code> to randomize — documented in the comments, but a divergence from the NEWID() sampling convention that a reader must know to expect.</p>
+    <p><b>Severity rationale:</b> Low — safe and partly documented; consistency with the sampling/parameterization conventions.</p>
+    <p><b>Remediation sketch:</b> Bind IN-lists alongside F1; either add <code>ORDER BY NEWID()</code> to the deterministic finders or document the in-memory-pick contract in one place.</p>
+  </div>
+
+  <!-- DIM 2 -->
+  <h2 class="section">Dimension 2 — Test Coverage, Quality &amp; Gaps</h2>
+  <div class="tier muted">
+    <h3>Partial mitigation — the SQL sanity spec exercises these strings</h3>
+    <p><code>src/tests/sql/sql.queries.spec.ts</code> runs the <code>queries/*</code> builders against the live schema and asserts they return rows, which is the safety net that keeps column drift (the repo’s documented 32+ findings) from going fully silent — and the reason this report does not raise a column-drift finding to High. The gap: that net does <em>not</em> cover the inline SQL in the facade (TDD-015 F5) or the Industrial pool finders (TDD-016 F7), and it asserts “rows come back,” not “the right rows” — a finder whose predicate is subtly wrong (e.g. the F3 status drift) still passes. No no-assertion or over-mocked tests observed in scope.</p>
+  </div>
+
+  <!-- DIM 4 / 6 / 7 -->
+  <h2 class="section">Dimension 4 — Error Handling &amp; Failure Modes</h2>
+  <div class="tier muted">
+    <h3>No findings in this slice — error handling lives in the facade</h3>
+    <p>The query modules are pure string builders with no control flow beyond ternaries (<code>getPartiesWithMultipleAccounts</code> <code>party:124</code>) and the sanitizing <code>.map/.filter/.join</code> on IN-lists. There is no try/catch, retry, or state mutation here to assess — empty-result and connection handling is the facade’s concern (TDD-015 F1/F4). One observation: <code>getCiContractsByIds</code> emits <code>IN (${idList || 'NULL'})</code> (<code>contract:89</code>) so an empty id array yields <code>IN (NULL)</code> (zero rows) rather than a SQL syntax error — a deliberate, correct guard worth keeping.</p>
+  </div>
+
+  <h2 class="section">Dimension 6 — Dependency Health &amp; Version Risk</h2>
+  <div class="tier muted">
+    <h3>No findings — these modules import nothing</h3>
+    <p>The query modules have zero imports (pure template-literal functions). No dependency, transitive, or version surface in this slice.</p>
+  </div>
+
+  <h2 class="section">Dimension 7 — Performance Hotspots</h2>
+  <div class="tier muted">
+    <h3>No material findings — bounded queries; two known heavy-table cautions already handled</h3>
+    <p>Every query is <code>TOP</code>-bounded (<code>TOP 1</code>…<code>TOP 1000</code>), and the documented heavy-table hazards are respected: nothing in scope does an unbounded <code>ORDER BY</code> on the 176K-row ULOB contract-term table (the KB timeout caution), and the merge finders deliberately drop a costly NOT-EXISTS that previously pushed the email finder past the mssql timeout (documented at <code>queries.party.ts:631–637</code>). The complex multi-JOIN/CROSS-APPLY finders (<code>getPartyWithActiveRepTaskAndOtherOpp</code> <code>opp:326–365</code>, the merge <code>*Pairs</code> unions) are heavier but bounded and run once per fixture, not in a loop. No N+1 in the SQL layer (N+1 risk, if any, is in how the facade sequences calls — TDD-015). No perf finding warranted.</p>
+  </div>
+
+  <footer class="rep">Technical Due Diligence · TDD-017 · 2026-06-25 · src/utils/sql/queries · Read-only audit — no files in the target were modified.</footer>
+
+</div>
+</body>
+</html>

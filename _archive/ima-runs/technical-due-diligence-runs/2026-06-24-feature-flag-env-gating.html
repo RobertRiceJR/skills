@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-012
+date: 2026-06-24
+scope: Feature-flag / environment-gating strategy for the Playwright suite
+jira: []
+severity: { critical: 0, high: 3, medium: 4, low: 4 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-012 — Feature-Flag / Environment-Gating Strategy</title>
+  <style>
+:root{
+  --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+  --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#ffffff;
+  --s1:#b5261c;--s2:#c84a32;--s3:#dd6b3f;--s4:#e08a3e;--s5:#d4a017;--s6:#b6a92e;--s7:#8aab3c;--s8:#5fa345;--s9:#2f8f3e;--s10:#1d7a33;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+header.report h1{margin:0 0 8px;font-size:29px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+header.report p.sub{margin:0;font-size:15px;opacity:.93;max-width:760px;}
+header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+.legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+.legend .item .k{font-weight:750;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.legend .item .k .dot{width:10px;height:10px;border-radius:50%;}
+.legend .item .d{font-size:12.5px;color:var(--muted);line-height:1.45;}
+.tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead th{background:#eef1ee;text-align:left;padding:13px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);white-space:nowrap;}
+thead th.num{text-align:center;}
+tbody td{padding:12px 14px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f6faf4;}
+td.num{text-align:center;}
+.score{display:inline-block;min-width:30px;padding:4px 0;border-radius:7px;font-weight:750;font-size:13px;color:#fff;text-align:center;}
+.s1{background:var(--s1);}.s2{background:var(--s2);}.s3{background:var(--s3);}.s4{background:var(--s4);}.s5{background:var(--s5);color:#3a2e00;}.s6{background:var(--s6);color:#2c2900;}.s7{background:var(--s7);}.s8{background:var(--s8);}.s9{background:var(--s9);}.s10{background:var(--s10);}
+.tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:14px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.tier h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);}
+.tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+.tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+.tier ul{margin:6px 0 0;padding-left:18px;}
+.tier li{margin:6px 0;font-size:13.5px;}
+.tier.ok{border-left-color:var(--accent);}.tier.ok .badge{background:var(--accent);}
+.tier.warn{border-left-color:var(--accent-3);}.tier.warn .badge{background:var(--accent-3);}
+.tier.info{border-left-color:var(--accent-2);}.tier.info .badge{background:var(--accent-2);}
+.tier.muted{border-left-color:var(--muted);}.tier.muted .badge{background:var(--muted);}
+.tier.crit{border-left-color:var(--s1);}.tier.crit .badge{background:var(--s1);}
+.callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+.callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:6px;}
+.callout p{margin:0;font-size:14.5px;line-height:1.55;}
+.callout p + p{margin-top:9px;}
+.callout ol{margin:8px 0 0;padding-left:20px;font-size:14.5px;}
+.callout ol li{margin:6px 0;}
+.note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.88em;font-family:"SF Mono",Consolas,monospace;}
+pre{background:#1b1f1d;color:#e8efe6;border-radius:9px;padding:13px 15px;overflow:auto;font-size:12.5px;line-height:1.5;font-family:"SF Mono",Consolas,monospace;margin:8px 0;}
+pre .cmt{color:#8aab8a;}
+.ev{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin:4px 0 2px;}
+footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+a{color:var(--accent-2);}
+@media print{body{background:#fff;}.wrap{padding:0;}.tablecard,.tier,.legend .item{box-shadow:none;}header.report{box-shadow:none;}}
+@media (max-width:720px){.legend{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>Feature-Flag / Environment-Gating Strategy for the Playwright Suite</h1>
+    <p class="sub">Pricing the risk in how the suite decides <em>what runs where</em> — and the lightest correct way to add a feature/environment gate so INT-only work (communications) stops polluting the regression signal.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice / QE (suite owner)</span>
+      <span><b>Date:</b> 2026-06-24</span>
+      <span><b>Scope:</b> TDD-012 · test-selection &amp; env-gating subsystem</span>
+    </div>
+  </header>
+
+  <!-- legend: C/H/M/L tally -->
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--s1)"></span>Critical · 0</div><div class="d">No data-loss / auth / money-path gating defect.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High · 3</div><div class="d">Signal pollution, a phantom gate, and unenforced capability debt.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium · 4</div><div class="d">Missing axis, silent-forever skips, flag-source trust, floating PW pin.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low · 4</div><div class="d">Coupling, fail-open lookup, idiom drift, and the perf upside.</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout">
+    <div class="lbl">Verdict — the three things that matter</div>
+    <p><b>The suite has no environment/feature axis in test <i>selection</i> at all.</b> Env (<code>NODE_ENV</code>) only changes <i>where</i> a test points (baseURL/SQL), never <i>which</i> tests run. So <code>npm run regression</code> (= <code>-g @Regression</code>) sweeps in every INT-only communications test on every pass. Robert's instinct — a tiny conditional <code>test.skip</code> fed by a lightweight flag source — is the right shape. The risk isn't the mechanism; it's doing it <i>without</i> a single audited source, which trades today's noise for tomorrow's false confidence.</p>
+    <ol>
+      <li><b><a href="#f1">[High]</a> Signal pollution is structural, not incidental</b> — ~72 live, INT-only communications tests carry <code>@Regression</code> with zero guard; they run (and time out) on every regression run.</li>
+      <li><b><a href="#f2">[High]</a> The suite's only documented env-gate is a phantom</b> — "the CI-T2422/2423 callers skip on QA" is a comment with <i>no skip code</i>; the test runs unconditionally (and is a repeat-offender failure in INT). Comments-as-gates have already failed here once.</li>
+      <li><b><a href="#f5">[Medium]</a> Skips are silent-forever</b> — a skip reads as "fine" indefinitely. Built on a scattered/env-only source, a feature flag becomes permanent invisibility. The fix is one committed, reviewable flag file + an audit line, not the skip itself.</li>
+    </ol>
+  </div>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier muted">
+    <h3><span class="badge">SCOPE</span> Target, dimensions, method</h3>
+    <ul>
+      <li><b>Target subsystem:</b> the test-selection &amp; environment-resolution machinery — <code>playwright.config.ts</code>, <code>src/utils/context.ts</code>, <code>src/utils/auth-config.ts</code>, <code>scripts/run-staged.ps1</code>, <code>package.json</code> scripts, and every existing skip/fixme/conditional in <code>src/tests/**</code>. Driving case: the <code>communications/</code> specs.</li>
+      <li><b>In scope:</b> all 7 dimensions, run inline (cohesive subsystem, &lt; 40 files). Read-only; nothing was mutated.</li>
+      <li><b>Out of scope:</b> fixing the comms tests themselves (that's <code>/fix-loop</code> + <code>/triage-failures</code>), and the app-side "feature flag" concept in <code>src/generated/graphql.ts</code> (a domain entity, not test infra).</li>
+      <li><b>Run:</b> TDD-012 · 2026-06-24 · no Jira ref. Evidence: every finding cites <code>file:line</code> with quoted code.</li>
+    </ul>
+  </div>
+
+  <!-- PHASE 1 SURFACE MAP -->
+  <h2 class="section">Phase 1 — Surface Map (how the suite picks tests today)</h2>
+  <div class="tier info">
+    <h3><span class="badge">MAP</span> Three selection axes — none of them is environment</h3>
+    <p>Tracing the real entry points (<code>npm run regression</code> → <code>run-staged.ps1</code> → <code>npx playwright test</code>):</p>
+    <ul>
+      <li><b>Axis 1 — Project (filename suffix).</b> <code>playwright.config.ts:127-172</code>: <code>IGS-360</code> matches <code>*.e2e.spec.ts</code>, <code>API-tests</code> matches <code>*.api.spec.ts</code>, <code>SQL-tests</code> = <code>src/tests/sql</code>, <code>setup</code> only in storageState mode. Routing is suffix-based.</li>
+      <li><b>Axis 2 — Tag grep.</b> <code>run-staged.ps1:77-84</code>: <code>-Suite regression → -g @Regression</code>; <code>smoke → -g @Smoke</code>; <code>api → --project API-tests</code>. <code>npm run regression</code> = <code>-g @Regression</code>, all workers, then <code>--last-failed</code> rounds.</li>
+      <li><b>Axis 3 — Path / title.</b> ad-hoc <code>-Spec</code> / <code>-Grep</code>.</li>
+      <li><b>Environment is NOT a selection axis.</b> <code>context.ts:8</code> <code>static env = process.env.NODE_ENV || 'int'</code> drives only <code>getBaseURL()</code>/<code>getBaseAPI()</code>/SQL-server (<code>context.ts:9-74</code>). <code>run-staged.ps1:133</code> sets <code>$env:NODE_ENV</code>. Nothing reads env to decide <i>which</i> tests execute.</li>
+    </ul>
+    <p><b>Existing conditional-execution machinery (the precedent to build on):</b></p>
+    <ul>
+      <li><b>The one real conditional skip:</b> <code>src/tests/setup/login-unprivileged.setup.ts:13,15</code> — <code>setup.skip(!USE_UNPRIVILEGED, '…')</code>. A boolean env-flag → <code>skip(condition, reason)</code>. This is exactly the idiom to generalize.</li>
+      <li><b>The boolean env-flag parser idiom:</b> <code>auth-config.ts:22-46</code> — <code>USE_STORAGE_STATE</code>, <code>TOKEN_REFRESH_ENABLED</code>, <code>TOKEN_BROKER_ENABLED</code> each parse <code>process.env.X</code> into a boolean with a default. A clean, tested, ~3-line-per-flag template.</li>
+      <li><b>Hand-disable idiom:</b> <code>test.skip(true, reason)</code> ×2 (data-exhausted) and <code>test.fixme(true, reason)</code> (pervasive — 30 in <code>communications.e2e.spec.ts</code> alone). Both are <i>unconditional</i>.</li>
+    </ul>
+    <p><b>Change-radius:</b> <code>Context</code> is imported by the config process <i>and</i> by fixtures and many specs — high blast radius. <code>auth-config.ts</code> is a low-radius, single-purpose flag module — the correct sibling location for new flags.</p>
+  </div>
+
+  <!-- DIMENSION 1 -->
+  <h2 class="section">Dimension 1 — Architecture, coupling, boundaries</h2>
+
+  <div class="tier info" id="f4">
+    <h3><span class="badge">MEDIUM</span> F4 · Capability-availability has no declared home in the selection model</h3>
+    <p class="ev">Evidence — <code>communications.e2e.spec.ts:410, 492, 651, 752, 913, 1149</code></p>
+    <pre><span class="cmt">// Note: ImaCommunication schema is INT-only — run with NODE_ENV=int</span></pre>
+    <p><b>Why it matters:</b> the config cleanly separates routing (suffix) from scoping (tag) from targeting (env→URL), but the suite's real <i>intent</i> — "this behavior only exists in INT" — has nowhere structural to live, so it leaked into prose. There is no boundary object for "capability availability per environment." Every new INT-only feature repeats the leak.</p>
+    <p><b>Severity rationale:</b> Medium — a design gap that compounds with each feature, but no current correctness/security impact.</p>
+    <p><b>Remediation sketch:</b> introduce a single declarative capability source (per-env flag file) + a one-line guard idiom; that <i>is</i> the missing boundary.</p>
+  </div>
+
+  <div class="tier muted" id="f8">
+    <h3><span class="badge">LOW</span> F8 · Don't gate via the <code>Context</code> env singleton — use a sibling module</h3>
+    <p class="ev">Evidence — <code>context.ts:7-74</code> (baseURL + baseAPI + 2 SQL servers + exchange URL all switch on <code>this.env</code>)</p>
+    <pre>export class Context {
+  static env: string = process.env.NODE_ENV || 'int';
+  static getBaseURL(): string { switch (this.env) { <span class="cmt">/* int|qa|prod */</span> } }
+  <span class="cmt">// …getBaseAPI / getCrmSqlServer / getIndustrialSqlServer / getExchangeURL</span>
+}</pre>
+    <p><b>Why it matters:</b> <code>Context</code> is already an overloaded env singleton imported by the config process and widely across specs. Hanging feature flags off it raises its blast radius and couples "which tests run" to "where they point." <code>auth-config.ts</code> is the proven low-radius home for boolean flags.</p>
+    <p><b>Severity rationale:</b> Low — a placement choice; either works, but the sibling keeps blast radius contained.</p>
+    <p><b>Remediation sketch:</b> new <code>src/utils/feature-flags.ts</code> alongside <code>auth-config.ts</code>; it may <i>read</i> <code>Context.env</code> but should not live inside <code>Context</code>.</p>
+  </div>
+
+  <!-- DIMENSION 2 -->
+  <h2 class="section">Dimension 2 — Test coverage, quality &amp; gaps</h2>
+
+  <div class="tier warn" id="f1">
+    <h3><span class="badge">HIGH</span> F1 · ~72 live INT-only communications tests run unguarded on every <code>@Regression</code> pass</h3>
+    <p class="ev">Evidence — per-file live/fixme/@Regression counts (grep over <code>src/tests/communications/</code>)</p>
+    <pre>communications.e2e.spec.ts        : live=46  fixme=30  @Regression=49
+email.preview.e2e.spec.ts         : live=12  fixme=3   @Regression=12
+communications.table-paste.e2e.ts : live=9   fixme=0   @Regression=9
+communications.edit-template.e2e  : live=4   fixme=0   @Regression=4
+communications.api.spec.ts        : live=1             @Regression=1
+<span class="cmt">→ ~72 LIVE tests, all @Regression, all INT-only-by-comment, no guard</span></pre>
+    <p><b>Why it matters:</b> these execute on every <code>npm run regression</code> (round 1 = <code>-g @Regression</code>). They are browser E2E (auth + nav), so the broken/maintenance/bug ones consume worker slots and time, then surface as failures that are <i>out of scope</i> for a regression signal. The prior staged run confirms it: comms timeouts <code>CI-T2069/2071/2344/2345/2436/2437</code> were repeat offenders in that triage. The regression signal cannot distinguish a real regression from known INT-only WIP noise.</p>
+    <p><b>Call path / reach:</b> <code>run-staged.ps1:79</code> (<code>-g @Regression</code>) → <code>IGS-360</code> project → all 6 comms spec files.</p>
+    <p><b>Severity rationale:</b> High — a core workflow (the regression signal) is degraded for the suite owner on every run.</p>
+    <p><b>Remediation sketch:</b> one describe-level <code>test.skip(!featureEnabled('communications'), reason)</code> per comms file, fed by a per-env flag (see Recommendation).</p>
+  </div>
+
+  <div class="tier warn" id="f2">
+    <h3><span class="badge">HIGH</span> F2 · The only documented environment gate is a phantom — comment, no code</h3>
+    <p class="ev">Evidence — <code>opportunity.bulk-transfer.e2e.spec.ts:84-95</code> &amp; <code>bulk.transfer.opportunities.page.ts:38</code></p>
+    <pre>test('Verify downloaded bulk-transfer template …', { tag: ['@Regression','@CI-T2422'] }, async ({ page }) =&gt; {
+  <span class="cmt">// QA has no dedicated slim bulk-transfer template page (INT/CI-7787 only) …</span>
+  <span class="cmt">// Version/deploy gap — skip on QA rather than assert against the wrong template (fix-loop 2026-06-15).</span>
+  const bulkTransfer = new BulkTransferOpportunitiesPage(page);
+  await bulkTransfer.goto();            <span class="cmt">// ← runs unconditionally; NO test.skip(env==='qa') anywhere</span>
+  const workbook = await bulkTransfer.downloadTemplate();
+  …</pre>
+    <p><b>Why it matters:</b> a grep for <code>test.skip(</code> / <code>describe.skip(</code> tied to <code>Context</code>/<code>env</code> across <code>src/tests</code> returns <b>nothing</b> — only two unconditional <code>test.skip(true, …)</code> and the setup-project skips. The "skip on QA" is intent encoded as prose; the code never honors it. Worse than no comment: it tells the next engineer the case is handled. (And <code>CI-T2422</code> is in fact a repeat-offender failure in INT.) This is direct proof that comments-as-gates fail in this repo.</p>
+    <p><b>Call path / reach:</b> runs in any env; on QA it would assert against the wrong template page and fail misleadingly.</p>
+    <p><b>Severity rationale:</b> High — a claimed guard that doesn't exist is an active trap for the maintainer.</p>
+    <p><b>Remediation sketch:</b> replace the comment with a real <code>test.skip(Context.env === 'qa', 'CI-7787 slim template is INT-only')</code> — the first concrete adopter of the gate idiom.</p>
+  </div>
+
+  <div class="tier info" id="f3b">
+    <h3><span class="badge">MEDIUM</span> F3b · Skips/fixmes already hide a large dormant population — adding more without an audit compounds it</h3>
+    <p class="ev">Evidence — <code>communications.e2e.spec.ts</code> (30× <code>test.fixme</code>); <code>opportunities.merge.e2e.spec.ts:26</code>; <code>historical.usage.api.spec.ts:113</code></p>
+    <pre>test.skip(true, 'Merge data consumed — hardcoded opp IDs already merged in INT. Reseed to re-enable.');
+test.skip(true, 'No HU-eligible account … INT data exhausted');
+<span class="cmt">+ 30 test.fixme(true, …) in communications.e2e alone</span></pre>
+    <p><b>Why it matters:</b> the suite already carries a deep dormant layer that reports as "not failing." A feature flag built on skip joins that layer; without one place to see "what is currently switched off," flagged work silently never comes back. The audit surface is the mitigation, not the skip.</p>
+    <p><b>Severity rationale:</b> Medium — coverage-erosion risk, realized only if the flag source is opaque.</p>
+    <p><b>Remediation sketch:</b> make the flag file the single audit surface; add a "currently flagged off" line to the DSU/triage cadence.</p>
+  </div>
+
+  <!-- DIMENSION 3 -->
+  <h2 class="section">Dimension 3 — Security surface &amp; trust boundaries</h2>
+
+  <div class="tier info" id="f6">
+    <h3><span class="badge">MEDIUM</span> F6 · The flag <i>source</i> is the trust boundary — and a flag must never silently disable an authz test</h3>
+    <p class="ev">Evidence — <code>auth-config.ts:22</code> (env-only flag, no record) &amp; <code>opportunity.bulk-transfer.e2e.spec.ts:12-43</code> (an authz test, <code>CI-T2157</code>, currently a shell)</p>
+    <pre>const storageStateFlag = process.env.AUTH_STORAGE_STATE;   <span class="cmt">// flips from any shell, leaves no trace</span>
+…
+test.fixme('Verify user without BulkTransferOpportunitiesViaTemplate is redirected …', …)  <span class="cmt">// access-control case</span></pre>
+    <p><b>Why it matters:</b> if flags live only in <code>process.env</code>, what's switched off is invisible and un-reviewed — anyone can flip a gate per-shell with no PR record. A committed JSON makes the gate state a reviewable artifact (the trust-boundary-correct choice). Separately: a feature flag that skips an authz/permission test (e.g. the unprivileged-redirect <code>CI-T2157</code>) would hide an access-control regression behind a green check — flags must not gate security cases without a louder, separate marker.</p>
+    <p><b>Severity rationale:</b> Medium — no secret exposure, but an un-audited gate over authz tests is a latent access-control blind spot.</p>
+    <p><b>Remediation sketch:</b> committed per-env JSON as the canonical source (env var only as a one-off override); never list an authz test under a routine feature flag.</p>
+  </div>
+
+  <!-- DIMENSION 4 -->
+  <h2 class="section">Dimension 4 — Error handling &amp; failure modes</h2>
+
+  <div class="tier info" id="f5">
+    <h3><span class="badge">MEDIUM</span> F5 · Skip-based gating is silent-forever → flag-off becomes permanent false confidence</h3>
+    <p class="ev">Evidence — Playwright semantics + <code>run-staged.ps1:141-150</code> (the cascade counts only <code>failedTests</code>; skipped ≠ failed)</p>
+    <pre>function Get-FailedCount { … return @($j.failedTests).Count }   <span class="cmt">// skipped tests are invisible to the cascade/triage signal</span></pre>
+    <p><b>Why it matters:</b> Playwright reports a skip as non-failing; the staged cascade and <code>/triage-failures</code> only ever see <code>failedTests</code>. Once <code>communications=false</code>, those ~72 tests are green-by-omission with no alarm when the feature ships and the flag should flip back. The failure mode of the <i>solution</i> is permanent dormancy — the same way 30 <code>test.fixme</code> shells have sat in one file.</p>
+    <p><b>Severity rationale:</b> Medium — the cure can quietly become the disease without an audit/report loop.</p>
+    <p><b>Remediation sketch:</b> the flag JSON is the one audit surface + a periodic "flagged-off" report; consider a guard test that fails if a flag has been off past a review date.</p>
+  </div>
+
+  <div class="tier muted" id="f9">
+    <h3><span class="badge">LOW</span> F9 · A flag lookup should fail closed on an unknown name</h3>
+    <p><b>Why it matters:</b> if <code>featureEnabled('comunications')</code> (typo) silently returns <code>false</code> (or <code>true</code>), the gate misfires invisibly — the test silently skips (or runs) against intent. Mirror the strictness of <code>Context.getBaseURL()</code>, which <code>throw</code>s on an unknown env (<code>context.ts:18</code>).</p>
+    <p><b>Severity rationale:</b> Low — a small helper-design choice with outsized debugging cost if wrong.</p>
+    <p><b>Remediation sketch:</b> <code>featureEnabled(name)</code> throws if <code>name</code> isn't a declared key in the flag file.</p>
+  </div>
+
+  <!-- DIMENSION 5 -->
+  <h2 class="section">Dimension 5 — Tech debt &amp; maintainability</h2>
+
+  <div class="tier warn" id="f3">
+    <h3><span class="badge">HIGH</span> F3 · "INT-only" is unenforced prose across 7 files — the debt this work should retire</h3>
+    <p class="ev">Evidence — 20 occurrences of "INT-only / run with NODE_ENV=int" across 7 spec files</p>
+    <pre>communications.e2e.spec.ts · communications.edit-template.e2e.spec.ts
+communications.table-paste.e2e.spec.ts · email.preview.e2e.spec.ts
+parties/party.merge.e2e.spec.ts
+summary.panel/summary.panel.activity.e2e.spec.ts · summary.panel/summary.panel.overview.e2e.spec.ts</pre>
+    <p><b>Why it matters:</b> the constraint spans more than communications — <code>summary.panel.activity</code> and <code>party.merge</code> (the exact clusters that polluted the last regression run) carry the same comment-only "INT-only" note. A comment can't gate execution and silently drifts from reality. This is the concrete debt a single declarative flag + one-line guard retires: N scattered comments → 1 reviewable source.</p>
+    <p><b>Severity rationale:</b> High — duplicated, unenforced, load-bearing knowledge across 7 files; high maintenance tax and the direct cause of F1.</p>
+    <p><b>Remediation sketch:</b> as each file adopts the guard, delete its "INT-only" comment; the flag file becomes the SSOT.</p>
+  </div>
+
+  <div class="tier muted" id="f10">
+    <h3><span class="badge">LOW</span> F10 · Keep one flag idiom — don't invent a second mental model</h3>
+    <p><b>Why it matters:</b> <code>auth-config.ts</code> already established <code>process.env.X → boolean with default</code>. New feature flags should reuse that exact parser/shape so contributors reason about one idiom, not two.</p>
+    <p><b>Severity rationale:</b> Low — consistency, not correctness.</p>
+    <p><b>Remediation sketch:</b> <code>feature-flags.ts</code> imports/mirrors the auth-config boolean parser.</p>
+  </div>
+
+  <!-- DIMENSION 6 -->
+  <h2 class="section">Dimension 6 — Dependency health &amp; version risk</h2>
+
+  <div class="tier info" id="f7">
+    <h3><span class="badge">MEDIUM</span> F7 · <code>@playwright/test</code> is pinned to <code>"latest"</code> — a floating contract under the gate you're building</h3>
+    <p class="ev">Evidence — <code>package.json</code> dependency</p>
+    <pre>"@playwright/test": "latest"   <span class="cmt">// floating — every install can ingest a breaking change silently</span></pre>
+    <p><b>Why it matters:</b> the gate idiom rests on <code>test.skip(condition, reason)</code> (stable for years) and optionally tags / <code>--grep-invert</code> (also stable), so the design adds <b>zero</b> new dependencies — good. But a test framework pinned to <code>latest</code> means the very API your gate stands on is non-deterministic build-to-build (this repo has already been bitten by a version trap — the <code>graphql-codegen</code> double-emit). The risk is pre-existing, not introduced here, but it widens as more behavior (gating) leans on the framework.</p>
+    <p><b>Severity rationale:</b> Medium — floating major-version on the core test dependency; no known active break, but unbounded.</p>
+    <p><b>Remediation sketch:</b> pin <code>@playwright/test</code> to an explicit version. Reject any third-party feature-flag SDK (LaunchDarkly etc.) — network dependency + secret + overkill for ~5 booleans.</p>
+  </div>
+
+  <!-- DIMENSION 7 -->
+  <h2 class="section">Dimension 7 — Performance hotspots</h2>
+
+  <div class="tier ok" id="f11">
+    <h3><span class="badge">UPSIDE · LOW</span> F11 · Gating reclaims the biggest wall-clock sink — and short-circuits before browser setup</h3>
+    <p class="ev">Evidence — <code>playwright.config.ts:97-98,111-112</code> (60s test + 30s action/nav timeouts) × ~72 comms E2E × every staged round</p>
+    <pre>timeout: 60000, expect:{timeout:60_000}, actionTimeout:30_000, navigationTimeout:30_000
+<span class="cmt">// ~72 INT-only comms browser tests (auth+nav), several timing out at 30–60s, on EVERY @Regression round</span></pre>
+    <p><b>Why it matters:</b> this is the "resources and time" Robert called out, quantified. A describe-level <code>test.skip(condition, reason)</code> is evaluated <i>before</i> the test body and per-test fixtures, so a gated file never spins up the browser/auth for those workers — the reclaimed time is direct, and it multiplies across the staged cascade's rounds. The flag isn't only signal hygiene; it's the cheapest available performance win.</p>
+    <p><b>Severity rationale:</b> Low — an upside, not a defect. Noted because it's a primary motivation.</p>
+    <p><b>Remediation sketch:</b> put the guard at the <i>top of the describe</i> (or the file's top-level describe), not inside individual tests, so the short-circuit happens before fixture setup.</p>
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <h2 class="section">Recommendation — the lightest correct approach</h2>
+  <div class="callout">
+    <div class="lbl">Build this (≈25 lines, zero new deps)</div>
+    <p>Robert's instinct is correct: native <code>test.skip(condition, reason)</code> fed by a lightweight source. Make the <i>source</i> a single committed per-env JSON, and generalize the proven <code>auth-config.ts</code> boolean idiom into one tiny helper. Two flag axes fall out naturally: <b>env-capability</b> ("INT-only" — schema absent in QA) and <b>feature-WIP</b> ("not ready for the regression signal yet"). The JSON expresses both per env.</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">STEP 1</span> A committed, reviewable flag file — <code>config/feature-flags.json</code></h3>
+    <pre>{
+  "int": { "communications": false, "summaryPanelActivity": true },
+  "qa":  { "communications": false, "bulkTransferSlimTemplate": false }
+}</pre>
+    <p>One file, per-env, flips in a PR. This is the single audit surface (answers F3b/F5/F6). <code>false</code> = gated off.</p>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">STEP 2</span> A ~20-line helper mirroring <code>auth-config.ts</code> — <code>src/utils/feature-flags.ts</code></h3>
+    <pre>import flags from '../../config/feature-flags.json';
+import { Context } from './context';
+import type { Test } from '@playwright/test';
+
+type FlagName = keyof (typeof flags)['int'];
+
+export function featureEnabled(name: FlagName): boolean {
+  const envFlags = (flags as Record&lt;string, Record&lt;string, boolean&gt;&gt;)[Context.env] ?? {};
+  if (!(name in envFlags)) throw new Error(`Unknown feature flag '${name}' for env '${Context.env}'`); <span class="cmt">// fail-closed (F9)</span>
+  const override = process.env[`FEATURE_${String(name).toUpperCase()}`];  <span class="cmt">// one-off shell override</span>
+  if (override === '0' || override === 'false') return false;
+  if (override === '1' || override === 'true') return true;
+  return envFlags[name];
+}
+
+<span class="cmt">/** First line of a gated describe: skips the whole block, before fixtures, with an honest reason. */</span>
+export function skipUnlessFeature(test: typeof Test, name: FlagName): void {
+  test.skip(!featureEnabled(name), `feature flag '${String(name)}' is off for ${Context.env}`);
+}</pre>
+  </div>
+
+  <div class="tier ok">
+    <h3><span class="badge">STEP 3</span> One line at the top of each gated file — replaces the comment</h3>
+    <pre>test.describe('Communications — email templates', { tag: ['@Regression'] }, () =&gt; {
+  skipUnlessFeature(test, 'communications');     <span class="cmt">// ← was: // Note: ImaCommunication is INT-only</span>
+  <span class="cmt">// …the 72 tests; all skip cleanly with a reason when the flag is off</span>
+});</pre>
+    <p>Then delete that file's "INT-only" comment (retires F3). First concrete adopter beyond comms: turn F2's phantom into a real <code>test.skip(Context.env === 'qa', …)</code>.</p>
+  </div>
+
+  <h2 class="section">Options weighed (why skip+JSON over the alternatives)</h2>
+  <div class="tablecard">
+    <table>
+      <thead>
+        <tr><th>Approach</th><th>Mechanism</th><th class="num">Light</th><th class="num">Honest signal</th><th class="num">Operator-proof</th><th>Verdict</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>A · <code>test.skip</code> + per-env JSON</b></td>
+          <td>Describe-level guard, condition from one committed flag file (+env override)</td>
+          <td class="num"><span class="score s9">9</span></td>
+          <td class="num"><span class="score s9">9</span></td>
+          <td class="num"><span class="score s9">9</span></td>
+          <td><b>Recommended.</b> Gate travels with the test; honest "skipped: reason"; one audited source; zero deps.</td>
+        </tr>
+        <tr>
+          <td>B · Tag + <code>--grep-invert</code></td>
+          <td>Tag files <code>@int-only</code>/<code>@wip</code>; run with <code>--grep-invert @wip</code></td>
+          <td class="num"><span class="score s8">8</span></td>
+          <td class="num"><span class="score s5">5</span></td>
+          <td class="num"><span class="score s3">3</span></td>
+          <td>Keep as a <i>secondary</i> convenience. Lives in the run command, not the test — easy to forget; the staged script already owns <code>-g</code>, so combining is awkward.</td>
+        </tr>
+        <tr>
+          <td>C · Per-env project / <code>testIgnore</code></td>
+          <td>Separate Playwright projects or path ignores per environment</td>
+          <td class="num"><span class="score s3">3</span></td>
+          <td class="num"><span class="score s7">7</span></td>
+          <td class="num"><span class="score s6">6</span></td>
+          <td>Rejected — heavyweight config churn for a per-file boolean; multiplies the project matrix.</td>
+        </tr>
+        <tr>
+          <td>D · Third-party flag SDK</td>
+          <td>LaunchDarkly / similar SDK + remote config</td>
+          <td class="num"><span class="score s1">1</span></td>
+          <td class="num"><span class="score s6">6</span></td>
+          <td class="num"><span class="score s5">5</span></td>
+          <td>Rejected — network dependency, a secret to manage, and remote state for ~5 booleans. Violates "extremely lightweight."</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Scores are 1–10 against this suite's constraints (lightness / honest reporting / resistance to operator error), not absolute. The decisive axis is <b>operator-proof</b>: the gate must travel with the test and report an honest reason, not depend on remembering a CLI flag — which is exactly why the phantom skip (F2) and the prose comments (F3) failed.</p>
+
+  <footer class="rep">TDD-012 · Technical Due Diligence · IMA 360 Playwright suite · 2026-06-24 · read-only review, no code mutated</footer>
+
+</div>
+</body>
+</html>

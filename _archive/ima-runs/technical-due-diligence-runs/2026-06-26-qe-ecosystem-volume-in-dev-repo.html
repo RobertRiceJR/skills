@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-023
+date: 2026-06-26
+scope: Volume-driven agent-steering risk of co-locating the full .claude/ QE ecosystem inside a developer/app repo
+jira: [—]
+severity: { critical: 1, high: 3, medium: 4, low: 1 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-023 · QE Ecosystem Volume Inside a Developer Repo</title>
+  <style>
+  :root{
+    --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+    --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#fff;
+    --crit:#b5261c;
+    --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+  header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+  header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+  header.report h1{margin:0 0 8px;font-size:29px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+  header.report p.sub{margin:0;font-size:15px;opacity:.93;max-width:800px;}
+  header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+  h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+  .legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+  .legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+  .legend .item .k{font-weight:750;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+  .legend .item .k .dot{width:10px;height:10px;border-radius:50%;}
+  .legend .item .d{font-size:12.5px;color:var(--muted);line-height:1.45;}
+  .tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);margin-bottom:8px;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  thead th{background:#eef1ee;text-align:left;padding:13px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);}
+  tbody td{padding:12px 14px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#f6faf4;}
+  td.num{text-align:center;font-variant-numeric:tabular-nums;}
+  .tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:14px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .tier h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);}
+  .tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+  .tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+  .tier ul{margin:6px 0 0;padding-left:18px;}
+  .tier li{margin:6px 0;font-size:13.5px;}
+  .tier.crit{border-left-color:var(--crit);} .tier.crit .badge{background:var(--crit);}
+  .tier.warn{border-left-color:var(--accent-3);} .tier.warn .badge{background:var(--accent-3);}
+  .tier.info{border-left-color:var(--accent-2);} .tier.info .badge{background:var(--accent-2);}
+  .tier.ok{border-left-color:var(--accent);} .tier.ok .badge{background:var(--accent);}
+  .tier.muted{border-left-color:var(--muted);} .tier.muted .badge{background:var(--muted);}
+  .callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+  .callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:6px;}
+  .callout p{margin:0 0 9px;font-size:14.5px;line-height:1.55;}
+  .callout ol{margin:4px 0 0;padding-left:20px;} .callout ol li{margin:9px 0;font-size:14px;}
+  .callout a{color:var(--accent-2);font-weight:600;text-decoration:none;}
+  .note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+  code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.86em;font-family:"SF Mono",Consolas,monospace;}
+  pre{background:#f1f4f1;border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;font-size:12px;line-height:1.5;font-family:"SF Mono",Consolas,monospace;color:#23291f;margin:8px 0;white-space:pre-wrap;word-break:break-word;}
+  .ev{font-size:12px;color:var(--muted);font-family:"SF Mono",Consolas,monospace;margin:2px 0 4px;}
+  footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+  @media (max-width:720px){.legend{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE</p>
+    <h1>Will the volume of the QE Claude ecosystem mis-steer an agent if it lives inside the app repo?</h1>
+    <p class="sub">A context-pollution / agent-steering risk audit of the full <code>.claude/</code> tree
+      (61 skills · 69-node knowledge tree · 82 memory files · two CLAUDE.md layers) as a footprint co-located
+      inside a developer/app repository — not a review of the app source. Question: how badly can the sheer
+      mass of QE context confuse or persuade an agent doing <em>development</em> work, and how do we contain it?</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice / QE leadership · the developer who raised the concern</span>
+      <span><b>Date:</b> 2026-06-26</span>
+      <span><b>Run:</b> TDD-023</span>
+      <span><b>Scope:</b> <code>.claude/</code> ecosystem footprint (forward-looking risk)</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--crit)"></span>1 Critical</div><div class="d">False-authority test facts read as app truth under OVERRIDE framing.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>3 High</div><div class="d">Eager-load precedence floor · trigger collisions · ungated autonomous writers.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>4 Medium</div><div class="d">No trigger guard · silent shadowing · duplication amplifier · dangling env refs.</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>1 Low</div><div class="d">Disk + token footprint (129 MB / 2,241 files / ~23.5K-token floor).</div></div>
+  </div>
+
+  <div class="callout">
+    <div class="lbl">Verdict — the three things that matter most</div>
+    <p><b>Bottom line:</b> the answer to "will Claude get confused?" is <b>yes, materially — but only because
+      co-location is the one configuration that breaks the isolation the platform otherwise has by construction</b>
+      (see the sibling run <a href="2026-06-26-qe-dev-context-bleed.html">TDD-022</a>, which found the shipped toolkit
+      well-isolated). The danger is not the raw 40,125 lines of markdown — most of it is <em>lazy</em>, read only on
+      demand. The danger is the <b>always-on floor (~23.5K tokens) of QE convention, framed as MUST-follow overrides</b>,
+      sitting on top of a body of confident test-harness assertions an app agent has no way to recognize as test-only.
+      The mitigation is real and ranked below; the cheapest correct one is "don't co-locate."</p>
+    <ol>
+      <li><a href="#f-crit">[CRITICAL]</a> <b>Test-harness facts stated as unconditional app imperatives.</b>
+        "apply to all party-scoped SQL queries", "Google Places broken — do NOT use", "exclude StatusIds 7/8" —
+        under the harness's <code>OVERRIDE any default behavior / MUST follow exactly</code> framing, a dev agent
+        will obey them against <em>app</em> code and silently scope or break real data.</li>
+      <li><a href="#f-eager">[HIGH]</a> <b>The eager-load floor frames every session as a test session.</b>
+        ~23.5K tokens of QE convention auto-loads before any app task is read — the agent's default interpretation
+        of "fix this" or "add a query" is pulled toward Playwright/Zephyr/test-data shapes.</li>
+      <li><a href="#f-auto">[HIGH]</a> <b>Globally-visible autonomous writers with no approval gate.</b>
+        <code>ruby-migration</code> ("writes … autonomously — no approval gates"), <code>fix-loop</code>, and the
+        standing memory "never ask 'should I proceed' … skills run start-to-finish" become live edit hazards over
+        app source the moment a broad trigger mis-fires.</li>
+    </ol>
+  </div>
+
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier muted">
+    <p><b>Target:</b> the <code>.claude/</code> QE ecosystem as a <em>passive + active context footprint</em>, evaluated
+      against the hypothetical the developer posed — "if the entire Claude knowledge ecosystem that lives in the test
+      framework sat inside a developer repo where the app lives, what is the risk the agent is confused or persuaded
+      wrong by the volume?" This is a <b>forward-looking risk / control-gap audit</b>, not a defect hunt in app source —
+      where no enforcing code exists, findings are framed as control gaps + recommended guardrails.</p>
+    <p><b>In scope:</b> what loads eagerly vs. lazily; instruction precedence &amp; the OVERRIDE/MUST framing; the
+      false-authority surface; trigger/description hygiene across 61 skills; autonomous-write failure modes; the
+      deliberate-duplication design; dangling external assumptions; context-window cost.</p>
+    <p><b>Out of scope:</b> the app source itself; the distribution/leak-<em>out</em> question (that is TDD-022 — this
+      run is the inverse: harm once the ecosystem is already <em>inside</em> the dev repo).</p>
+    <p><b>Run shape:</b> inline (single cohesive target). <b>Measured, not inferred:</b> file/byte/LOC counts via
+      <code>find</code>/<code>wc</code>/<code>du</code>; eager-load bytes summed from the actual frontmatter + the two
+      CLAUDE.md layers + MEMORY.md; every directive finding cites <code>file:line</code> with the verbatim quote.</p>
+    <p class="note"><b>Relationship to TDD-022 (same day):</b> TDD-022 asked "will the QE platform leak <em>out</em> into a
+      dev repo via sharing?" and found it well-isolated by construction. TDD-023 asks the opposite: "<em>given</em> it is
+      all co-located inside the dev repo, does the volume mis-steer the agent?" The two are complementary, not duplicative.</p>
+  </div>
+
+  <h2 class="section">Phase 1 — Surface Map: what actually loads, eager vs. lazy</h2>
+  <p style="font-size:13.5px;">The steering question turns entirely on <b>what enters the context window without being
+    asked</b>. Measured footprint of the <code>.claude/</code> tree: <b>2,241 files · 129 MB on disk · 40,125 markdown LOC ·
+    61 skills · 69 knowledge nodes · 82 memory files.</b> But almost none of that is eager. The honest split:</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Artifact</th><th>Load mode</th><th class="num">Eager size</th><th>Steering pressure on an app task</th></tr></thead>
+      <tbody>
+        <tr><td>Global <code>~/.claude/CLAUDE.md</code></td><td>Eager (every session)</td><td class="num">7,605 B</td><td>High — QE identity, skills-architecture rules, "global = non-IMA" doctrine</td></tr>
+        <tr><td>Project <code>CLAUDE.md</code> (234 ln)</td><td>Eager (every session)</td><td class="num">20,228 B</td><td>High — pure test-suite conventions, framed MUST/OVERRIDE</td></tr>
+        <tr><td><code>MEMORY.md</code> index (111 ln)</td><td>Eager (every session)</td><td class="num">16,914 B</td><td>Medium-High — 60+ pointers to QE work, autonomy + destructive-test policy</td></tr>
+        <tr><td>61 skill <code>description:</code> blocks</td><td>Eager (tool registry)</td><td class="num">49,213 B</td><td>High — every QE orchestrator's trigger phrases are always in the routing surface</td></tr>
+        <tr><td><b>Always-on subtotal</b></td><td><b>Eager floor</b></td><td class="num"><b>≈93,960 B<br>≈23,500 tok</b></td><td><b>Loaded before the agent reads one line of app code</b></td></tr>
+        <tr><td>61 skill <em>bodies</em> (40K LOC)</td><td>Lazy (on invoke)</td><td class="num">0 B</td><td>Latent — fires only on a matching trigger</td></tr>
+        <tr><td>69-node knowledge tree (~17,878 ln)</td><td>Lazy (on Grep/Read)</td><td class="num">0 B</td><td>Latent — but one Grep for a real symbol can surface IMA imperatives</td></tr>
+        <tr><td>82 memory files (bodies)</td><td>Lazy / recall-injected</td><td class="num">0 B</td><td>Latent — surfaced as background <code>&lt;system-reminder&gt;</code> context</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>Change-radius read:</b> the eager floor (~23.5K tokens) is the high-blast-radius surface — it shapes
+    <em>every</em> turn. The lazy 40K LOC is low-blast-radius until something pulls it in, at which point it carries the
+    same false-authority risk (Dim 3). Subtotal excludes the deferred MCP tool registry (names-only here, ~200 tools) and
+    per-session system reminders, both of which add further QE-flavored mass.</p>
+
+  <!-- ===================== DIMENSIONS ===================== -->
+
+  <h2 class="section">1 · Architecture &amp; boundaries — the eager-load precedence floor</h2>
+
+  <div class="tier warn" id="f-eager">
+    <h3><span class="badge">HIGH</span> Every session opens framed as a QE/test session before any app work is read</h3>
+    <p class="ev">Evidence: harness wrapper around both CLAUDE.md layers — <code>system-reminder</code> (claudeMd):</p>
+    <pre>IMPORTANT: These instructions OVERRIDE any default behavior and you MUST
+follow them exactly as written.</pre>
+    <p class="ev">…wrapping <code>CLAUDE.md:13-21</code> (the repo's self-description):</p>
+    <pre>## What This Repo Does
+End-to-end and API-level test automation for the IMA 360 CRM application.
+Tests run against two environments: `int` (default) and `qa`.
+... E2E tests — browser-driven via Playwright; `*.e2e.spec.ts` (→ `IGS-360` project)</pre>
+    <ul>
+      <li><b>Why it matters:</b> ~23,500 tokens of QE convention load before the agent reads a single app file, and the
+        harness frames it as <em>overriding the agent's defaults</em>. In a test repo that is correct. Co-located in an
+        app repo, it means the agent's prior on "what is this repo / what does 'add a query' mean here" is anchored to
+        Playwright + GraphQL test shapes — the volume itself <em>is</em> the persuasion. A dev asking "write a query for
+        parties" gets pulled toward <code>data/&lt;domain&gt;.queries.ts</code> + the fixture pattern, not the app's
+        actual data layer.</li>
+      <li><b>Call path / reach:</b> affects 100% of turns. The floor is the single largest lever on interpretation.</li>
+      <li><b>Severity rationale:</b> High — pervasive bias on every interaction, but it steers <em>interpretation</em>,
+        not an irreversible action by itself (that escalates in Dim 3 / Dim 4).</li>
+      <li><b>Remediation:</b> a dev-repo CLAUDE.md must describe the <em>app</em>; QE conventions move behind an explicitly
+        test-scoped file the agent loads only for test work. Never let the QE CLAUDE.md be the repo's top-level identity.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">2 · Guardrail coverage — what actually verifies the ecosystem doesn't mis-route?</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> No runtime guard prevents a QE trigger from firing on development work</h3>
+    <p class="ev">Evidence: the drift machinery is report-only and QE-scoped — e.g. <code>/sync</code> family
+      (<code>sync-skills</code>, <code>sync-knowledge</code>, <code>sync-memory</code>) audits skill architecture, not
+      trigger-vs-task fit; and the only behavioral guards in the repo are husky pre-commit hooks scoped to the test suite.</p>
+    <ul>
+      <li><b>Why it matters:</b> nothing checks "did a skill fire on a prompt that was actually about app code?" The
+        protections that exist are <em>about</em> the QE ecosystem's internal consistency, not about containing it when
+        it shares a repo with app source. There is no negative test for mis-routing.</li>
+      <li><b>Call path / reach:</b> the absence is the finding — every mis-route is silent.</li>
+      <li><b>Severity rationale:</b> Medium — a control gap, not an active fault; raises the cost of every other finding
+        because nothing catches the failure after the fact.</li>
+      <li><b>Remediation:</b> if co-located, add a lightweight router guard (or namespace, Dim 3) and a "this repo is an
+        app repo, QE skills are opt-in" banner the orchestrators check before acting.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">3 · Trust boundary &amp; instruction precedence — the contamination surface</h2>
+
+  <div class="tier crit" id="f-crit">
+    <h3><span class="badge">CRITICAL</span> Test-harness facts are written as unconditional app imperatives — High → Critical (data path)</h3>
+    <p class="ev">Evidence: <code>CLAUDE.md:160</code>, <code>:161</code>, <code>:169</code> (the "Known Conventions" table):</p>
+    <pre>| CI filter | `p.RelationshipManagerId = 1 AND p.CreateDate BETWEEN ...`
+            — apply to all party-scoped SQL queries |
+| Terminal state | Exclude IMA opportunity StatusIds 7 (Won) and 8 (Dead)
+            from mutation test data ... |
+| Google Places broken | Playwright config has `--disable-http2` in
+            `launchOptions` which breaks the Google Places Autocomplete API.
+            Do NOT use `pressSequentially` / Google Places in address fields ... |</pre>
+    <ul>
+      <li><b>Why it matters:</b> these are <em>test-harness</em> truths — the CI filter exists to scope test data to one
+        RM; "Google Places broken" is broken <em>because the Playwright launch flag disables HTTP/2</em>, which has
+        nothing to do with the app. But they are phrased as flat imperatives ("apply to <b>all</b> party-scoped SQL
+        queries", "Do <b>NOT</b> use Google Places") and sit under the harness's <code>OVERRIDE / MUST follow exactly</code>
+        framing. A co-located dev agent has <b>no signal</b> that these are test-only. Acting on the CI filter would
+        silently scope a production query to <code>RelationshipManagerId = 1</code> — wrong results for every other RM's
+        parties. Acting on "Google Places broken" would make the agent misdiagnose or rip out a working app integration.</li>
+      <li><b>Call path / reach:</b> any app task touching party SQL, opportunity status, or address autocomplete — i.e.
+        core CRM data paths. The instruction is unconditional, so the only thing standing between it and a corrupt query
+        is the agent choosing to ignore an OVERRIDE-framed MUST.</li>
+      <li><b>Severity rationale:</b> High baseline (false authority that requires the agent to act) → <b>Critical</b> via
+        the data/correctness multiplier: a silently RM-scoped query is data-correctness corruption with no rollback signal.</li>
+      <li><b>Remediation:</b> re-label every test-harness fact <em>as</em> a test-harness fact ("in TESTS, the Playwright
+        <code>--disable-http2</code> flag breaks Google Places — fill fields manually"; "the CI filter scopes <em>test
+        data</em>, not production queries"). The fix is one clause per row and it neutralizes the whole finding.</li>
+    </ul>
+  </div>
+
+  <div class="tier warn" id="f-trigger">
+    <h3><span class="badge">HIGH</span> 61 always-on skill descriptions with broad triggers collide with ordinary dev verbs</h3>
+    <p class="ev">Evidence: generic-named, broadly-triggered skills in the eager registry — e.g. <code>playwright</code>:
+      "Automate browser interactions, test web pages and work with Playwright tests"; plus <code>/run</code>,
+      <code>/init</code>, <code>/verify</code>, <code>/code-review</code>, <code>/security-review</code>; and IMA
+      orchestrators like <code>ready-for-testing</code> / <code>three-amigos</code> keyed to "test", "review", "ready".</p>
+    <ul>
+      <li><b>Why it matters:</b> 49,213 bytes of trigger phrases are always in the routing surface. A developer saying
+        "run the app", "review this", "init this repo", or "test the change" can route into a QE orchestrator that then
+        executes a Zephyr/Playwright-shaped workflow on app code. The volume of overlapping triggers makes a wrong
+        routing decision more likely, not less.</li>
+      <li><b>Call path / reach:</b> every prompt is matched against all 61 descriptions; the broadest ones dominate.</li>
+      <li><b>Severity rationale:</b> High — mis-routing a dev prompt into a QE orchestrator can trigger real writes
+        (compounds with Dim 4).</li>
+      <li><b>Remediation:</b> namespace QE skills (prefix), tighten descriptions so they don't fire on bare dev verbs,
+        and mark IMA-coupled skills project-scoped so they are absent from a dev repo entirely.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">4 · Failure modes — what happens when a skill mis-fires</h2>
+
+  <div class="tier warn" id="f-auto">
+    <h3><span class="badge">HIGH</span> Autonomous, globally-visible writers with no approval gate</h3>
+    <p class="ev">Evidence: <code>~/.claude/skills/ruby-migration/skill.md</code> (global, IMA-specific, user-invocable):</p>
+    <pre>... and writes the implemented test body and updates POMs autonomously — no
+approval gates. Runs type-check and shows a git diff when done.</pre>
+    <p class="ev">…reinforced by the standing memory <code>MEMORY.md:5</code> → <code>feedback_autonomous_execution.md</code>:</p>
+    <pre>[Autonomous Execution] — never ask "should I proceed" mid-skill; skills run
+start-to-finish</pre>
+    <ul>
+      <li><b>Why it matters:</b> the "no approval gates / never ask / run start-to-finish" posture is <em>correct and
+        safe inside a QE sandbox</em> — it is what makes the skills pleasant. Over <em>app source</em>, the same posture
+        means a mis-triggered skill (Dim 3) edits files and updates "POMs" with no human checkpoint. <code>fix-loop</code>
+        likewise iterates fixes autonomously. <code>ruby-migration</code> is also <em>global</em>, so it is visible in a
+        dev repo even if the project skills are not copied.</li>
+      <li><b>Call path / reach:</b> any mis-route into a write-capable skill → unguarded working-tree edits; recoverable
+        via git, but only if the dev notices before committing.</li>
+      <li><b>Severity rationale:</b> High — autonomous writes to app code without a gate; the blast radius is bounded by
+        git, which keeps it below Critical.</li>
+      <li><b>Remediation:</b> any write-capable QE skill that could run in a non-QE repo needs an approval gate or a
+        repo-type assertion ("refuse unless this is the QE suite"). Keep the no-gate posture scoped to the QE repo.</li>
+    </ul>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> Silent global shadowing — the wrong skill body can run invisibly</h3>
+    <p class="ev">Evidence: <code>CLAUDE.md:172</code> (already a documented live failure in this ecosystem):</p>
+    <pre>Global skill shadowing | A global `~/.claude/skills/<name>` copy can silently
+shadow an enhanced project `.claude/skills/<name>` skill of the same name —
+the project body won't execute ... (identical descriptions mask it: triggering
+looks fine, the wrong body runs).</pre>
+    <ul>
+      <li><b>Why it matters:</b> this is a real failure mode <em>today</em>. Co-locating the full ecosystem multiplies
+        the name-collision surface between the dev repo's <code>.claude/skills/</code> and the global tree — and the
+        failure is invisible (triggering "looks fine, the wrong body runs"). An agent confidently runs QE logic the
+        operator did not intend and gets no error.</li>
+      <li><b>Call path / reach:</b> any name collision between project and global skills.</li>
+      <li><b>Severity rationale:</b> Medium — silent and confusing, but bounded to skill invocations.</li>
+      <li><b>Remediation:</b> unique namespacing per repo; the existing <code>ls ~/.claude/skills/&lt;name&gt;</code> check
+        becomes mandatory if the trees co-exist.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">5 · Tech debt &amp; maintainability — the duplication amplifier</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> Deliberate duplication multiplies the salience of every QE assertion</h3>
+    <p class="ev">Evidence: <code>~/.claude/CLAUDE.md:94</code> (a stated design rule):</p>
+    <pre>**Rule:** Skills intentionally duplicate context from CLAUDE.md rather than
+cross-importing. CLAUDE.md may not be in context when a skill runs —
+duplication is the cost of reliability.</pre>
+    <ul>
+      <li><b>Why it matters:</b> the ecosystem <em>by design</em> repeats the same domain facts across CLAUDE.md, the
+        69-node knowledge tree, and many of the 61 skills. For reliability inside the QE repo this is the right call.
+        But repetition is exactly what raises a statement's weight for an LLM — the same IMA imperative restated five
+        times is harder for a co-located dev agent to discount than one it sees once. The design that makes the toolkit
+        reliable is the same design that makes its assertions <em>sticky</em> in the wrong repo. It is also a maintenance
+        tax: 40,125 markdown LOC + 82 memory files to keep coherent.</li>
+      <li><b>Call path / reach:</b> compounds Dim 1 and Dim 3 — duplication is the volume's force multiplier.</li>
+      <li><b>Severity rationale:</b> Medium — amplifier rather than a standalone fault.</li>
+      <li><b>Remediation:</b> the duplication rule is fine <em>within</em> the QE boundary; the fix is the boundary
+        itself (Dim 1 / mitigation #1–2), not de-duplication.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">6 · Dependency / environment health — dangling external assumptions</h2>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> Hardcoded QE environment refs become confidently-cited dead references in a dev repo</h3>
+    <p class="ev">Evidence: <code>CLAUDE.md:163-166</code> + global tool table — MCP servers and IDs that exist only in
+      the QE setup:</p>
+    <pre>| Jira project | `CI` — tickets are CI-#### |
+| Jira cloud ID | `5fa58df5-1af7-4834-b76b-201a98e74211` |
+| ADO project | `IGS` — repos: QueryGateway, IMA360, CRM, DB-Industrial |
+MSSQL INT → mssql-int · Zephyr → zephyr-scale · Ruby suite path hardcoded in ruby-migration</pre>
+    <ul>
+      <li><b>Why it matters:</b> a co-located agent inherits a registry of confident references — specific MCP servers
+        (<code>mssql-*</code>, <code>zephyr-scale</code>), a Jira cloud ID, CI-T test-case keys, the Ruby suite path —
+        none of which a developer's environment is guaranteed to have. The agent will <em>cite</em> them as fact and may
+        attempt to use tools that aren't connected, producing confidently-wrong instructions and failed tool calls
+        rather than admitting the repo is a different context.</li>
+      <li><b>Call path / reach:</b> any task the agent tries to enrich with "ticket"/"test"/"DB" context.</li>
+      <li><b>Severity rationale:</b> Medium — misleading and noisy; failures are loud (tool errors) more often than silent.</li>
+      <li><b>Remediation:</b> strip QE-specific tool/ID tables from any CLAUDE.md that ships into a dev repo; keep them in
+        the test-scoped file.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">7 · Context-window cost (performance, reframed)</h2>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> Footprint: ~23.5K-token eager floor + 129 MB / 2,241 files on disk</h3>
+    <p class="ev">Evidence: measured — <code>du -sm .claude</code> = 129 MB; <code>find .claude -type f</code> = 2,241;
+      eager floor = 7,605 + 20,228 + 16,914 + 49,213 ≈ 93,960 B ≈ 23,500 tokens.</p>
+    <ul>
+      <li><b>Why it matters:</b> the eager floor is a fixed tax on every session's budget (modest against a 1M window,
+        non-trivial against smaller ones). The 129 MB / 2,241 files (mostly HTML run reports, run-logs, plans) are a
+        clone/CI/IDE-index tax with near-zero steering risk but real repo-hygiene cost if dropped into an app repo's tree.</li>
+      <li><b>Call path / reach:</b> every clone, every session, every IDE index.</li>
+      <li><b>Severity rationale:</b> Low — cost and hygiene, not correctness.</li>
+      <li><b>Remediation:</b> if anything co-locates, keep generated artifacts (<code>runs/</code>, <code>run-log/</code>,
+        <code>plans/</code>) out of the dev repo; ship only the skill/knowledge text the agent needs.</li>
+    </ul>
+  </div>
+
+  <h2 class="section">Mitigation Strategy — if we proceed (ranked by leverage)</h2>
+  <div class="callout">
+    <div class="lbl">Containment controls, cheapest-correct first</div>
+    <ol>
+      <li><b>Don't co-locate the full ecosystem (the real answer).</b> Keep the QE ecosystem in the QE repo. If a
+        developer needs QE skills, ship only the portable subset via the <code>qe-essentials</code> installer — never the
+        QE CLAUDE.md, the knowledge tree, or MEMORY. This is precisely the isolation TDD-022 verified the toolkit already
+        has; the risk in this report exists <em>only</em> in the co-located configuration, so not co-locating closes
+        almost all of it.</li>
+      <li><b>If co-location is unavoidable, scope the CLAUDE.md.</b> The dev repo's top-level CLAUDE.md must describe the
+        <em>app</em>. Move QE conventions into an explicitly test-scoped file the agent loads only for test work — kills
+        Dim 1 (the precedence floor) and Dim 6 (dangling refs).</li>
+      <li><b>Re-label test-harness facts as test-harness facts.</b> One clause per "Known Conventions" row ("in TESTS …",
+        "scopes test data, not production") — directly neutralizes the Critical (Dim 3).</li>
+      <li><b>Namespace + tighten triggers; mark IMA-coupled skills project-scoped.</b> So they are absent from a dev repo
+        and don't fire on bare dev verbs — closes Dim 3 (collisions) and Dim 4 (shadowing).</li>
+      <li><b>Gate the autonomous writers outside the QE repo.</b> Any write-capable skill that could run in a non-QE repo
+        asserts repo-type or requires approval before editing — keeps the no-gate posture safely scoped (Dim 4).</li>
+      <li><b>Adopt the boundary doc TDD-022 already recommended</b> (a SHARE / NEVER-SHARE list) plus an optional export
+        guard, so the discipline is enforced rather than convention.</li>
+    </ol>
+    <p class="note">Net: the developer's instinct is right — co-locating this volume is a genuine agent-steering risk,
+      driven less by raw line count than by an always-on, OVERRIDE-framed QE floor and a body of test-truths an app agent
+      can't distinguish from app-truths. But it is fully containable, and the lowest-cost control (#1) is the one the
+      platform was already designed around.</p>
+  </div>
+
+  <footer class="rep">TDD-023 · Technical Due Diligence · IGS Quality Engineering · 2026-06-26 · forward-looking risk audit, evidence-first (file:line cited)</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+[
+  {
+    "query": "roast the test suite",
+    "should_trigger": true
+  },
+  {
+    "query": "roast me, what's rotting in these tests",
+    "should_trigger": true
+  },
+  {
+    "query": "what's rotting in the test suite",
+    "should_trigger": true
+  },
+  {
+    "query": "give me a test debt audit of the playwright specs",
+    "should_trigger": true
+  },
+  {
+    "query": "suite health check before I hand this off",
+    "should_trigger": true
+  },
+  {
+    "query": "are my specs flaky, what's the worst offender",
+    "should_trigger": true
+  },
+  {
+    "query": "roast the party area tests",
+    "should_trigger": true
+  },
+  {
+    "query": "this opportunity spec keeps failing, fix it and get it green",
+    "should_trigger": false
+  },
+  {
+    "query": "derive test cases from the merged PR",
+    "should_trigger": false
+  },
+  {
+    "query": "audit the whole repo including the obsidian vault and dependencies",
+    "should_trigger": false
+  },
+  {
+    "query": "review this pull request for me",
+    "should_trigger": false
+  }
+]

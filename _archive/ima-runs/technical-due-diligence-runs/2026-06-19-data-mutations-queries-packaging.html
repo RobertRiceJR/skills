@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<!-- tdd-meta
+run_id: TDD-004
+date: 2026-06-19
+scope: src/data/mutations + src/data/queries (GraphQL operation modules)
+jira: []
+severity: { critical: 0, high: 3, medium: 5, low: 5 }
+status: complete
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD-004 — src/data GraphQL operation packaging</title>
+  <style>
+:root{
+  --ink:#1b1f1d; --bg:#f7f9f7; --muted:#5b6472; --line:#e4e9e5;
+  --accent:#4f9d3a; --accent-2:#2c6e9b; --accent-3:#e08a3e; --accent-soft:#eef5ea; --card:#fff;
+  --crit:#b5261c;
+  --font-head:"Inter","Segoe UI",Arial,sans-serif; --font-body:"Inter","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px;}
+header.report{background:linear-gradient(135deg,var(--ink) 0%,var(--accent) 100%);color:#fff;border-radius:16px;padding:34px 36px;margin-bottom:28px;box-shadow:0 8px 28px rgba(27,31,29,.18);}
+header.report .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;opacity:.85;margin:0 0 10px;}
+header.report h1{margin:0 0 8px;font-size:29px;line-height:1.15;font-weight:750;font-family:var(--font-head);}
+header.report p.sub{margin:0;font-size:15px;opacity:.93;max-width:760px;}
+header.report .meta{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);display:flex;flex-wrap:wrap;gap:22px;font-size:12.5px;opacity:.93;}
+h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);font-family:var(--font-head);}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+.legend .item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+.legend .item .k{font-weight:750;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.legend .item .k .dot{width:10px;height:10px;border-radius:50%;}
+.legend .item .d{font-size:12.5px;color:var(--muted);line-height:1.45;}
+.tablecard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(20,25,40,.04);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead th{background:#eef1ee;text-align:left;padding:13px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750;border-bottom:1px solid var(--line);white-space:nowrap;}
+tbody td{padding:12px 14px;border-bottom:1px solid #eef0ee;vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f6faf4;}
+.tier{border-left:5px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:14px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.tier h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-head);}
+.tier h3 .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+.tier p{margin:0 0 8px;font-size:13.5px;color:var(--ink);}
+.tier ul{margin:6px 0 0;padding-left:18px;} .tier li{margin:6px 0;font-size:13.5px;}
+.tier.ok{border-left-color:var(--accent);} .tier.ok .badge{background:var(--accent);}
+.tier.warn{border-left-color:var(--accent-3);} .tier.warn .badge{background:var(--accent-3);}
+.tier.info{border-left-color:var(--accent-2);} .tier.info .badge{background:var(--accent-2);}
+.tier.muted{border-left-color:var(--muted);} .tier.muted .badge{background:var(--muted);}
+.tier.crit{border-left-color:var(--crit);} .tier.crit .badge{background:var(--crit);}
+.callout{background:var(--accent-soft);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:18px 22px;margin:6px 0 30px;}
+.callout .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:750;color:var(--accent);margin-bottom:6px;}
+.callout p{margin:0 0 9px;font-size:14.5px;line-height:1.55;}
+.callout ol{margin:4px 0 0;padding-left:20px;} .callout ol li{margin:9px 0;font-size:14px;line-height:1.5;}
+.note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;}
+code{background:#eef1ee;padding:1px 6px;border-radius:5px;font-size:.86em;font-family:"SF Mono",Consolas,monospace;}
+pre{background:#1b1f1d;color:#e8ebe6;border-radius:9px;padding:13px 15px;overflow-x:auto;font-size:12.3px;line-height:1.5;font-family:"SF Mono",Consolas,monospace;margin:9px 0;}
+pre .c{color:#8aab9a;} /* comment-ish */
+.ev{font-size:12.5px;color:var(--muted);margin:2px 0 0;}
+.ev code{background:#eef1ee;}
+.lbl-row{font-size:12.5px;margin:8px 0 0;} .lbl-row b{color:var(--ink);}
+a.anchor{color:var(--accent-2);text-decoration:none;font-weight:600;} a.anchor:hover{text-decoration:underline;}
+footer.rep{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;}
+@media print{body{background:#fff;} .wrap{padding:0;} .tablecard,.tier,.legend .item{box-shadow:none;} header.report{box-shadow:none;} pre{white-space:pre-wrap;}}
+@media (max-width:720px){.legend{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report">
+    <p class="eyebrow">Technical Due Diligence · QE · TDD-004</p>
+    <h1>GraphQL operation packaging — <code style="background:rgba(255,255,255,.16);color:#fff">src/data/mutations</code> + <code style="background:rgba(255,255,255,.16);color:#fff">src/data/queries</code></h1>
+    <p class="sub">Pricing the architectural risk in the test suite's GraphQL operation library as it grows. The library is structurally sound at the unit level (every module is a static, parameterized <code style="background:rgba(255,255,255,.16);color:#fff">gql</code> document) but the <em>packaging</em> has already begun to fail silently — a documented "load-bearing" duplicate is dead, two mutations live in the queries folder, and a shared fragment is copy-pasted three times.</p>
+    <div class="meta">
+      <span><b>Prepared for:</b> Robert Rice / QE (maintainer-as-acquirer)</span>
+      <span><b>Date:</b> 2026-06-19</span>
+      <span><b>Scope:</b> 37 files (19 mutations + 18 queries), ~1.9k LOC</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="item"><div class="k"><span class="dot" style="background:var(--crit)"></span>Critical · 0</div><div class="d">Data loss / silent-wrong-result on a money/auth path</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-3)"></span>High · 3</div><div class="d">Silently rots tests or radiates breakage across many consumers</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--accent-2)"></span>Medium · 5</div><div class="d">Coupling / over-fetch / convention drift — change is risky, not broken</div></div>
+    <div class="item"><div class="k"><span class="dot" style="background:var(--muted)"></span>Low · 5</div><div class="d">Localized smell, naming, single-dep exposure</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="callout">
+    <div class="lbl">Verdict — the three findings that most change the price of inheriting this code</div>
+    <ol>
+      <li><b>The duplicate that's supposed to be load-bearing is actually dead — and the live copy is a trap.</b> <code>upsertPartyAccountsMutation</code> is exported from <em>both</em> <code>party.mutations.ts</code> and <code>account.mutations.ts</code>. A 24-line comment justifies keeping the <code>party.mutations.ts</code> copy "because three existing consumers depend on it." All <b>five</b> live consumers import the <em>other</em> copy; the documented one has <b>zero</b> importers. The strategy of "keep both, document why" failed silently — the justification rotted and nobody noticed. Worse, the dead copy is the one that trips Hot Chocolate <code>HC0018</code> and collapses the whole response to <code>data:null</code>, one careless re-import away. → <a class="anchor" href="#a2">A2</a></li>
+      <li><b>Two mutations live in the <code>queries/</code> folder, so the directory name is no longer trustworthy.</b> <code>mergeParties</code> and <code>mergeOpportunities</code> are GraphQL <code>mutation</code> operations imported via <code>from 'queries/mergeParties'</code>. As this set "grows fast," every reader has to open the file to learn whether a folder's contents match its name. → <a class="anchor" href="#a1">A1</a></li>
+      <li><b>The shared <code>ReferenceFields</code> fragment is copy-pasted in three query files with no shared-fragment module.</b> Byte-identical today; the drift surface grows linearly with exactly the thing you flagged as growing fast. → <a class="anchor" href="#m1">M1</a></li>
+    </ol>
+    <p style="margin-top:4px"><b>Bottom line:</b> nothing here loses production data — these are test fixtures. But the packaging has crossed the threshold where the folder layout actively misinforms readers and silently accumulates dead/duplicated definitions. Fix the four cheap correctness items now (A1, A2, M1, M2); then decide on the structural target (see <a class="anchor" href="#rec">Recommended Packaging</a>).</p>
+  </div>
+
+  <!-- RECOMMENDED PACKAGING -->
+  <h2 class="section" id="rec">Recommended Packaging (the ask)</h2>
+  <div class="tier info">
+    <h3><span class="badge">TARGET</span> Feature-first co-location with a shared-fragment module</h3>
+    <p>Your own repo standard is feature-first (<code>CLAUDE.md</code>: <em>"Feature-first: one folder per domain under <code>src/tests/</code>"</em>). <code>src/data/</code> is the lone layer-first island left in the tree, and that split is the <em>root cause</em> of A1, A4, and A5 — a merge operation has no obvious home when "queries" and "mutations" are the only two boxes, so it lands wherever the author guessed. Co-locating by domain removes the guess.</p>
+    <pre><span class="c">// TARGET — domain-first, layer rides the filename suffix (mirrors src/tests/)</span>
+src/data/
+  party/        party.queries.ts   party.mutations.ts
+  account/      account.queries.ts account.mutations.ts
+  opportunity/  opportunity.queries.ts opportunity.mutations.ts
+  contract/ · communications/ · dashboard/ · …
+  _shared/
+    fragments.ts        <span class="c">// ReferenceFields, SearchPartyFields, CurrentUserFields …</span>
+    reference-data.ts   <span class="c">// the 373-line getReferenceData god query, isolated</span></pre>
+    <p class="lbl-row"><b>Conventions to lock in the same pass:</b> one export-naming rule (<code>&lt;verb&gt;&lt;Noun&gt;Mutation</code> / <code>&lt;query&gt;</code> — kill the bare <code>mergeParties</code> exports that force <code>as …Mutation</code> re-aliasing); one file-naming rule (<code>&lt;domain&gt;.&lt;layer&gt;.ts</code>, no <code>snake_case</code>); add a <code>data/*</code>-only alias policy (drop the redundant <code>queries/*</code> alias so there is exactly one way to spell each import).</p>
+    <p class="lbl-row"><b>Migration is mechanical but wide:</b> <b>40 consumer files / 71 imports</b> reference these modules. Do it as a codemod (move file → update barrel/alias → rewrite imports) in one branch, lean on <code>npm run type-check</code> as the gate. Stage it: <b>(1)</b> land the four correctness fixes now under the existing layout (zero structural risk); <b>(2)</b> introduce <code>_shared/fragments.ts</code>; <b>(3)</b> move domain-by-domain behind the codemod.</p>
+  </div>
+  <div class="tier muted">
+    <h3><span class="badge">ALT</span> Keep layer-first, just stop the leaks (lower effort, doesn't resolve the contradiction)</h3>
+    <p>If a full move is out of budget: add a <code>mutations/*</code> alias to match <code>queries/*</code>, move the two misfiled merge mutations into <code>mutations/</code>, extract <code>_fragments.ts</code>, delete the dead duplicate, standardize names. Cheaper, but leaves <code>src/data/</code> as a layer-first island disagreeing with <code>src/tests/</code> — the same "where does a merge go?" ambiguity returns with the next cross-cutting operation.</p>
+  </div>
+
+  <!-- SCOPE & PLAN -->
+  <h2 class="section">Scope &amp; Plan</h2>
+  <div class="tier ok">
+    <h3><span class="badge">SCOPE</span> Full 7-dimension pass, inline (no fan-out)</h3>
+    <ul>
+      <li><b>Target:</b> <code>src/data/mutations/**</code> (19 files) + <code>src/data/queries/**</code> (18 files). 37 files, ~1.9k LOC — within the small/medium single-context bracket, so all seven dimensions run inline.</li>
+      <li><b>Emphasis (per the ask "recommended arch packaging"):</b> Dim 1 (architecture/boundaries) and Dim 5 (maintainability) weighted heaviest; all seven covered.</li>
+      <li><b>Severity calibration:</b> this is a <em>test suite's</em> GraphQL operation library, not a production service. "Blast radius" here = silent test breakage / false pass-fail / maintainer-hours, not production money/auth. No money/auth multiplier applies — hence no Criticals.</li>
+      <li><b>Evidence base:</b> read all 4 structural drivers in full (<code>reference_data.ts</code>, <code>party.mutations.ts</code>, <code>general.ts</code>, <code>search.ts</code>) + 12 representative modules; traced the full consumption graph (40 files / 71 imports) and confirmed each cross-cutting claim against real import lines.</li>
+      <li><b>Out of scope / no silent caps:</b> a <em>complete</em> dead-export sweep across all ~70 exports was not run — one dead export (A2) was confirmed by exhaustive grep; others may exist (see C1). The 12 small modules not individually quoted were read for pattern conformance only.</li>
+    </ul>
+  </div>
+
+  <!-- PHASE 1 SURFACE MAP -->
+  <h2 class="section">Phase 1 — Surface Map</h2>
+  <div class="tier ok">
+    <h3><span class="badge">MAP</span> What's actually here, and what depends on it</h3>
+    <ul>
+      <li><b>Module shape:</b> every one of the 37 files is the same shape — <code>import { gql } from 'graphql-tag'</code> then one or more <code>export const X = gql`…`</code> template literals. No logic, no interpolation, no runtime branching. They are static GraphQL document definitions consumed by API specs (<code>{ gql }</code> fixture) and the data factories.</li>
+      <li><b>Entry points (consumers):</b> 40 files import from these two folders — API specs under <code>src/tests/**</code>, the <code>src/api/*.api.ts</code> page-API wrappers, and <code>src/dataFactory/*</code>. 71 import statements total.</li>
+      <li><b>Highest-blast-radius modules:</b> <code>reference_data.ts</code> (<code>getReferenceData</code>, imported by many specs for setup) and <code>party.mutations.ts</code> (15 exports — the de-facto grab-bag). A change to either radiates widely.</li>
+      <li><b>Alias surface:</b> <code>tsconfig.json</code> defines <code>queries/* → ./src/data/queries/*</code> <em>and</em> <code>data/* → ./src/data/*</code>. Mutations have <b>no</b> dedicated alias. Net: queries are reachable by two spellings, mutations by one — the asymmetry behind A5.</li>
+      <li><b>No barrel:</b> no <code>index.ts</code> in either folder; consumers reach individual files directly (explicit, tree-shakeable — fine; just means there's no curated public surface).</li>
+    </ul>
+  </div>
+
+  <!-- DIM 1 -->
+  <h2 class="section">Dimension 1 — Architecture, Coupling &amp; Boundaries</h2>
+
+  <div class="tier crit" id="a2">
+    <h3><span class="badge">HIGH</span> A2 · Duplicate <code>upsertPartyAccountsMutation</code> — the "load-bearing" copy is dead; the live copy is an HC0018 trap</h3>
+    <p class="ev"><b>Evidence:</b> <code>src/data/mutations/party.mutations.ts:43-66</code> (duplicate + justifying comment) vs <code>src/data/mutations/account.mutations.ts:11-24</code></p>
+    <pre><span class="c">// party.mutations.ts:43  — the comment claims this copy is load-bearing:</span>
+<span class="c">// "Both copies are kept because three existing consumers (ERCOT factory + 2</span>
+<span class="c">//  API tests) already depend on reading `errors` on the upsertedAccounts side here."</span>
+export const upsertPartyAccountsMutation = gql`
+  mutation upsertPartyAccounts($input: UpsertPartyAccountsInput!) {
+    upsertPartyAccounts(input: $input) {
+      upsertedAccounts { accountId requestId errors }   <span class="c">// reads errors[]</span>
+      ...</pre>
+    <p class="ev"><b>Reach (traced — all 5 live importers use the OTHER copy):</b></p>
+    <pre>account.api.ts:8                          → account.mutations
+dataFactory.ercot.account.ts:8           → account.mutations   <span class="c">// the "ERCOT factory" the comment cites</span>
+accounts.duplicate-validation.api.spec:4 → account.mutations
+accounts.mutations.api.spec:7            → account.mutations
+api.mixed.api.spec:9                      → account.mutations
+party.mutations.ts copy                   → <b>0 importers</b></pre>
+    <p><b>Why it matters:</b> the comment is now factually false — the "ERCOT factory" it names imports from <code>account.mutations</code>, not here. The dead copy is the one whose <code>upsertedAccounts[].errors</code> selection trips Hot Chocolate <code>HC0018</code> ("Cannot return null for non-nullable field") on success paths, collapsing the entire response to <code>data:null</code>. The next person who greps <code>upsertPartyAccountsMutation</code>, takes the first hit, and imports it gets a test that silently asserts against <code>data:null</code>. This is the packaging risk made concrete: a duplicate kept "for safety" became a dormant landmine.</p>
+    <p class="lbl-row"><b>Severity rationale:</b> High — silently rots a test (false pass/fail) and the protective comment actively misleads. No money/auth multiplier (test fixture).</p>
+    <p class="lbl-row"><b>Remediation:</b> delete <code>party.mutations.ts:43-66</code>; keep the single <code>account.mutations.ts</code> definition. If a consumer ever needs the <code>errors</code> selection, add it there.</p>
+  </div>
+
+  <div class="tier warn" id="a1">
+    <h3><span class="badge">HIGH</span> A1 · Two <code>mutation</code> operations live in the <code>queries/</code> folder — the directory name lies</h3>
+    <p class="ev"><b>Evidence:</b> <code>src/data/queries/mergeParties.ts:3-12</code>, <code>src/data/queries/mergeOpportunities.ts:3-12</code></p>
+    <pre>export const mergeParties = gql`
+  <b>mutation</b> mergeParties($input: MergePartiesInput!) { mergeParties(input: $input) { … } }`;
+
+export const mergeOpportunities = gql`
+  <b>mutation</b> mergeOpportunities($input: MergeOpportunitiesInput!) { … }`;</pre>
+    <p class="ev"><b>Reach:</b> <code>party-merge.api.spec.ts:5 → 'data/queries/mergeParties'</code>; <code>party.merge.e2e.spec.ts:9</code>, <code>party.merge.inheritance.e2e.spec.ts:9</code>, <code>party.record.myaccount.e2e.spec.ts:9 → 'queries/mergeParties'</code>; <code>opportunities.merge.e2e.spec.ts:8 → 'queries/mergeOpportunities'</code>. Note the sibling <code>mergeAccounts</code> mutation correctly lives in <code>mutations/</code> — so the three merge mutations are split across both folders with no rule.</p>
+    <p><b>Why it matters:</b> the folder split is the suite's one signal for "is this a read or a write?" Two writes hiding in <code>queries/</code> means <code>import … from 'queries/mergeParties'</code> reads as a query but mutates data. As the set grows, readers can't trust the folder; they must open each file. (<code>mergePartiesPreview.ts</code> is correctly a <code>query</code> — so the folder isn't wrong, just inconsistently populated.)</p>
+    <p class="lbl-row"><b>Severity rationale:</b> High — boundary integrity is the primary value of the layer-first split; two leaks negate it and the count will grow.</p>
+    <p class="lbl-row"><b>Remediation:</b> move <code>mergeParties.ts</code> + <code>mergeOpportunities.ts</code> into <code>mutations/</code> (or, preferred, into their domain folder per the recommendation); rename exports to <code>…Mutation</code> (see M2) and update the 5 import sites.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> A3 · Layer-first island contradicts the repo's feature-first standard (root cause of A1/A4/A5)</h3>
+    <p class="ev"><b>Evidence:</b> <code>CLAUDE.md</code> — "Feature-first: one folder per domain under <code>src/tests/</code>"; <code>src/tests/parties/</code>, <code>src/tests/accounts/</code>, … are domain folders. <code>src/data/{mutations,queries}/</code> is the only layer-first split in the source tree.</p>
+    <p><b>Why it matters:</b> the two organizing principles disagree, so a cross-cutting operation (a merge, a preview, a bulk action) has two equally-plausible homes and lands by author whim — exactly what produced A1. Every new operation re-litigates "queries or mutations?" instead of "which domain?".</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Medium — not breaking, but it's the structural reason the leaks keep appearing; compounds as the set grows.</p>
+    <p class="lbl-row"><b>Remediation:</b> adopt feature-first co-location (see Recommended Packaging). This dissolves A1, A4, and A5 at once.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> A4 · Cross-domain leak: <code>party.mutations.ts</code> is a grab-bag of non-party operations</h3>
+    <p class="ev"><b>Evidence:</b> <code>src/data/mutations/party.mutations.ts</code> exports, among 15 mutations: <code>insertOpportunityMutation</code> (L19), <code>makeContactPrimaryOnOpportunityMutation</code> (L31), <code>insertNoteMutation</code> (L68), <code>createCallOutcomeMutation</code> (L96), <code>updateSalesOrCollectionsNoteMutation</code> (L79).</p>
+    <p class="ev"><b>Reach:</b> <code>opportunity.mutations.api.spec.ts:5</code> and <code>opportunities.api.spec.ts:17</code> import <code>insertOpportunityMutation</code> <code>from 'data/mutations/party.mutations'</code> — while a sibling <code>opportunity.mutations.ts</code> already exists and also feeds those specs.</p>
+    <p><b>Why it matters:</b> opportunity, note, and call-outcome writes have wandered into the party file, so an opportunity test imports its core mutation from <code>party.mutations</code>. Domain ownership is no longer inferable from the filename; a developer changing party mutations also owns opportunity/note/call-outcome surface they didn't expect.</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Medium — coupling that makes the highest-traffic file risky to touch; not currently broken.</p>
+    <p class="lbl-row"><b>Remediation:</b> relocate <code>insertOpportunity</code> / <code>makeContactPrimaryOnOpportunity</code> to <code>opportunity.mutations.ts</code>; notes + call-outcomes to a <code>communications</code>/<code>notes</code> module. Update the ~4 import sites.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> A5 · Alias asymmetry — the same module is imported via two different spellings</h3>
+    <p class="ev"><b>Evidence:</b> <code>tsconfig.json</code> defines both <code>queries/*</code> and <code>data/*</code>; no <code>mutations/*</code>. So <code>reference_data.ts</code> is imported as both:</p>
+    <pre>opportunities.api.spec.ts:9          import … from 'queries/reference_data'
+accounts.mutations.api.spec.ts:10    import … from 'data/queries/reference_data'</pre>
+    <p class="ev">Most acute in one file — <code>party.merge.api.spec.ts</code> imports the <em>same export from the same file twice</em>, via two alias spellings:</p>
+    <pre>party.merge.api.spec.ts:5   import { mergeParties as mergePartiesMutation } from 'queries/mergeParties'
+party.merge.api.spec.ts:10  import { mergeParties }                       from 'data/queries/mergeParties'</pre>
+    <p><b>Why it matters:</b> two spellings for one path means a grep / find-references / codemod over <code>'queries/…'</code> silently misses every <code>'data/queries/…'</code> site (and vice-versa). It also defeats import-dedup — hence the same export pulled twice above. This directly raises the cost of the very repackage you're contemplating.</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Medium — makes refactors error-prone (missed call sites) precisely when you want to refactor.</p>
+    <p class="lbl-row"><b>Remediation:</b> pick one alias policy (recommend dropping <code>queries/*</code>, keep <code>data/*</code>), ESLint <code>no-restricted-imports</code> the other, codemod existing sites.</p>
+  </div>
+
+  <!-- DIM 2 -->
+  <h2 class="section">Dimension 2 — Test Coverage, Quality &amp; Gaps</h2>
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> C1 · No module-level schema-validity gate — a definition is only proven by a covering consumer</h3>
+    <p><b>Why it matters:</b> these modules are pure GraphQL documents; their correctness (valid against the deployed schema) is exercised only when a consuming spec runs <em>and</em> that spec's path is covered. An export that is mistyped but unimported — like A2's dead copy — sits indefinitely with no signal. <code>npm run codegen-int</code> validates operations against the schema, but it isn't a per-commit gate on this folder.</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Low — latent, not active; codegen catches it on the next regen.</p>
+    <p class="lbl-row"><b>Remediation:</b> wire a lightweight "all <code>gql</code> documents parse + validate against the generated schema" check into <code>knowledge:check</code>/pre-commit; flag exported-but-unimported documents as dead.</p>
+    <p class="note">No silent caps: a full dead-export sweep across all ~70 exports was <em>not</em> performed this run — only A2 was confirmed dead by exhaustive grep. Others may exist.</p>
+  </div>
+
+  <!-- DIM 3 -->
+  <h2 class="section">Dimension 3 — Security Surface &amp; Trust Boundaries</h2>
+  <div class="tier ok">
+    <h3><span class="badge">PASS</span> No material findings</h3>
+    <p>Checked all 37 modules: each is a static <code>gql</code> template literal with <b>no string interpolation</b> — every variable is a declared GraphQL operation parameter (<code>$input</code>, <code>$partyId</code>, …), never spliced into the query text. There is no untrusted-input path through these files (the test suite, not the app, supplies the values; auth is handled by the fixture/Key Vault layer documented in <code>CLAUDE.md</code>, out of this scope). No injection, no secret handling, no SSRF surface in the operation library itself.</p>
+  </div>
+
+  <!-- DIM 4 -->
+  <h2 class="section">Dimension 4 — Error Handling &amp; Failure Modes</h2>
+  <div class="tier warn">
+    <h3><span class="badge">HIGH</span> (cross-ref A2) · The one real failure mode is packaging-induced: the dead duplicate's <code>HC0018</code> null-collapse</h3>
+    <p><b>Why it matters:</b> selecting <code>upsertedAccounts[].errors</code> (the dead <code>party.mutations.ts</code> copy) makes the server return <code>null</code> for a non-nullable field on some success paths, which Hot Chocolate escalates to a top-level error and collapses the response to <code>data:null</code>. A spec importing that copy then asserts against <code>null</code> — a failure mode created entirely by the duplicate-and-document packaging choice. Full detail and remediation under <a class="anchor" href="#a2">A2</a>.</p>
+    <p class="lbl-row"><b>Observation (informational, server-side):</b> <code>mergeAccounts.ts:3-7</code> documents that the payload echoes only the surviving ids and does <em>not</em> confirm the merge happened (verify via the deleted from-account + <code>AcceptedAccountMerge</code> row). That's a correct, valuable comment about CRM behavior — not a packaging defect, but worth keeping co-located with the operation wherever it moves.</p>
+  </div>
+
+  <!-- DIM 5 -->
+  <h2 class="section">Dimension 5 — Tech Debt &amp; Maintainability</h2>
+
+  <div class="tier warn" id="m1">
+    <h3><span class="badge">HIGH</span> M1 · <code>ReferenceFields</code> fragment copy-pasted in three files — no shared-fragment module</h3>
+    <p class="ev"><b>Evidence:</b> identical <code>fragment ReferenceFields on ReferenceType { id code name __typename }</code> at <code>reference_data.ts:299</code>, <code>search.ts:82</code>, <code>getRecentSearches.ts:29</code>.</p>
+    <pre>fragment ReferenceFields on ReferenceType { id code name __typename }   <span class="c">// ×3, byte-identical</span></pre>
+    <p><b>Why it matters:</b> reference data is the most-reused shape in the schema; three hand-maintained copies will drift the moment one query needs an extra field (e.g. someone adds <code>isEnabled</code> to one copy). The drift surface scales with the number of queries — i.e. with exactly the growth you flagged. This is the single strongest argument for a <code>_shared/fragments.ts</code> module.</p>
+    <p class="lbl-row"><b>Severity rationale:</b> High — silent divergence across the suite's most-used shape; grows with the codebase.</p>
+    <p class="lbl-row"><b>Remediation:</b> extract <code>ReferenceFields</code> (and <code>SearchPartyFields</code>, <code>CurrentUserFields</code>, the <code>*Browser*Fields</code> family) into <code>_shared/fragments.ts</code>; compose via fragment import. Codegen already supports shared fragments.</p>
+  </div>
+
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> M2 · Inconsistent export naming → consumers re-alias at the call site</h3>
+    <p class="ev"><b>Evidence:</b> most exports carry a <code>…Mutation</code> suffix (<code>createPartyMutation</code>, <code>validateAccountsMutation</code>); the merge + bulk-template exports do not (<code>mergeParties</code>, <code>mergeAccounts</code>, <code>mergeOpportunities</code>, <code>bulkUpdateOpportunitiesFromTemplate</code>, <code>createOpportunitiesTask</code>). Consumers patch it locally:</p>
+    <pre>party.merge.e2e.spec.ts:9        import { mergeParties as mergePartiesMutation } …
+opportunities.merge.e2e.spec.ts:8  import { mergeOpportunities as mergeOpportunitiesMutation } …</pre>
+    <p><b>Why it matters:</b> the missing suffix is repaired by hand at every call site (<code>as …Mutation</code>) — duplicated effort, and a reader can't tell read-vs-write from the bare imported symbol. It's the export-naming twin of A1.</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Medium — recurring per-call-site tax; trivially preventable.</p>
+    <p class="lbl-row"><b>Remediation:</b> one naming rule — mutations end in <code>Mutation</code>, queries are bare verbs. Rename the ~5 offenders, drop the now-redundant <code>as</code> aliases.</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> M3 · File-naming conventions disagree within and across both folders</h3>
+    <p class="ev"><b>Evidence:</b> <code>queries/</code> mixes <code>camelCase</code> (<code>getAccountById.ts</code>), <code>snake_case</code> (<code>reference_data.ts</code>), bare nouns (<code>search.ts</code>, <code>general.ts</code>), and verb files (<code>logPartySearch.ts</code>). <code>mutations/</code> mixes <code>&lt;domain&gt;.mutations.ts</code>, <code>&lt;domain&gt;.&lt;sub&gt;.mutations.ts</code> (7 <code>opportunity.*</code> files), and a bare <code>mergeAccounts.ts</code> with no suffix.</p>
+    <p><b>Why it matters:</b> no predictable filename means no predictable import path — you can't autocomplete or guess where a thing lives, which slows every addition.</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Low — friction, not breakage.</p>
+    <p class="lbl-row"><b>Remediation:</b> standardize on <code>&lt;domain&gt;.&lt;layer&gt;.ts</code> (kebab/lower-camel domain), no <code>snake_case</code>; fold the orphans (see M4).</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> M4 · <code>general.ts</code> is a catch-all with no domain home</h3>
+    <p class="ev"><b>Evidence:</b> <code>src/data/queries/general.ts</code> exports only <code>getUser</code> (<code>currentUser</code> + <code>CurrentUserFields</code> fragment).</p>
+    <p><b>Why it matters:</b> "general" is where things go when nobody decides where they belong — it only grows and never shrinks. <code>getUser</code> has a clear home (a <code>user</code>/<code>session</code> module or <code>_shared</code>).</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Low — one small file today; a magnet for future orphans.</p>
+    <p class="lbl-row"><b>Remediation:</b> rename to <code>user.queries.ts</code> (or move <code>getUser</code> to <code>_shared</code>); ban a generic "general/misc" bucket by convention.</p>
+  </div>
+
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> M5 · Opportunity mutations sprawl across 7 files with no sub-package grouping</h3>
+    <p class="ev"><b>Evidence:</b> <code>opportunity.activity</code>, <code>opportunity.bulk</code>, <code>opportunity.bulk-template</code>, <code>opportunity.flag</code>, <code>opportunity.transfer</code>, <code>opportunity.contact</code>, <code>opportunity.mutations</code> — plus <code>insertOpportunityMutation</code> stranded in <code>party.mutations.ts</code> (A4). Several hold 1–3 exports (<code>opportunity.mutations.ts</code> = 1).</p>
+    <p><b>Why it matters:</b> this is the "growing large and fast" pattern in miniature — split-per-subfeature with no folder to contain it, so the flat <code>mutations/</code> namespace keeps widening. Two near-twins (<code>opportunity.bulk</code> vs <code>opportunity.bulk-template</code>) already invite confusion.</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Low now; this is the trajectory the whole review is about.</p>
+    <p class="lbl-row"><b>Remediation:</b> under feature-first, these collapse into <code>opportunity/opportunity.mutations.ts</code> (+ optional <code>opportunity.bulk.mutations.ts</code> if a file genuinely warrants splitting) — the domain folder is the grouping the flat layout lacks.</p>
+  </div>
+
+  <!-- DIM 6 -->
+  <h2 class="section">Dimension 6 — Dependency Health &amp; Version Risk</h2>
+  <div class="tier muted">
+    <h3><span class="badge">LOW</span> D1 · Single runtime dependency (<code>graphql-tag</code>) in maintenance mode</h3>
+    <p class="ev"><b>Evidence:</b> all 37 files <code>import { gql } from 'graphql-tag'</code> and nothing else.</p>
+    <p><b>Why it matters:</b> <code>graphql-tag</code> is stable and ubiquitous but effectively feature-frozen; the modern path is the codegen-provided <code>gql</code>/typed-document-node. No vulnerability or version trap in the used surface today. (The repo's known <code>graphql-codegen</code> version trap lives in codegen config, not these files — out of scope here.)</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Low — no known impact; noted for the eventual typed-document-node migration.</p>
+    <p class="lbl-row"><b>Remediation:</b> none required now; if/when you adopt <code>TypedDocumentNode</code>, this folder is the natural cut-over point.</p>
+  </div>
+
+  <!-- DIM 7 -->
+  <h2 class="section">Dimension 7 — Performance Hotspots</h2>
+  <div class="tier info">
+    <h3><span class="badge">MEDIUM</span> P1 · <code>getReferenceData</code> is a 373-line god query — every consumer over-fetches ~60 collections to use one</h3>
+    <p class="ev"><b>Evidence:</b> <code>src/data/queries/reference_data.ts:3-285</code> — a single <code>getReferenceData</code> query selecting ~60 reference collections (account types, statuses, utilities, LOBs, NAICS codes, task types, transfer reasons, aging buckets, …) plus 14 fragment definitions.</p>
+    <p class="ev"><b>Reach (hot path):</b> imported for setup by <code>reference.data.api.spec.ts</code>, <code>opportunities.api.spec.ts:9</code>, <code>accounts.mutations.api.spec.ts:10</code>, <code>opportunities.bulk-update-template.authz.api.spec.ts:5</code>, and more.</p>
+    <p><b>Why it matters:</b> a spec that needs only <code>opportunityStatuses</code> still pulls all ~60 collections — a large response, more server work, slower test setup, multiplied across every consuming spec and every shard. It's also the single most likely file to hit a merge conflict (every reference-data change touches it).</p>
+    <p class="lbl-row"><b>Severity rationale:</b> Medium — measurable setup-time/payload tax on a frequently-run path; not correctness.</p>
+    <p class="lbl-row"><b>Remediation:</b> isolate it in <code>_shared/reference-data.ts</code> (it doesn't belong to one domain); consider splitting into a few purpose-scoped reference queries so specs fetch only what they assert on. Lower priority than the correctness fixes.</p>
+    <p class="note">Observation (server-side, already documented): <code>mergePartiesPreview.ts:3-7</code> notes the preview has no pagination and times out on large parties (CI-7633). Real perf risk, but it's the resolver's, not the packaging's — keep the warning co-located with the operation.</p>
+  </div>
+
+  <footer class="rep">TDD-004 · Technical Due Diligence · IMA 360 Playwright suite · generated 2026-06-19 · read-only audit, no files in scope were modified</footer>
+
+</div>
+</body>
+</html>

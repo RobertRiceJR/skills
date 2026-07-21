@@ -1,0 +1,10 @@
+{
+  "name": "universal-core",
+  "version": "0.1.0",
+  "description": "Project-agnostic workflow skills usable in any repo: session-review, todo, condense-claude-md, sync-memory, comms-coach, claude-architect. Ships the universal session-stats hook plus dormant memory/SQL hooks that activate only when the relevant MCP servers exist.",
+  "author": {
+    "name": "Robert Rice",
+    "email": "robertrice12009@yahoo.com"
+  },
+  "hooks": "./hooks/hooks.json"
+}

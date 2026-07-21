@@ -1,0 +1,56 @@
+# =============================================================================
+# Skill-Quality LLM Judge — OPTIONAL batch harness (whole-collection sweep & calibrate)
+# =============================================================================
+# The DEFAULT grading path is interactive (Claude-as-judge) — see SKILL.md. This config is the
+# optional scale path for grading many skills headlessly through promptfoo.
+#
+#   npm i -D promptfoo
+#   npx promptfoo eval -c promptfooconfig.yaml
+#
+# Dimensions SSOT:  ./dimensions.json
+# Prose + anchors:  ./skill-quality-rubric.md
+#
+# HOW IT WORKS (no model-under-test — we grade a static artifact):
+#   providers: [echo]  → the `artifact` var (a skill's SKILL.md body, composed by a generating
+#                        step) is echoed straight through as {{output}}; nothing is generated.
+#   rubricPrompt       → the shared grader frame (score-only, no fixes, default-low, full-scale).
+#                        {{rubric}} swaps in each dimension's criteria; {{output}} is the artifact.
+#
+# GRADER AUTH: the default provider below is the keyless claude-cli-provider.cjs — it shells to
+#   `claude -p` and authenticates via the active Claude Code session (no ANTHROPIC_API_KEY). To use
+#   the per-token first-party API instead, swap the provider id for anthropic:messages:... and set
+#   ANTHROPIC_API_KEY. Do NOT add `temperature` to an Opus-4.8 grader (Opus 4.8 rejects it, HTTP 400).
+# =============================================================================
+
+description: Skill-quality judge sweep
+
+# Echo passes {{artifact}} through as the graded {{output}}. No generation step.
+providers:
+  - id: echo
+
+prompts:
+  - '{{artifact}}'
+
+defaultTest:
+  options:
+    # Keyless grader — shells to `claude -p` via the active session. Model is set per config.
+    provider:
+      id: file://claude-cli-provider.cjs
+      config:
+        model: claude-haiku-4-5
+    # Shared grader frame — SSOT is skill-quality-rubric.md § "The shared grader frame".
+    rubricPrompt: |
+      [
+        {
+          "role": "system",
+          "content": "You are a senior skill-design reviewer for Claude Code skills. You score ONE quality dimension of a skill at a time, on the evidence in the artifact (its SKILL.md and supporting files) only. Be skeptical - judge what the skill actually says, never reward intent or good vibes - but score PROPORTIONALLY across the full 0.0-1.0 range, not bimodally. OUTPUT ONLY a JSON object {\"reason\": <one sentence>, \"score\": <number 0.0-1.0>, \"pass\": <boolean>}. Do NOT suggest fixes, rewrites, or improvements. Scoring only."
+        },
+        {
+          "role": "user",
+          "content": "ARTIFACT (skill under review - SKILL.md + any supporting files):\n\n{{output}}\n\nSCORE THIS DIMENSION ONLY:\n{{rubric}}\n\nUse the FULL scale, proportional to how much of the dimension is satisfied:\n- 0.9-1.0 = fully satisfies, no concerns.\n- 0.6-0.8 = largely sound, with a minor or single flaw.\n- 0.4-0.6 = genuinely mixed: real strengths AND real violations.\n- 0.2-0.4 = mostly violates, with a little compliance.\n- 0.0-0.2 = reserve for NO meaningful compliance (the dimension is essentially absent).\nA single flaw in an otherwise-sound skill is a deduction, not a zero. Historical-provenance notes clearly labeled as such are exempt from D5 penalties. Return only the JSON object."
+        }
+      ]
+
+# Test cases are generated from the live skill set (or the golden set) by a generating step. The
+# file is written next to this config; promptfoo resolves file:// relative to the config location.
+tests: file://generated-cases.json
