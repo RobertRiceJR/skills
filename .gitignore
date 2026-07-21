@@ -1,5 +1,6 @@
 # Personal / machine-specific Claude Code config
 .claude/settings.local.json
+_archive/
 
 # Python bytecode
 __pycache__/
