@@ -5,6 +5,5 @@
   "author": {
     "name": "Robert Rice",
     "email": "robertrice12009@yahoo.com"
-  },
-  "hooks": "./hooks/hooks.json"
+  }
 }
